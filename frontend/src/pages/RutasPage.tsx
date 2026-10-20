@@ -28,6 +28,7 @@ export const RutasPage: React.FC = () => {
   } = useRouteDraftStore();
   const { crearRuta, isCreating } = useRutas();
   const [successToast, setSuccessToast] = useState(false);
+  const [draftToast, setDraftToast] = useState('');
 
   // Map markers from draft paradas
   const markers: IMapMarkerItem[] = (paradas || []).map((p) => ({
@@ -50,7 +51,8 @@ export const RutasPage: React.FC = () => {
         navigate('/');
       }, 1500);
     } catch {
-      alert('Ruta guardada localmente.');
+      setDraftToast('Ruta guardada en almacenamiento local.');
+      setTimeout(() => setDraftToast(''), 3000);
     }
   };
 
@@ -75,7 +77,10 @@ export const RutasPage: React.FC = () => {
           </button>
           <button
             type="button"
-            onClick={() => alert('Borrador guardado exitosamente.')}
+            onClick={() => {
+              setDraftToast('Borrador de ruta guardado con éxito.');
+              setTimeout(() => setDraftToast(''), 3000);
+            }}
             className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 cursor-pointer shadow-2xs transition-colors"
           >
             <Save className="h-3.5 w-3.5" />
@@ -173,6 +178,14 @@ export const RutasPage: React.FC = () => {
           <span className="text-xs font-bold">
             ¡Ruta asignada y programada con éxito! Redirigiendo al Dashboard...
           </span>
+        </div>
+      )}
+
+      {/* Draft Toast */}
+      {draftToast && (
+        <div className="fixed bottom-8 right-8 z-50 flex items-center gap-3 bg-slate-800 text-white px-5 py-3.5 rounded-xl shadow-2xl animate-in fade-in slide-in-from-bottom-5">
+          <Save className="h-5 w-5 text-orange-400" />
+          <span className="text-xs font-bold">{draftToast}</span>
         </div>
       )}
     </div>
