@@ -168,7 +168,11 @@ export const VisitasPage: React.FC = () => {
         navigate('/');
       }, 1500);
     } catch {
-      alert('Visita registrada.');
+      setSuccessToast(true);
+      setTimeout(() => {
+        setSuccessToast(false);
+        navigate('/');
+      }, 1500);
     }
   };
 
