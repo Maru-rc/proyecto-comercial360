@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Building2, Phone, Mail, MapPin, Eye, Play } from 'lucide-react';
+import { Search, Plus, Building2, Phone, Mail, MapPin, Eye, Play, Check } from 'lucide-react';
 import { ICliente } from '../types/cliente';
-import { getClientes } from '../api/clientes';
+import { getClientes, crearCliente } from '../api/clientes';
 import { Badge } from '../components/common/Badge';
 import { Modal } from '../components/common/Modal';
 import { Button } from '../components/common/Button';
+import { Input } from '../components/common/Input';
+import { Pagination } from '../components/common/Pagination';
 
 export const ClientesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -13,10 +15,73 @@ export const ClientesPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [tipo, setTipo] = useState('Todos');
   const [selectedCliente, setSelectedCliente] = useState<ICliente | null>(null);
+  const [isNewModalOpen, setIsNewModalOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
-  useEffect(() => {
+  // New Client form state
+  const [newNombre, setNewNombre] = useState('');
+  const [newNit, setNewNit] = useState('');
+  const [newDireccion, setNewDireccion] = useState('');
+  const [newMunicipio, setNewMunicipio] = useState('Barranquilla');
+  const [newTipo, setNewTipo] = useState('Industrial');
+  const [newPotencial, setNewPotencial] = useState('Alto');
+  const [newTelefono, setNewTelefono] = useState('');
+  const [newEmail, setNewEmail] = useState('');
+  const [newContacto, setNewContacto] = useState('');
+  const [newCargo, setNewCargo] = useState('Jefe de Compras');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const fetchClientes = useCallback(() => {
     getClientes({ search, tipo }).then((data) => setClientes(data));
   }, [search, tipo]);
+
+  useEffect(() => {
+    fetchClientes();
+  }, [fetchClientes]);
+
+  const handleCreateClient = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newNombre.trim()) return;
+    setIsSubmitting(true);
+    try {
+      const created = await crearCliente({
+        nombre_comercial: newNombre,
+        razon_social: newNombre,
+        nit: newNit || `900.${Math.floor(100 + Math.random() * 900)}.${Math.floor(100 + Math.random() * 900)}-1`,
+        direccion: newDireccion || 'Calle 45 # 30-10',
+        municipio: newMunicipio,
+        tipo_cliente_nombre: newTipo,
+        potencial_nombre: newPotencial as 'Alto' | 'Medio' | 'Bajo',
+        telefono: newTelefono || '300 123 4567',
+        email: newEmail || 'compras@cliente.com',
+        contactos: [
+          {
+            id_contacto: `con-${Date.now()}`,
+            nombre: newContacto || 'Contacto Comercial',
+            cargo: newCargo,
+            telefono: newTelefono || '300 123 4567',
+            email: newEmail || 'compras@cliente.com',
+            principal: true,
+          },
+        ],
+      });
+      setIsNewModalOpen(false);
+      setToastMessage(`Cliente ${created.nombre_comercial} registrado con éxito.`);
+      setTimeout(() => setToastMessage(''), 3000);
+      // Reset form
+      setNewNombre('');
+      setNewNit('');
+      setNewDireccion('');
+      setNewTelefono('');
+      setNewEmail('');
+      setNewContacto('');
+      fetchClientes();
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="space-y-5 pb-16">
@@ -31,7 +96,7 @@ export const ClientesPage: React.FC = () => {
 
         <button
           type="button"
-          onClick={() => alert('Formulario de nuevo cliente habilitado')}
+          onClick={() => setIsNewModalOpen(true)}
           className="inline-flex items-center gap-1.5 rounded-lg bg-[#EA580C] hover:bg-[#D9480F] text-white px-4 py-2 text-xs font-bold cursor-pointer shadow-sm transition-colors"
         >
           <Plus className="h-4 w-4" />
@@ -84,7 +149,7 @@ export const ClientesPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
-              {clientes.map((c) => (
+              {clientes.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((c) => (
                 <tr key={c.id_cliente} className="hover:bg-slate-50/70 transition-colors">
                   <td className="py-2.5 px-3 font-mono font-bold text-slate-800">
                     {c.codigo}
@@ -149,6 +214,14 @@ export const ClientesPage: React.FC = () => {
             </tbody>
           </table>
         </div>
+
+        <Pagination
+          currentPage={currentPage}
+          totalItems={clientes.length}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+        />
       </div>
 
       {/* Client Detail Modal */}
@@ -221,6 +294,144 @@ export const ClientesPage: React.FC = () => {
             </div>
           </div>
         </Modal>
+      )}
+
+      {/* New Client Modal */}
+      {isNewModalOpen && (
+        <Modal
+          isOpen={isNewModalOpen}
+          onClose={() => setIsNewModalOpen(false)}
+          title="Crear nuevo cliente comercial"
+          description="Registre la cuenta para asignarle rutas, visitas y cotizaciones."
+          maxWidth="lg"
+          footer={
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsNewModalOpen(false)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleCreateClient}
+                isLoading={isSubmitting}
+              >
+                Guardar cliente
+              </Button>
+            </>
+          }
+        >
+          <form onSubmit={handleCreateClient} className="space-y-4 text-xs">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <Input
+                label="Nombre Comercial / Razón Social"
+                placeholder="Ej. Distribuciones del Mar S.A.S"
+                value={newNombre}
+                onChange={(e) => setNewNombre(e.target.value)}
+                required
+              />
+              <Input
+                label="NIT o Cédula"
+                placeholder="Ej. 901.445.678-9"
+                value={newNit}
+                onChange={(e) => setNewNit(e.target.value)}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <Input
+                label="Dirección física"
+                placeholder="Ej. Calle 72 # 54-20"
+                value={newDireccion}
+                onChange={(e) => setNewDireccion(e.target.value)}
+              />
+              <div className="space-y-1">
+                <label className="block text-xs font-semibold text-slate-700">Municipio</label>
+                <select
+                  value={newMunicipio}
+                  onChange={(e) => setNewMunicipio(e.target.value)}
+                  className="w-full rounded-lg border border-slate-300 p-2 text-xs text-slate-800 focus:border-[#EA580C] focus:outline-none"
+                >
+                  <option value="Barranquilla">Barranquilla</option>
+                  <option value="Soledad">Soledad</option>
+                  <option value="Malambo">Malambo</option>
+                  <option value="Galapa">Galapa</option>
+                  <option value="Puerto Colombia">Puerto Colombia</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="block text-xs font-semibold text-slate-700">Tipo de cliente</label>
+                <select
+                  value={newTipo}
+                  onChange={(e) => setNewTipo(e.target.value)}
+                  className="w-full rounded-lg border border-slate-300 p-2 text-xs text-slate-800 focus:border-[#EA580C] focus:outline-none"
+                >
+                  <option value="Industrial">Industrial</option>
+                  <option value="Distribuidor">Distribuidor</option>
+                  <option value="Retail">Retail</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-xs font-semibold text-slate-700">Potencial</label>
+                <select
+                  value={newPotencial}
+                  onChange={(e) => setNewPotencial(e.target.value)}
+                  className="w-full rounded-lg border border-slate-300 p-2 text-xs text-slate-800 focus:border-[#EA580C] focus:outline-none"
+                >
+                  <option value="Alto">Alto</option>
+                  <option value="Medio">Medio</option>
+                  <option value="Bajo">Bajo</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="border-t border-slate-100 pt-3">
+              <p className="font-bold text-slate-800 mb-2">Contacto Principal</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <Input
+                  label="Nombre del contacto"
+                  placeholder="Ej. Andrés Morales"
+                  value={newContacto}
+                  onChange={(e) => setNewContacto(e.target.value)}
+                />
+                <Input
+                  label="Cargo"
+                  placeholder="Ej. Gerente de Operaciones"
+                  value={newCargo}
+                  onChange={(e) => setNewCargo(e.target.value)}
+                />
+                <Input
+                  label="Teléfono / Celular"
+                  placeholder="Ej. 301 234 5678"
+                  value={newTelefono}
+                  onChange={(e) => setNewTelefono(e.target.value)}
+                />
+                <Input
+                  label="Correo Electrónico"
+                  type="email"
+                  placeholder="Ej. contacto@empresa.com"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                />
+              </div>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-8 right-8 z-50 flex items-center gap-3 bg-emerald-600 text-white px-5 py-3.5 rounded-xl shadow-2xl animate-in fade-in slide-in-from-bottom-5">
+          <Check className="h-5 w-5" />
+          <span className="text-xs font-bold">{toastMessage}</span>
+        </div>
       )}
     </div>
   );

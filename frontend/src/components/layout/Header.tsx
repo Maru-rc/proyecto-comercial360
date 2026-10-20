@@ -37,6 +37,50 @@ export const Header: React.FC<HeaderProps> = ({
     setSearchQuery,
   } = useFilterStore();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [notifMenuOpen, setNotifMenuOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(4);
+
+  const notifications = [
+    {
+      id: 1,
+      titulo: 'Nueva ruta asignada',
+      detalle: 'RUT-ATL-001 (Atlántico Industrial) para el día de hoy',
+      tiempo: 'Hace 10 min',
+      ruta: '/rutas/asignadas',
+      color: 'bg-orange-500',
+    },
+    {
+      id: 2,
+      titulo: 'Cotización aprobada',
+      detalle: 'Metalúrgicas S.A.S aprobó COT-1242 por $24.8M',
+      tiempo: 'Hace 35 min',
+      ruta: '/cotizaciones',
+      color: 'bg-emerald-500',
+    },
+    {
+      id: 3,
+      titulo: 'Cliente pendiente de visita',
+      detalle: 'ConstruInnova S.A.S agendada para las 11:45 AM',
+      tiempo: 'Hace 1 hora',
+      ruta: '/agenda',
+      color: 'bg-blue-500',
+    },
+    {
+      id: 4,
+      titulo: 'Alerta de cobertura',
+      detalle: 'Ferretería La 14 cumple 16 días sin visita programada',
+      tiempo: 'Hace 2 horas',
+      ruta: '/clientes',
+      color: 'bg-amber-500',
+    },
+  ];
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/clientes`);
+    }
+  };
 
   const isDirector = user?.rol === 'DIRECTOR_REGIONAL';
 
@@ -48,7 +92,8 @@ export const Header: React.FC<HeaderProps> = ({
           type="button"
           onClick={onToggleSidebar}
           className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors cursor-pointer"
-          aria-label="Abrir menú"
+          aria-label="Abrir o cerrar menú lateral"
+          title="Alternar barra lateral"
         >
           <Menu className="h-5 w-5" />
         </button>
@@ -94,16 +139,16 @@ export const Header: React.FC<HeaderProps> = ({
         )}
 
         {/* Global Search */}
-        <div className="hidden lg:flex items-center relative ml-4 w-72 xl:w-96">
+        <form onSubmit={handleSearchSubmit} className="hidden lg:flex items-center relative ml-4 w-72 xl:w-96">
           <Search className="absolute left-3 h-4 w-4 text-slate-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Buscar clientes, contactos, rutas..."
+            placeholder="Buscar clientes, contactos, rutas... (Enter)"
             className="w-full rounded-lg border border-slate-200 bg-slate-50/70 py-1.5 pl-9 pr-3 text-xs text-slate-800 placeholder-slate-400 focus:border-[#EA580C] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#EA580C]"
           />
-        </div>
+        </form>
       </div>
 
       {/* Right side controls */}
@@ -162,16 +207,63 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Notification Bell */}
-        <button
-          type="button"
-          className="relative rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors cursor-pointer"
-          aria-label="Notificaciones"
-        >
-          <Bell className="h-5 w-5" />
-          <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#EA580C] text-[10px] font-bold text-white ring-2 ring-white">
-            8
-          </span>
-        </button>
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setNotifMenuOpen(!notifMenuOpen)}
+            className="relative rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors cursor-pointer"
+            aria-label="Notificaciones"
+            title="Ver notificaciones y alertas"
+          >
+            <Bell className="h-5 w-5" />
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#EA580C] text-[10px] font-bold text-white ring-2 ring-white">
+                {unreadCount}
+              </span>
+            )}
+          </button>
+
+          {notifMenuOpen && (
+            <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-xl bg-white p-3 shadow-xl border border-slate-200 z-50 animate-in fade-in slide-in-from-top-2">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100 mb-2">
+                <span className="font-extrabold text-slate-900 text-xs">
+                  Notificaciones de Campo ({unreadCount})
+                </span>
+                {unreadCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setUnreadCount(0)}
+                    className="text-[11px] font-bold text-[#EA580C] hover:underline cursor-pointer"
+                  >
+                    Marcar leídas
+                  </button>
+                )}
+              </div>
+
+              <div className="divide-y divide-slate-100 max-h-72 overflow-y-auto space-y-1">
+                {notifications.map((n) => (
+                  <div
+                    key={n.id}
+                    onClick={() => {
+                      setNotifMenuOpen(false);
+                      navigate(n.ruta);
+                    }}
+                    className="p-2.5 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors space-y-1"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`w-2 h-2 rounded-full ${n.color}`} />
+                        <span className="font-bold text-slate-800 text-xs">{n.titulo}</span>
+                      </div>
+                      <span className="text-[10px] text-slate-400">{n.tiempo}</span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 pl-3.5">{n.detalle}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* User profile dropdown */}
         <div className="relative">

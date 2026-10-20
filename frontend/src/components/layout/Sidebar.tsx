@@ -14,21 +14,46 @@ import {
   ChevronDown,
   Target,
   X,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 
 interface SidebarProps {
-  isOpen: boolean;
-  onClose: () => void;
+  isMobileOpen?: boolean;
+  onMobileClose?: () => void;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
+  // Compatibility props
+  isDesktopOpen?: boolean;
+  onToggleDesktop?: () => void;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
+export const Sidebar: React.FC<SidebarProps> = ({
+  isMobileOpen,
+  onMobileClose,
+  isCollapsed = false,
+  onToggleCollapse,
+  isDesktopOpen,
+  onToggleDesktop,
+  isOpen,
+  onClose,
+}) => {
   const location = useLocation();
   const { user } = useAuthStore();
-  const [rutasExpanded, setRutasExpanded] = useState(
-    location.pathname.startsWith('/rutas')
-  );
+  const [rutasExpanded, setRutasExpanded] = useState(false);
+
+  const mobileOpen = isMobileOpen ?? isOpen ?? false;
+  // If isDesktopOpen is passed (legacy), collapsed is !isDesktopOpen
+  const collapsed = isDesktopOpen !== undefined ? !isDesktopOpen : isCollapsed;
+  const handleMobileClose = onMobileClose ?? onClose ?? (() => {});
+  const handleToggleCollapse = onToggleCollapse ?? onToggleDesktop ?? (() => {});
+
+  const isRutasRoute = location.pathname.startsWith('/rutas');
+  const showRutasSubmenu = rutasExpanded || isRutasRoute;
 
   const isDirector = user?.rol === 'DIRECTOR_REGIONAL';
 
@@ -48,7 +73,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { name: 'Agenda', icon: CalendarDays, path: '/agenda' },
     { name: 'Mapa de visitas', icon: MapPin, path: '/mapa' },
     { name: 'Clientes', icon: Users, path: '/clientes' },
-    { name: 'Visitas', icon: ClipboardList, path: '/visitas/registrar' },
+    { name: 'Visitas', icon: ClipboardList, path: '/visitas' },
     { name: 'Cotizaciones', icon: FileText, path: '/cotizaciones' },
     { name: 'Pedidos', icon: ShoppingCart, path: '/pedidos' },
     { name: 'Indicadores', icon: BarChart3, path: '/indicadores' },
@@ -59,44 +84,113 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   return (
     <>
       {/* Mobile backdrop */}
-      {isOpen && (
+      {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-slate-900/50 md:hidden"
-          onClick={onClose}
+          className="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-xs md:hidden"
+          onClick={handleMobileClose}
+          aria-label="Cerrar menú lateral"
         />
       )}
 
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-40 flex w-64 flex-col justify-between bg-[#0B1527] text-slate-300 transition-transform duration-300 ease-in-out md:static md:translate-x-0 ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
+        className={`fixed top-0 bottom-0 left-0 z-50 flex flex-col justify-between bg-[#0B1527] text-slate-300 transition-[width,transform] duration-300 ease-in-out md:static md:z-auto md:translate-x-0 ${
+          // Mobile open / close
+          mobileOpen ? 'translate-x-0 w-72 max-w-[85vw] shadow-2xl' : '-translate-x-full w-72 max-w-[85vw]'
+        } ${
+          // Desktop width: w-20 (collapsed) vs w-64 (expanded)
+          collapsed ? 'md:w-20' : 'md:w-64'
         }`}
       >
         {/* Brand Header inside Sidebar */}
-        <div className="flex h-16 items-center justify-between px-5 border-b border-slate-800/80">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#EA580C] text-white font-black text-sm">
-              360
-            </div>
-            <span className="text-lg font-bold tracking-tight text-white">
-              Comercial <span className="text-[#EA580C]">360</span>
-            </span>
-          </div>
-          <button
-            onClick={onClose}
-            className="md:hidden text-slate-400 hover:text-white p-1 rounded-lg"
-          >
-            <X className="h-5 w-5" />
-          </button>
+        <div
+          className={`flex h-16 items-center border-b border-slate-800/80 ${
+            collapsed ? 'justify-center px-2' : 'justify-between px-5'
+          }`}
+        >
+          {collapsed ? (
+            <button
+              type="button"
+              onClick={handleToggleCollapse}
+              className="group flex flex-col items-center gap-1 rounded-lg p-1.5 text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors cursor-pointer"
+              title="Expandir menú lateral"
+            >
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#EA580C] text-white font-black text-xs shadow-xs group-hover:scale-105 transition-transform">
+                360
+              </div>
+              <PanelLeftOpen className="h-3.5 w-3.5 text-slate-400 group-hover:text-white" />
+            </button>
+          ) : (
+            <>
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#EA580C] text-white font-black text-sm shadow-xs">
+                  360
+                </div>
+                <span className="text-lg font-bold tracking-tight text-white whitespace-nowrap">
+                  Comercial <span className="text-[#EA580C]">360</span>
+                </span>
+              </div>
+
+              <div className="flex items-center gap-1">
+                {/* Desktop collapse button */}
+                <button
+                  type="button"
+                  onClick={handleToggleCollapse}
+                  className="hidden md:flex text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800/60 transition-colors cursor-pointer"
+                  title="Contraer menú lateral"
+                >
+                  <PanelLeftClose className="h-4 w-4" />
+                </button>
+
+                {/* Mobile close button */}
+                <button
+                  type="button"
+                  onClick={handleMobileClose}
+                  className="md:hidden text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800/60 transition-colors cursor-pointer"
+                  title="Cerrar menú"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Navigation list */}
-        <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+        <div
+          className={`flex-1 overflow-y-auto py-4 space-y-1.5 ${
+            collapsed ? 'px-2' : 'px-3'
+          }`}
+        >
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive =
               item.path === '/'
-                ? location.pathname === '/'
+                ? location.pathname === '/' || location.pathname === '/dashboard'
                 : location.pathname.startsWith(item.path);
+
+            if (collapsed) {
+              return (
+                <NavLink
+                  key={item.name}
+                  to={item.path}
+                  title={item.name}
+                  onClick={() => {
+                    if (window.innerWidth < 768) handleMobileClose();
+                  }}
+                  className={`flex h-10 w-full items-center justify-center rounded-lg transition-colors cursor-pointer group relative ${
+                    isActive
+                      ? 'bg-[#EA580C] text-white shadow-xs font-semibold'
+                      : 'text-slate-400 hover:bg-slate-800/60 hover:text-white'
+                  }`}
+                >
+                  <Icon className="h-5 w-5 shrink-0" />
+                  {/* Floating tooltip */}
+                  <span className="pointer-events-none absolute left-full ml-3 z-50 hidden rounded-md bg-slate-900 border border-slate-700 px-2.5 py-1 text-xs font-medium text-white shadow-lg group-hover:block whitespace-nowrap">
+                    {item.name}
+                  </span>
+                </NavLink>
+              );
+            }
 
             if (item.hasSubmenu) {
               return (
@@ -112,16 +206,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                   >
                     <div className="flex items-center gap-3">
                       <Icon className={`h-4 w-4 ${isActive ? 'text-[#EA580C]' : 'text-slate-400'}`} />
-                      <span>{item.name}</span>
+                      <span className="whitespace-nowrap">{item.name}</span>
                     </div>
                     <ChevronDown
                       className={`h-3.5 w-3.5 transition-transform ${
-                        rutasExpanded ? 'rotate-180 text-white' : 'text-slate-400'
+                        showRutasSubmenu ? 'rotate-180 text-white' : 'text-slate-400'
                       }`}
                     />
                   </button>
 
-                  {rutasExpanded && item.subItems && (
+                  {showRutasSubmenu && item.subItems && (
                     <div className="pl-9 pr-2 space-y-1 py-1">
                       {item.subItems.map((sub) => {
                         const isSubActive = location.pathname === sub.path;
@@ -130,7 +224,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                             key={sub.name}
                             to={sub.path}
                             onClick={() => {
-                              if (window.innerWidth < 768) onClose();
+                              if (window.innerWidth < 768) handleMobileClose();
                             }}
                             className={`block rounded-md px-2.5 py-1.5 text-[11px] transition-colors ${
                               isSubActive
@@ -153,7 +247,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 key={item.name}
                 to={item.path}
                 onClick={() => {
-                  if (window.innerWidth < 768) onClose();
+                  if (window.innerWidth < 768) handleMobileClose();
                 }}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
                   isActive
@@ -162,15 +256,31 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 }`}
               >
                 <Icon className={`h-4 w-4 ${isActive ? 'text-[#EA580C]' : 'text-slate-400'}`} />
-                <span>{item.name}</span>
+                <span className="whitespace-nowrap">{item.name}</span>
               </NavLink>
             );
           })}
         </div>
 
         {/* Bottom Sidebar Widget */}
-        <div className="p-4 border-t border-slate-800/80 bg-[#09111E]">
-          {isDirector ? (
+        <div
+          className={`border-t border-slate-800/80 bg-[#09111E] ${
+            collapsed ? 'p-2 flex flex-col items-center justify-center' : 'p-4'
+          }`}
+        >
+          {collapsed ? (
+            <div
+              className="flex flex-col items-center justify-center rounded-xl bg-slate-800/60 p-2.5 border border-slate-700/50 w-full hover:bg-slate-800 cursor-pointer transition-colors"
+              title={
+                isDirector
+                  ? 'Resumen regional: 24 rutas activas, 12 asesores'
+                  : 'Objetivo semanal: 78% cumplimiento (19/24 visitas)'
+              }
+            >
+              <Target className="h-5 w-5 text-orange-400" />
+              <span className="text-[10px] font-extrabold text-white mt-1">78%</span>
+            </div>
+          ) : isDirector ? (
             <div className="rounded-xl bg-slate-800/60 p-3.5 border border-slate-700/50">
               <div className="flex items-center gap-2 mb-2 text-orange-400">
                 <Target className="h-4 w-4" />
