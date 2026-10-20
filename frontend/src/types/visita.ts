@@ -31,11 +31,15 @@ export interface ICotizacion {
   id_cotizacion?: string;
   numero: string;
   id_cliente: string;
+  cliente_nombre?: string;
   id_asesor?: string;
+  asesor_nombre?: string;
   fecha: string;
+  validez?: string;
   valor: number;
   moneda?: string;
-  estado?: string;
+  estado?: 'BORRADOR' | 'ENVIADA' | 'APROBADA' | 'EN_NEGOCIACION' | 'RECHAZADA' | 'VENCIDA' | string;
+  descripcion?: string;
   s3_document_key?: string;
 }
 
@@ -43,11 +47,15 @@ export interface IPedido {
   id_pedido?: string;
   numero: string;
   id_cliente: string;
+  cliente_nombre?: string;
   id_cotizacion?: string;
   fecha: string;
   valor: number;
   fecha_entrega?: string;
-  estado?: string;
+  estado?: 'PENDIENTE' | 'EN_PREPARACION' | 'DESPACHADO' | 'ENTREGADO' | 'CANCELADO' | string;
+  asesor_nombre?: string;
+  items_count?: number;
+  observaciones?: string;
 }
 
 export interface IVisita {

@@ -307,3 +307,44 @@ export const getClienteById = async (id: string): Promise<ICliente | undefined> 
     return MOCK_CLIENTES.find((c) => c.id_cliente === id || c.nombre_comercial.toLowerCase().includes(id.toLowerCase()));
   }
 };
+
+export const crearCliente = async (nuevo: Partial<ICliente>): Promise<ICliente> => {
+  const cliente: ICliente = {
+    id_cliente: `cli-${Date.now()}`,
+    nit: nuevo.nit || '900.999.888-1',
+    razon_social: nuevo.razon_social || 'Nueva Empresa S.A.S',
+    nombre_comercial: nuevo.nombre_comercial || nuevo.razon_social || 'Nueva Empresa S.A.S',
+    codigo: nuevo.codigo || `CJI-${Math.floor(100000 + Math.random() * 900000)}`,
+    direccion: nuevo.direccion || 'Calle 100 # 50-20',
+    departamento: nuevo.departamento || 'Atlántico',
+    municipio: nuevo.municipio || 'Barranquilla',
+    telefono: nuevo.telefono || '300 000 0000',
+    email: nuevo.email || 'contacto@empresa.com',
+    zona_nombre: nuevo.zona_nombre || 'Atlántico Centro',
+    tipo_cliente_nombre: nuevo.tipo_cliente_nombre || 'Industrial',
+    potencial_nombre: nuevo.potencial_nombre || 'Alto',
+    estado_cliente_nombre: 'Activo',
+    latitud: nuevo.latitud || 10.98 + (Math.random() - 0.5) * 0.05,
+    longitud: nuevo.longitud || -74.79 + (Math.random() - 0.5) * 0.05,
+    activo: true,
+    contactos: nuevo.contactos || [
+      {
+        id_contacto: `con-${Date.now()}`,
+        nombre: 'Contacto Comercial',
+        cargo: 'Encargado de Compras',
+        telefono: nuevo.telefono || '300 000 0000',
+        email: nuevo.email || 'contacto@empresa.com',
+        principal: true,
+      },
+    ],
+  };
+
+  try {
+    const res = await apiClient.post<ICliente>('/clientes', cliente);
+    MOCK_CLIENTES.unshift(res.data);
+    return res.data;
+  } catch {
+    MOCK_CLIENTES.unshift(cliente);
+    return cliente;
+  }
+};
