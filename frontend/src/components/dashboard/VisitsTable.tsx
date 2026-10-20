@@ -5,11 +5,10 @@ import {
   Filter,
   Eye,
   Edit2,
-  ChevronLeft,
-  ChevronRight,
 } from 'lucide-react';
 import { ISeguimientoFila } from '../../types/kpi';
 import { Badge } from '../common/Badge';
+import { Pagination } from '../common/Pagination';
 import { downloadCsvReport } from '../../api/kpis';
 import { useFilterStore } from '../../store/useFilterStore';
 
@@ -21,7 +20,20 @@ export const VisitsTable: React.FC<VisitsTableProps> = ({ filas }) => {
   const navigate = useNavigate();
   const { territorio, semanaNumero } = useFilterStore();
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
   const [filterPeriod, setFilterPeriod] = useState('Esta semana');
+  const [filterEstado, setFilterEstado] = useState('Todos');
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
+
+  const filteredFilas = filas.filter((r) => {
+    if (filterEstado === 'Todos') return true;
+    return r.estado_visita.toLowerCase() === filterEstado.toLowerCase();
+  });
+
+  const paginatedFilas = filteredFilas.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   const formatCurrency = (val: number) => {
     if (!val) return '$ 0';
@@ -51,13 +63,39 @@ export const VisitsTable: React.FC<VisitsTableProps> = ({ filas }) => {
             <option value="Mes actual">Mes actual</option>
           </select>
 
-          <button
-            type="button"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer shadow-2xs"
-          >
-            <Filter className="h-3.5 w-3.5 text-slate-500" />
-            Filtros
-          </button>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowFilterMenu(!showFilterMenu)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer shadow-2xs"
+            >
+              <Filter className="h-3.5 w-3.5 text-slate-500" />
+              Filtro: {filterEstado}
+            </button>
+
+            {showFilterMenu && (
+              <div className="absolute right-0 mt-1 w-40 rounded-xl bg-white p-1.5 shadow-xl border border-slate-200 z-30 text-xs">
+                {['Todos', 'Visitado', 'Pendiente', 'Reprogramado', 'Sin visitar'].map((est) => (
+                  <button
+                    key={est}
+                    type="button"
+                    onClick={() => {
+                      setFilterEstado(est);
+                      setCurrentPage(1);
+                      setShowFilterMenu(false);
+                    }}
+                    className={`w-full text-left px-2.5 py-1.5 rounded-lg cursor-pointer ${
+                      filterEstado === est
+                        ? 'bg-orange-50 text-[#EA580C] font-bold'
+                        : 'text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    {est}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           <button
             type="button"
@@ -95,7 +133,7 @@ export const VisitsTable: React.FC<VisitsTableProps> = ({ filas }) => {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-slate-700">
-            {filas.map((row) => (
+            {paginatedFilas.map((row) => (
               <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
                 <td className="py-2.5 px-3 whitespace-nowrap">{row.fecha}</td>
                 <td className="py-2.5 px-3 whitespace-nowrap font-medium text-slate-900">
@@ -170,66 +208,13 @@ export const VisitsTable: React.FC<VisitsTableProps> = ({ filas }) => {
       </div>
 
       {/* Pagination Footer */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-slate-100 text-xs text-slate-500">
-        <div>Mostrando 1 a 5 de 24 filas</div>
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-            className="p-1 rounded-md border border-slate-200 hover:bg-slate-50 text-slate-500 disabled:opacity-40 cursor-pointer"
-            disabled={currentPage === 1}
-          >
-            <ChevronLeft className="h-3.5 w-3.5" />
-          </button>
-          <button
-            onClick={() => setCurrentPage(1)}
-            className={`w-7 h-7 flex items-center justify-center rounded-md font-bold text-xs cursor-pointer ${
-              currentPage === 1
-                ? 'bg-[#EA580C] text-white'
-                : 'border border-slate-200 hover:bg-slate-50 text-slate-700'
-            }`}
-          >
-            1
-          </button>
-          <button
-            onClick={() => setCurrentPage(2)}
-            className={`w-7 h-7 flex items-center justify-center rounded-md font-bold text-xs cursor-pointer ${
-              currentPage === 2
-                ? 'bg-[#EA580C] text-white'
-                : 'border border-slate-200 hover:bg-slate-50 text-slate-700'
-            }`}
-          >
-            2
-          </button>
-          <button
-            onClick={() => setCurrentPage(3)}
-            className={`w-7 h-7 flex items-center justify-center rounded-md font-bold text-xs cursor-pointer ${
-              currentPage === 3
-                ? 'bg-[#EA580C] text-white'
-                : 'border border-slate-200 hover:bg-slate-50 text-slate-700'
-            }`}
-          >
-            3
-          </button>
-          <span className="px-1 text-slate-400">...</span>
-          <button
-            onClick={() => setCurrentPage(5)}
-            className={`w-7 h-7 flex items-center justify-center rounded-md font-bold text-xs cursor-pointer ${
-              currentPage === 5
-                ? 'bg-[#EA580C] text-white'
-                : 'border border-slate-200 hover:bg-slate-50 text-slate-700'
-            }`}
-          >
-            5
-          </button>
-          <button
-            onClick={() => setCurrentPage(Math.min(5, currentPage + 1))}
-            className="p-1 rounded-md border border-slate-200 hover:bg-slate-50 text-slate-500 disabled:opacity-40 cursor-pointer"
-            disabled={currentPage === 5}
-          >
-            <ChevronRight className="h-3.5 w-3.5" />
-          </button>
-        </div>
-      </div>
+      <Pagination
+        currentPage={currentPage}
+        totalItems={filteredFilas.length}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={setPageSize}
+      />
     </div>
   );
 };
