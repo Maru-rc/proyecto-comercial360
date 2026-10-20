@@ -1,32 +1,59 @@
-# React + TypeScript + Vite
+# Comercial 360 - Frontend Application
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Aplicación web React + TypeScript + Vite para el sistema **Comercial 360**.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🚀 Inicio Rápido
 
-## React Compiler
+### Requisitos Previos
+- **Node.js**: Versión 18.0 o superior (recomendado 20+ LTS).
+- **npm**: Versión 9.0 o superior.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Instalación y Ejecución
 
-## Expanding the Oxlint configuration
+```bash
+# Instalar dependencias
+npm install
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+# Iniciar servidor de desarrollo en http://localhost:5173
+npm run dev
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+# Compilar para producción
+npm run build
+
+# Ejecutar el linter Oxlint
+npm run lint
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+---
+
+## 🔐 Credenciales Demo
+
+| Rol | Usuario | Contraseña |
+| :--- | :--- | :--- |
+| **Asesor Comercial** | `asesor@comercial360.co` | `password123` |
+| **Director Regional** | `director@comercial360.co` | `password123` |
+
+También puedes usar los botones de acceso directo en la pantalla de inicio de sesión (`/login`).
+
+---
+
+## 🧭 Vistas y Rutas
+
+- `/` o `/dashboard`: Panel de control general y KPIs.
+- `/rutas`: Creación de rutas con mapa Leaflet y Drag & Drop.
+- `/rutas/asignadas`: Listado de rutas asignadas con detalle de paradas.
+- `/rutas/agenda`: Matriz semanal de disponibilidad de asesores.
+- `/agenda`: Agenda diaria con citas y agendamiento interactivo.
+- `/mapa`: Mapa de visitas en pantalla completa con buscador de clientes.
+- `/clientes`: Directorio comercial de clientes con paginación y modal de creación.
+- `/visitas`: Historial de visitas con paginación y filtros.
+- `/visitas/registrar`: Asistente de 5 pasos para ejecución de visita con fotos y firma.
+- `/cotizaciones`: Gestión de cotizaciones con modal de impresión y creación.
+- `/pedidos`: Control de pedidos con stepper de seguimiento de entregas.
+- `/indicadores`: Gráficos de ventas, ranking de asesores y cumplimiento de metas.
+- `/reportes`: Exportación de reportes a formatos CSV y Excel.
+- `/configuracion`: Parámetros del perfil, notificaciones y sistema.
+
+Para más información, consulta el archivo [README.md principal](../README.md).
