@@ -5,10 +5,14 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "audit:architecture": "./scripts/check-clean-architecture.sh --all",
     "prepare": "husky"
   },
   "lint-staged": {
-    "backend/src/**/*.{ts,js}": [
+    "app/backend/src/**/*.{ts,js}": [
+      "prettier --write"
+    ],
+    "app/frontend/src/**/*.{ts,tsx,js,jsx}": [
       "prettier --write"
     ]
   },

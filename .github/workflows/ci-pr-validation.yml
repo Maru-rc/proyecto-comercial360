@@ -1,0 +1,66 @@
+name: CI - PR Quality Gate
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+  push:
+    branches:
+      - develop
+
+jobs:
+  # ==============================================================================
+  # 1. AUDITORÍA DE CLEAN ARCHITECTURE Y SOLID (Uncle Bob)
+  # ==============================================================================
+  architecture-audit:
+    name: Clean Architecture & SOLID Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Architecture Linter
+        run: |
+          chmod +x ./scripts/check-clean-architecture.sh
+          ./scripts/check-clean-architecture.sh --all
+
+  # ==============================================================================
+  # 2. VALIDACIÓN DE BACKEND (NestJS + TypeScript + Vitest)
+  # ==============================================================================
+  backend-check:
+    name: Backend Typecheck & Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck Backend
+        run: pnpm --filter backend exec tsc --noEmit
+
+      - name: Run Unit Tests
+        run: pnpm --filter backend exec vitest run
+
+  # ==============================================================================
+  # 3. VALIDACIÓN DE DOCKER COMPOSE
+  # ==============================================================================
+  docker-validation:
+    name: Docker Compose Syntax Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate Docker Compose Configuration
+        run: |
+          docker compose -f docker-compose.yml config > /dev/null
+          docker compose -f docker-compose.prod.yml config > /dev/null
