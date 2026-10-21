@@ -25,7 +25,7 @@
     "migration:run": "pnpm run typeorm -- migration:run",
     "migration:revert": "pnpm run typeorm -- migration:revert",
     "migration:show": "pnpm run typeorm -- migration:show",
-    "seed": "ts-node -r tsconfig-paths/register src/core/infrastructure/database/seeds/run-seed.ts"
+    "seed": "nest build && node dist/core/infrastructure/database/seeds/run-seed.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1153.0",
