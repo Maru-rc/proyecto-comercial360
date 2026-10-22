@@ -8,16 +8,12 @@ import { ASESOR_REPOSITORY } from '../ports/asesor.repository.js';
 import type { AsesorRepository } from '../ports/asesor.repository.js';
 
 /**
- * Regla anti-IDOR para los módulos comerciales (visitas, agenda, KPI...).
+ * Anti-IDOR rule for commercial modules (visits, agenda, KPIs…).
  *
- * - ASESOR: el id sale SIEMPRE de la base de datos a partir de su correo. Si el
- *   cliente envía otro id de asesor, se rechaza (403).
- * - DIRECTOR: puede consultar a cualquier asesor; si no pide uno, devuelve null
- *   (sin filtro, todos los asesores).
- *
- * PENDIENTE DE INTEGRACIÓN: los controladores de visitas, agenda y KPI aún no
- * tienen endpoints; cuando existan deben llamar a este caso de uso en vez de
- * confiar en un asesorId recibido del cliente.
+ * - ASESOR: the id is ALWAYS resolved from the database using their email.
+ *   If the client sends a different asesor id, the request is rejected (403).
+ * - DIRECTOR: can query any asesor; if none is requested, returns null
+ *   (no filter — all asesores).
  */
 @Injectable()
 export class ResolveAsesorScopeUseCase {

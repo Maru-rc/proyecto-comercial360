@@ -10,7 +10,7 @@ import { Role } from '../domain/role.js';
 import type { RequestWithUser } from './auth.guard.js';
 import { ROLES_KEY } from './roles.decorator.js';
 
-/** Se ejecuta después de AuthGuard. Rol no permitido: 403. */
+/** Runs after AuthGuard. Returns 403 if role is not allowed. */
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
@@ -20,13 +20,15 @@ export class RolesGuard implements CanActivate {
       ROLES_KEY,
       [context.getHandler(), context.getClass()],
     );
-    // Sin @Roles, basta con estar autenticado
+    // No @Roles decorator means any authenticated user is allowed
     if (!roles || roles.length === 0) return true;
 
     const user = context.switchToHttp().getRequest<RequestWithUser>().authUser;
-    if (!user) throw new UnauthorizedException('Sesión no válida');
+    if (!user) throw new UnauthorizedException('Invalid session');
     if (!roles.includes(user.role)) {
-      throw new ForbiddenException('No tienes permisos para esta operación');
+      throw new ForbiddenException(
+        'You do not have permission for this operation',
+      );
     }
     return true;
   }

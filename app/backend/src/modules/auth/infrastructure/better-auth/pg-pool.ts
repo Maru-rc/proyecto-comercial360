@@ -1,8 +1,8 @@
 import { Pool } from 'pg';
 
 /**
- * Pool de `pg` para Better Auth. Usa la misma base de datos y las mismas
- * variables de entorno que TypeORM.
+ * pg Pool for Better Auth. Uses the same database and environment variables
+ * as TypeORM so both share the same PostgreSQL instance.
  */
 export function createPgPool(env: NodeJS.ProcessEnv = process.env): Pool {
   return new Pool({

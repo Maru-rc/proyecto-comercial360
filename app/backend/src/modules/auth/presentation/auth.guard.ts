@@ -16,9 +16,9 @@ import type { Auth } from '../infrastructure/better-auth/auth.factory.js';
 export type RequestWithUser = Request & { authUser?: AuthenticatedUser };
 
 /**
- * Exige una sesión válida de Better Auth (cookie). Si no hay sesión: 401.
- * Deja el usuario en `request.authUser`; el rol sale de la base de datos,
- * nunca de lo que envíe el cliente.
+ * Requires a valid Better Auth session (cookie). No session → 401.
+ * Stores the user in `request.authUser`. The role comes from the database,
+ * never from what the client sends.
  */
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -30,11 +30,11 @@ export class AuthGuard implements CanActivate {
     const session = await this.auth.api.getSession({
       headers: fromNodeHeaders(request.headers),
     });
-    if (!session) throw new UnauthorizedException('Sesión no válida');
+    if (!session) throw new UnauthorizedException('Invalid session');
 
     const { id, name, email, role } = session.user;
-    // Si en la base hubiera un rol desconocido, se niega el acceso
-    if (!isRole(role)) throw new ForbiddenException('Rol no válido');
+    // If the database somehow has an unknown role, deny access
+    if (!isRole(role)) throw new ForbiddenException('Invalid role');
 
     request.authUser = { id, name, email, role };
     return true;
