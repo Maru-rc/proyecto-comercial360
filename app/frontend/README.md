@@ -8,22 +8,24 @@ Aplicación web React + TypeScript + Vite para el sistema **Comercial 360**.
 
 ### Requisitos Previos
 - **Node.js**: Versión 18.0 o superior (recomendado 20+ LTS).
-- **npm**: Versión 9.0 o superior.
+- **pnpm**: Versión 10 (`corepack enable` lo deja disponible).
 
 ### Instalación y Ejecución
 
+El frontend es parte del monorepo (`pnpm-workspace.yaml`). Los comandos se corren desde la raíz del repositorio:
+
 ```bash
-# Instalar dependencias
-npm install
+# Instalar dependencias de todo el monorepo
+pnpm install
 
 # Iniciar servidor de desarrollo en http://localhost:5173
-npm run dev
+pnpm --filter frontend dev
 
 # Compilar para producción
-npm run build
+pnpm --filter frontend build
 
 # Ejecutar el linter Oxlint
-npm run lint
+pnpm --filter frontend lint
 ```
 
 ---
