@@ -8,7 +8,7 @@ export class PotencialOrmEntity {
   @Column({ length: 100, unique: true })
   nombre: string;
 
-  // Orden de visualización: 1 = Alto, 2 = Medio, 3 = Bajo
+  // Display order: 1 = High, 2 = Medium, 3 = Low
   @Column({ type: 'int' })
   orden: number;
 }

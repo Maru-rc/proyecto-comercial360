@@ -9,7 +9,7 @@ import {
 } from 'typeorm';
 import { ClienteOrmEntity } from './cliente.orm-entity.js';
 
-// Índice compuesto para que las consultas de historial sean rápidas
+// Composite index for faster history queries
 @Index(['idCliente', 'fecha'])
 @Entity('historial_cliente')
 export class HistorialClienteOrmEntity {
@@ -20,7 +20,7 @@ export class HistorialClienteOrmEntity {
   @JoinColumn({ name: 'id_cliente' })
   cliente: ClienteOrmEntity;
 
-  // Columna redundante para el índice compuesto
+  // Redundant column for the composite index
   @Column({ name: 'id_cliente', insert: false, update: false })
   idCliente: number;
 

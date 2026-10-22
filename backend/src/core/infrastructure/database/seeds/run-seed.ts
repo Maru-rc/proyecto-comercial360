@@ -2,28 +2,32 @@ import AppDataSource from '../data-source-cli.js';
 
 async function runSeeds() {
   try {
-    console.log('🌱 Inicializando conexión a la base de datos...');
+    console.log('Initializing database connection...');
     await AppDataSource.initialize();
-    console.log('✅ Conexión establecida\n');
+    console.log('Database connection established.\n');
 
     await seedCatalogos();
     await seedAsesores();
 
-    console.log('\n🎉 Seeds completados exitosamente');
+    console.log('\nSeeds completed successfully.');
 
     const counts = await getCounts();
-    console.log('\n📊 Resumen de datos insertados:');
+    console.log('\nInserted data summary:');
     console.table(counts);
-  } catch (error) {
-    console.error('❌ Error ejecutando seeds:', error);
-    process.exit(1);
+  } catch {
+    console.error(
+      'Could not load the initial data. Check the database connection and try again.',
+    );
+    process.exitCode = 1;
   } finally {
-    await AppDataSource.destroy();
+    if (AppDataSource.isInitialized) {
+      await AppDataSource.destroy();
+    }
   }
 }
 
 async function seedCatalogos() {
-  console.log('📦 Insertando catálogos base...');
+  console.log('Inserting base catalogs...');
 
   await AppDataSource.query(`
     INSERT INTO zona (nombre) VALUES
@@ -34,7 +38,7 @@ async function seedCatalogos() {
       ('OCCIDENTE')
     ON CONFLICT DO NOTHING;
   `);
-  console.log('  ✓ Zonas');
+  console.log('  Zones inserted.');
 
   await AppDataSource.query(`
     INSERT INTO tipo_cliente (nombre) VALUES
@@ -45,7 +49,7 @@ async function seedCatalogos() {
       ('Corporativo')
     ON CONFLICT DO NOTHING;
   `);
-  console.log('  ✓ Tipos de Cliente');
+  console.log('  Customer types inserted.');
 
   await AppDataSource.query(`
     INSERT INTO potencial (nombre, orden) VALUES
@@ -54,7 +58,7 @@ async function seedCatalogos() {
       ('Bajo', 3)
     ON CONFLICT DO NOTHING;
   `);
-  console.log('  ✓ Potenciales');
+  console.log('  Customer potentials inserted.');
 
   await AppDataSource.query(`
     INSERT INTO estado_cliente (nombre) VALUES
@@ -64,7 +68,7 @@ async function seedCatalogos() {
       ('Suspendido')
     ON CONFLICT DO NOTHING;
   `);
-  console.log('  ✓ Estados de Cliente');
+  console.log('  Customer statuses inserted.');
 
   await AppDataSource.query(`
     INSERT INTO portafolio (nombre, descripcion) VALUES
@@ -75,7 +79,7 @@ async function seedCatalogos() {
       ('Consumibles', 'Materiales de consumo industrial')
     ON CONFLICT DO NOTHING;
   `);
-  console.log('  ✓ Portafolios');
+  console.log('  Portfolios inserted.');
 
   await AppDataSource.query(`
     INSERT INTO resultado_visita (nombre) VALUES
@@ -87,11 +91,11 @@ async function seedCatalogos() {
       ('Requiere seguimiento')
     ON CONFLICT DO NOTHING;
   `);
-  console.log('  ✓ Resultados de Visita');
+  console.log('  Visit outcomes inserted.');
 }
 
 async function seedAsesores() {
-  console.log('\n👤 Insertando asesores de prueba...');
+  console.log('\nInserting sample sales representatives...');
 
   await AppDataSource.query(`
     INSERT INTO asesor (nombre, correo, telefono, estado) VALUES
@@ -100,7 +104,7 @@ async function seedAsesores() {
       ('Carlos Martínez Soto', 'carlos.martinez@comercial360.com', '3157654321', 'ACTIVO')
     ON CONFLICT (correo) DO NOTHING;
   `);
-  console.log('  ✓ 3 asesores creados');
+  console.log('  3 sales representatives inserted.');
 }
 
 async function getCounts() {

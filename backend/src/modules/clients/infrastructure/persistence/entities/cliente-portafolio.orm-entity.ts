@@ -9,7 +9,7 @@ import type { Relation } from 'typeorm';
 import { ClienteOrmEntity } from './cliente.orm-entity.js';
 import { PortafolioOrmEntity } from './portafolio.orm-entity.js';
 
-// Tabla intermedia de la relación muchos a muchos Cliente <-> Portafolio
+// Junction table for the many-to-many Customer <-> Portfolio relationship
 @Entity('cliente_portafolio')
 export class ClientePortafolioOrmEntity {
   @PrimaryGeneratedColumn({ name: 'id_cliente_portafolio' })
