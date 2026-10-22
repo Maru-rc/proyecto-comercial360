@@ -34,7 +34,13 @@ const PG_POOL = Symbol('PG_POOL');
     RolesGuard,
   ],
   // Los demás módulos usan estos guards, @Auth() y el caso de uso de alcance
-  exports: [AUTH, AuthGuard, RolesGuard, ResolveAsesorScopeUseCase],
+  exports: [
+    AUTH,
+    AuthGuard,
+    RolesGuard,
+    ResolveAsesorScopeUseCase,
+    'ResolveAsesorScopeUseCase',
+  ],
 })
 export class AuthModule implements OnApplicationShutdown {
   constructor(@Inject(PG_POOL) private readonly pool: Pool) {}
