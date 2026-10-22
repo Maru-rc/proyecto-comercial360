@@ -19,11 +19,6 @@ import { WeeklyKpisResponseDto } from './application/dtos/weekly-kpis-response.d
 export class DashboardController {
   constructor(private readonly getWeeklyKpis: GetWeeklyKpisUseCase) {}
 
-  /**
-   * Returns the 6 weekly KPI cards for the authenticated user.
-   * - ASESOR: sees only their own data; zona filter is ignored.
-   * - DIRECTOR: sees all data; can filter by zona.
-   */
   @Get('kpis')
   @ApiOperation({ summary: 'Get weekly commercial KPIs' })
   @ApiOkResponse({ type: WeeklyKpisResponseDto })

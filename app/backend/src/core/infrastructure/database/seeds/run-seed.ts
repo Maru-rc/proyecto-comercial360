@@ -3,8 +3,6 @@ import { createAuth } from '../../../../modules/auth/infrastructure/better-auth/
 import { createPgPool } from '../../../../modules/auth/infrastructure/better-auth/pg-pool.js';
 import { seedDemoUsers } from './seed-demo-users.js';
 
-// Seed de usuarios de demostración: un asesor y un director.
-// Las contraseñas vienen del entorno (.env), nunca del código.
 async function run() {
   if (
     process.env.NODE_ENV === 'production' &&

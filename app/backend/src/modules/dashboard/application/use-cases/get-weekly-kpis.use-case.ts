@@ -4,24 +4,18 @@ import type { IDashboardRepository } from '../ports/dashboard.repository.port.js
 import { WeeklyKpisQueryDto } from '../dtos/weekly-kpis-query.dto.js';
 import { WeeklyKpisResponseDto } from '../dtos/weekly-kpis-response.dto.js';
 
-/**
- * Authenticated user shape — kept local to avoid cross-module imports.
- * The controller passes req.authUser which satisfies this interface.
- */
 export interface KpiRequestUser {
   id: string;
   email: string;
   role: 'ASESOR' | 'DIRECTOR';
 }
 
-/** Resolve asesor scope — kept local to avoid cross-module DIP violation. */
 export interface AsesorScopeResolver {
   execute(user: KpiRequestUser, requestedId?: number): Promise<number | null>;
 }
 
 export const ASESOR_SCOPE_RESOLVER = Symbol('ASESOR_SCOPE_RESOLVER');
 
-/** Parses "YYYY-Www" and returns [weekStart (Monday 00:00), weekEnd (next Monday 00:00)]. */
 function resolveWeekBounds(isoWeek: string): [Date, Date] {
   const [yearStr, weekStr] = isoWeek.split('-W');
   const year = parseInt(yearStr, 10);
@@ -37,7 +31,6 @@ function resolveWeekBounds(isoWeek: string): [Date, Date] {
   return [weekStart, weekEnd];
 }
 
-/** Returns the current ISO week string (YYYY-Www). */
 function currentIsoWeek(): string {
   const now = new Date();
   const jan4 = new Date(Date.UTC(now.getUTCFullYear(), 0, 4));
@@ -49,11 +42,6 @@ function currentIsoWeek(): string {
   return `${now.getUTCFullYear()}-W${String(week).padStart(2, '0')}`;
 }
 
-/**
- * Single-responsibility use case: resolves the asesor scope, fetches raw KPI
- * data and maps it to the response DTO.
- * One public method: execute(user, dto).
- */
 @Injectable()
 export class GetWeeklyKpisUseCase {
   constructor(

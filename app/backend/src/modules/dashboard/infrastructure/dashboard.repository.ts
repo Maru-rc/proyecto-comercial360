@@ -9,10 +9,6 @@ import type {
   WeeklyKpisRaw,
 } from '../application/ports/dashboard.repository.port.js';
 
-/**
- * Runs 4 independent SQL aggregations in parallel.
- * No N+1: every KPI card is a single query resolved at the database level.
- */
 @Injectable()
 export class DashboardRepository implements IDashboardRepository {
   constructor(@InjectDataSource() private readonly db: DataSource) {}
@@ -27,10 +23,6 @@ export class DashboardRepository implements IDashboardRepository {
 
     return { visits, quotedValue, orders, weeklyTarget };
   }
-
-  // ---------------------------------------------------------------------------
-  // Private queries
-  // ---------------------------------------------------------------------------
 
   private async queryVisitStats(f: WeeklyKpisFilter): Promise<VisitStats> {
     const params: unknown[] = [f.weekStart, f.weekEnd];

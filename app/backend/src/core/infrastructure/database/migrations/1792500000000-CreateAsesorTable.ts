@@ -1,10 +1,5 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-/**
- * Crea la tabla ASESOR (id_asesor, nombre, correo, telefono, estado).
- * El correo es único sin importar mayúsculas, porque con él se vincula el
- * usuario de Better Auth (user.email = asesor.correo).
- */
 export class CreateAsesorTable1792500000000 implements MigrationInterface {
   name = 'CreateAsesorTable1792500000000';
 
