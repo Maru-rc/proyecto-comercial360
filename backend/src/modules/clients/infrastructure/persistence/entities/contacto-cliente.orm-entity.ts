@@ -5,6 +5,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import type { Relation } from 'typeorm';
 import { ClienteOrmEntity } from './cliente.orm-entity.js';
 
 @Entity('contacto_cliente')
@@ -16,21 +17,21 @@ export class ContactoClienteOrmEntity {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'id_cliente' })
-  cliente: ClienteOrmEntity;
+  cliente: Relation<ClienteOrmEntity>;
 
   @Column({ length: 150 })
   nombre: string;
 
-  @Column({ length: 100, nullable: true })
+  @Column({ type: 'varchar', length: 100, nullable: true })
   cargo: string | null;
 
-  @Column({ length: 20, nullable: true })
+  @Column({ type: 'varchar', length: 20, nullable: true })
   telefono: string | null;
 
-  @Column({ length: 20, nullable: true })
+  @Column({ type: 'varchar', length: 20, nullable: true })
   celular: string | null;
 
-  @Column({ length: 150, nullable: true })
+  @Column({ type: 'varchar', length: 150, nullable: true })
   email: string | null;
 
   // Indica si es el contacto principal del cliente

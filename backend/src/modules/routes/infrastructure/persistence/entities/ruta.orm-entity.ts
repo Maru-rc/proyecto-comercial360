@@ -35,10 +35,15 @@ export class RutaOrmEntity {
   @Column({ length: 30, default: 'BORRADOR' })
   estado: string;
 
-  @Column({ name: 'dia_ejecucion', length: 20, nullable: true })
+  @Column({
+    name: 'dia_ejecucion',
+    type: 'varchar',
+    length: 20,
+    nullable: true,
+  })
   diaEjecucion: string | null;
 
-  @Column({ length: 20, nullable: true })
+  @Column({ type: 'varchar', length: 20, nullable: true })
   frecuencia: string | null;
 
   @Column({ name: 'hora_inicio', type: 'time', nullable: true })
@@ -47,7 +52,7 @@ export class RutaOrmEntity {
   @Column({ name: 'hora_fin', type: 'time', nullable: true })
   horaFin: string | null;
 
-  @Column({ length: 200, nullable: true })
+  @Column({ type: 'varchar', length: 200, nullable: true })
   descripcion: string | null;
 
   @OneToMany(() => RutaClienteOrmEntity, (rc) => rc.ruta)

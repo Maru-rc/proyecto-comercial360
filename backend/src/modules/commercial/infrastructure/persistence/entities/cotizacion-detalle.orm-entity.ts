@@ -5,6 +5,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import type { Relation } from 'typeorm';
 import { CotizacionOrmEntity } from './cotizacion.orm-entity.js';
 
 @Entity('cotizacion_detalle')
@@ -16,7 +17,7 @@ export class CotizacionDetalleOrmEntity {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'id_cotizacion' })
-  cotizacion: CotizacionOrmEntity;
+  cotizacion: Relation<CotizacionOrmEntity>;
 
   @Column({ length: 200 })
   producto: string;

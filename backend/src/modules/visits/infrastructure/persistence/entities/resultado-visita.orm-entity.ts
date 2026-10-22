@@ -5,6 +5,6 @@ export class ResultadoVisitaOrmEntity {
   @PrimaryGeneratedColumn({ name: 'id_resultado' })
   idResultado: number;
 
-  @Column({ length: 100 })
+  @Column({ length: 100, unique: true })
   nombre: string;
 }

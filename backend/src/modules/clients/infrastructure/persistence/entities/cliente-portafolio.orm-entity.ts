@@ -5,6 +5,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import type { Relation } from 'typeorm';
 import { ClienteOrmEntity } from './cliente.orm-entity.js';
 import { PortafolioOrmEntity } from './portafolio.orm-entity.js';
 
@@ -18,7 +19,7 @@ export class ClientePortafolioOrmEntity {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'id_cliente' })
-  cliente: ClienteOrmEntity;
+  cliente: Relation<ClienteOrmEntity>;
 
   @ManyToOne(() => PortafolioOrmEntity)
   @JoinColumn({ name: 'id_portafolio' })

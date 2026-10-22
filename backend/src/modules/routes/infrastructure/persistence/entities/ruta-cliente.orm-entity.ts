@@ -5,6 +5,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import type { Relation } from 'typeorm';
 import { RutaOrmEntity } from './ruta.orm-entity.js';
 import { ClienteOrmEntity } from '../../../../clients/infrastructure/persistence/entities/cliente.orm-entity.js';
 
@@ -15,7 +16,7 @@ export class RutaClienteOrmEntity {
 
   @ManyToOne(() => RutaOrmEntity, (r) => r.paradas, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'id_ruta' })
-  ruta: RutaOrmEntity;
+  ruta: Relation<RutaOrmEntity>;
 
   @ManyToOne(() => ClienteOrmEntity)
   @JoinColumn({ name: 'id_cliente' })
