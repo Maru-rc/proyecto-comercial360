@@ -1,0 +1,76 @@
+# ==============================================================================
+# CONFIGURACIÓN DEL ETIQUETADO AUTOMÁTICO DE PRs — COMERCIAL 360
+# ==============================================================================
+# Asigna etiquetas automáticas según las carpetas y dominios modificados en el PR
+# ==============================================================================
+
+area:contratos-centrales:
+  - changed-files:
+      - any-glob-to-any-file: 'app/backend/src/domain-contracts/**'
+
+area:infraestructura:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'docker*'
+          - 'docker/**'
+          - 'nginx/**'
+          - 'Jenkinsfile'
+          - '.env.example'
+
+area:base-de-datos:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'app/backend/src/database/migrations/**'
+          - 'app/backend/src/database/seeds/**'
+
+area:clientes:
+  - changed-files:
+      - any-glob-to-any-file: 'app/backend/src/modules/clients/**'
+
+area:rutas:
+  - changed-files:
+      - any-glob-to-any-file: 'app/backend/src/modules/routes/**'
+
+area:visitas:
+  - changed-files:
+      - any-glob-to-any-file: 'app/backend/src/modules/visits/**'
+
+area:comercial-ventas:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'app/backend/src/modules/commercial/**'
+          - 'app/backend/src/modules/follow-ups/**'
+
+area:dashboard-kpis:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'app/backend/src/modules/dashboard/**'
+          - 'app/backend/src/modules/reports/**'
+
+area:autenticacion-rbac:
+  - changed-files:
+      - any-glob-to-any-file: 'app/backend/src/modules/auth/**'
+
+area:almacenamiento-s3:
+  - changed-files:
+      - any-glob-to-any-file: 'app/backend/src/modules/storage/**'
+
+area:frontend-react:
+  - changed-files:
+      - any-glob-to-any-file: 'app/frontend/**'
+
+area:pruebas-qa:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'app/backend/test/**'
+          - '**/*.spec.ts'
+
+area:agentes-ai:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'agents/**'
+          - 'AGENTS.md'
+          - '.cursorrules'
+          - '.windsurfrules'
+          - 'CLAUDE.md'
+          - '.clinerules'

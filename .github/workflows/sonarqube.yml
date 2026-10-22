@@ -1,0 +1,57 @@
+name: SonarQube
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'app/backend/**'
+      - 'sonar-project.properties'
+      - '.github/workflows/sonarqube.yml'
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'app/backend/**'
+      - 'sonar-project.properties'
+      - '.github/workflows/sonarqube.yml'
+
+jobs:
+  build:
+    name: Build and analyze
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install backend dependencies
+        run: pnpm install --frozen-lockfile --filter backend
+
+      - name: Run backend tests with coverage
+        run: pnpm --filter backend exec vitest run --coverage --coverage.include='src/**/*.ts' --coverage.reporter=lcov --coverage.reporter=text
+
+      # Vitest writes lcov paths relative to app/backend/; SonarQube resolves them from the repo root
+      - name: Fix coverage paths
+        run: sed -i 's|^SF:src/|SF:app/backend/src/|' app/backend/coverage/lcov.info
+
+      - name: Cache SonarQube packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

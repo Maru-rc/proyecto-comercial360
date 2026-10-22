@@ -1,0 +1,64 @@
+# ==============================================================================
+# GITHUB CODEOWNERS — COMERCIAL 360
+# ==============================================================================
+# Cada cambio en las rutas listadas requiere la aprobación obligatoria de los
+# propietarios asignados antes de poder integrarse a 'develop' o 'main'.
+# ==============================================================================
+
+# Propietarios generales de arquitectura y repositorio por defecto
+*                                         @manulz @alejandroesbr
+
+# ==============================================================================
+# 1. CONTRATOS PÚBLICOS DE ARQUITECTURA (BARRIL CENTRAL)
+# Solo los líderes de Clean Architecture pueden autorizar cambios
+# ==============================================================================
+*domain-contracts*                       @manulz @alejandroesbr
+app/backend/src/domain-contracts/**       @manulz @alejandroesbr
+
+# ==============================================================================
+# 2. INFRAESTRUCTURA, DOCKER Y DESPLIEGUE EN LA NUBE
+# ==============================================================================
+docker-compose*.yml                       @manulz @alejandroesbr @Andres-1109
+*Dockerfile*                              @manulz @alejandroesbr @Andres-1109
+nginx/**                                  @manulz @alejandroesbr @Andres-1109
+Jenkinsfile                               @manulz @alejandroesbr @Andres-1109
+.env.example                              @manulz @alejandroesbr
+
+# ==============================================================================
+# 3. BASE DE DATOS Y MIGRACIONES
+# Saúl es el único autorizado para migraciones, bajo supervisión de los líderes
+# ==============================================================================
+*migrations*                              @saul @manulz @alejandroesbr
+app/backend/src/database/migrations/**    @saul @manulz @alejandroesbr
+
+# ==============================================================================
+# 4. MÓDULOS DEL BACKEND SEGÚN DOMINIO
+# ==============================================================================
+# Clientes, Rutas y Bitácora (Alejandro)
+app/backend/src/modules/clients/**        @alejandroesbr @manulz
+app/backend/src/modules/routes/**         @alejandroesbr @manulz
+app/backend/src/modules/history/**        @alejandroesbr @manulz
+
+# Visitas, Comercial (Cotizaciones/Pedidos), Seguimientos y S3 (Manuel Vásquez)
+app/backend/src/modules/visits/**         @manulz @alejandroesbr
+app/backend/src/modules/commercial/**     @manulz @alejandroesbr
+app/backend/src/modules/follow-ups/**     @manulz @alejandroesbr
+app/backend/src/modules/storage/**        @manulz @alejandroesbr
+
+# Dashboard, KPIs y Reportes (Saúl)
+app/backend/src/modules/dashboard/**      @saul @manulz @alejandroesbr
+app/backend/src/modules/reports/**        @saul @manulz @alejandroesbr
+
+# Autenticación, RBAC y Seguridad (Valentina)
+app/backend/src/modules/auth/**           @valentina @manulz @alejandroesbr
+
+# ==============================================================================
+# 5. FRONTEND (Frank)
+# ==============================================================================
+app/frontend/**                           @Frankcanas @manulz
+
+# ==============================================================================
+# 6. SUITE DE PRUEBAS UNITARIAS Y CALIDAD (Manuel Rueda)
+# ==============================================================================
+app/backend/test/**                       @Maru-rc @manulz @alejandroesbr
+*sonar*                                   @Maru-rc @manulz

@@ -24,7 +24,7 @@ importers:
         specifier: ^3.4.2
         version: 3.9.10
 
-  backend:
+  app/backend:
     dependencies:
       '@aws-sdk/client-s3':
         specifier: ^3.1153.0

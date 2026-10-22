@@ -1,5 +1,5 @@
 packages:
-  - 'backend'
-  - 'frontend'
+  - "app/backend"
+  - "app/frontend"
 allowBuilds:
-  '@scarf/scarf': false
+  "@scarf/scarf": false

@@ -1,2 +1,5 @@
-pnpm exec commitlint --edit $1
-
+if command -v pnpm >/dev/null 2>&1; then
+  pnpm exec commitlint --edit $1
+elif command -v npx >/dev/null 2>&1; then
+  npx commitlint --edit $1
+fi
