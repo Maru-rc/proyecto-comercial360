@@ -86,9 +86,9 @@ Documentado en Swagger (`app/backend/src/main.ts`) con descripciones de estos en
 - **Controlador:** `app/backend/src/modules/auth/presentation/me.controller.ts` (`GET /me` con `@Auth()`).
 - **Caso de uso:** `app/backend/src/modules/auth/application/use-cases/get-me.use-case.ts`
   - Si `rol === 'DIRECTOR'` → `asesor: null`.
-  - Si `rol === 'ASESOR'` → busca en `asesor` por `correo` (case-insensitive, vía `TypeOrmAsesorRepository`). Si no existe → lanza `AsesorNoVinculadoError` (403). Si existe → devuelve datos del asesor.
+  - Si `rol === 'ASESOR'` → busca en `sales_representatives` por `email` (case-insensitive, vía `TypeOrmAsesorRepository`). Si no existe → lanza `AsesorNoVinculadoError` (403). Si existe → devuelve datos del asesor.
 - **DTO:** `app/backend/src/modules/auth/presentation/dto/me-response.dto.ts` (`MeResponseDto`).
-- **Vinculación:** `user.email = asesor.correo` (comparación case-insensitive).
+- **Vinculación:** `user.email = sales_representatives.email` (comparación case-insensitive).
 
 ### Validaciones y manejo de errores
 - `AuthGuard`: sin sesión → `401 "Sesión no válida"`. Rol inválido → `403 "Rol no válido"`.
@@ -111,6 +111,7 @@ Documentado en Swagger (`app/backend/src/main.ts`) con descripciones de estos en
 | `app/backend/src/modules/auth/application/use-cases/resolve-asesor-scope.use-case.ts` | Anti-IDOR para operaciones comerciales (preparado). |
 | `app/backend/src/modules/auth/infrastructure/persistence/typeorm-asesor.repository.ts` | Búsqueda de asesor por correo (case-insensitive). |
 | `app/backend/src/core/infrastructure/database/migrations/1792500000000-CreateAsesorTable.ts` | Tabla `asesor`. |
+| `app/backend/src/core/infrastructure/database/migrations/1792600000000-RenameAsesorToSalesRepresentatives.ts` | Renombra `asesor` a `sales_representatives` y sus columnas a inglés. |
 | `app/backend/src/core/infrastructure/database/migrations/1792500000001-CreateBetterAuthTables.ts` | Tablas `user/session/account/verification` con `role`. |
 | `app/backend/src/core/infrastructure/database/seeds/seed-demo-users.ts` | Creación de usuarios demo con hasher nativo de Better Auth. |
 | `app/backend/src/app.setup.ts` | Montaje de Better Auth en Express, CORS, prefijo `/api`. |
@@ -130,7 +131,7 @@ Documentado en Swagger (`app/backend/src/main.ts`) con descripciones de estos en
 
 ### Pruebas e2e cubiertas (HU-09/HU-10)
 - **HU-09:** Login válido con cookie `httpOnly`/`SameSite=Lax`; credenciales incorrectas → 401 sin cookie; registro público deshabilitado (400); origen no autorizado → 403; CORS correcto; `rememberMe: true` → `Max-Age=2592000` y ~30 días en BD; `rememberMe: false` → cookie de sesión + `dont_remember` y ~1 día; sign-out invalida sesión y elimina fila en `session`.
-- **GET /api/me:** 401 sin sesión/cookie inventada; ASESOR con asesor vinculado devuelve perfil+asesor; DIRECTOR devuelve `asesor: null`; vínculo por correo case-insensitive; ASESOR sin registro en `asesor` → **403** (via `DomainErrorsFilter`).
+- **GET /api/me:** 401 sin sesión/cookie inventada; ASESOR con asesor vinculado devuelve perfil+asesor; DIRECTOR devuelve `asesor: null`; vínculo por correo case-insensitive; ASESOR sin registro en `sales_representatives` → **403** (via `DomainErrorsFilter`).
 - **HU-10:** Director accede a ruta exclusiva; Asesor recibe 403 en ruta exclusiva pero accede a ruta común; 401 sin sesión; rol no modificable desde cliente (update-user/query/header); constraint de BD rechaza roles inválidos; cambio de rol en BD se refleja inmediatamente.
 
 ### Pruebas manuales en Swagger (recomendadas)
@@ -151,9 +152,9 @@ Documentado en Swagger (`app/backend/src/main.ts`) con descripciones de estos en
 - **Autenticación:** Better Auth con email/contraseña, registro público deshabilitado, roles protegidos contra modificación.
 - **Sesiones:** Cookies `httpOnly`/`SameSite=Lax`, "Recordarme" 30 días, sin recordarme ~1 día, renovación de sesión configurada.
 - **Autorización:** `AuthGuard`, `RolesGuard`, `@Auth()`, `@CurrentUser()`, control por roles ASESOR/DIRECTOR.
-- **Perfil:** `GET /api/me` con vínculo `user.email = asesor.correo` (case-insensitive). DIRECTOR → `asesor: null`. ASESOR sin registro → 403.
+- **Perfil:** `GET /api/me` con vínculo `user.email = sales_representatives.email` (case-insensitive). DIRECTOR → `asesor: null`. ASESOR sin registro → 403.
 - **Cierre de sesión:** `POST /api/auth/sign-out` invalida sesión.
-- **Infraestructura:** Migraciones para `asesor` y tablas Better Auth, seed con hasher nativo, pool pg compartido, montaje en Express, Swagger documentado.
+- **Infraestructura:** Migraciones para `sales_representatives` (antes `asesor`) y tablas Better Auth, seed con hasher nativo, pool pg compartido, montaje en Express, Swagger documentado.
 - **Pruebas:** 22 unitarias + 22 e2e pasando, lint y build correctos.
 
 ### Verificado

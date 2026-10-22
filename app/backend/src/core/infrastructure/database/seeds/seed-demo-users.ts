@@ -7,7 +7,7 @@ export interface DemoUser {
   email: string;
   password: string;
   role: Role;
-  /** Solo para ASESOR: datos del registro en la tabla ASESOR */
+  /** Solo para ASESOR: datos del registro en la tabla SALES_REPRESENTATIVES */
   asesor?: { telefono: string };
 }
 
@@ -29,12 +29,12 @@ export async function seedDemoUsers(
   for (const demo of users) {
     const email = demo.email.toLowerCase();
 
-    // 1. Registro en ASESOR (solo para el rol ASESOR)
+    // 1. Registro en SALES_REPRESENTATIVES (solo para el rol ASESOR)
     if (demo.role === 'ASESOR' && demo.asesor) {
       await dataSource.query(
-        `INSERT INTO "asesor" ("nombre", "correo", "telefono", "estado")
+        `INSERT INTO "sales_representatives" ("name", "email", "phone", "status")
          VALUES ($1, $2, $3, 'ACTIVO')
-         ON CONFLICT (LOWER("correo")) DO NOTHING`,
+         ON CONFLICT (LOWER("email")) DO NOTHING`,
         [demo.name, email, demo.asesor.telefono],
       );
     }

@@ -1,7 +1,7 @@
 // Errores de negocio de la autorización. La capa de presentación los
 // convierte en 403 Forbidden (ver DomainErrorsFilter).
 
-/** Un usuario ASESOR que no tiene registro en la tabla ASESOR. */
+/** Un usuario ASESOR que no tiene registro en la tabla SALES_REPRESENTATIVES. */
 export class AsesorNoVinculadoError extends Error {
   constructor(email: string) {
     super(`No existe un asesor vinculado al correo ${email}`);

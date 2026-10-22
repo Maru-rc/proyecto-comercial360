@@ -91,9 +91,9 @@ describe('Autenticación y roles (e2e, PostgreSQL real)', () => {
 
     // Base limpia + usuarios de prueba creados con el mismo seed de la app
     await dataSource.query('DELETE FROM "user"');
-    await dataSource.query('DELETE FROM "asesor"');
+    await dataSource.query('DELETE FROM "sales_representatives"');
     await seedDemoUsers(auth, dataSource, demoUsers());
-    // Usuario ASESOR sin registro en la tabla ASESOR
+    // Usuario ASESOR sin registro en la tabla SALES_REPRESENTATIVES
     await seedDemoUsers(auth, dataSource, [
       { name: 'Sin Registro', ...SIN_REGISTRO, role: 'ASESOR' },
     ]);
@@ -268,7 +268,7 @@ describe('Autenticación y roles (e2e, PostgreSQL real)', () => {
 
     it('6. vincula al asesor por correo sin distinguir mayúsculas', async () => {
       await dataSource.query(
-        `UPDATE "asesor" SET correo = UPPER(correo) WHERE LOWER(correo) = $1`,
+        `UPDATE "sales_representatives" SET email = UPPER(email) WHERE LOWER(email) = $1`,
         [ASESOR.email],
       );
       const cookie = await cookieOf(ASESOR);
@@ -277,7 +277,9 @@ describe('Autenticación y roles (e2e, PostgreSQL real)', () => {
         .set('Cookie', cookie)
         .expect(200);
       expect(res.body.asesor).not.toBeNull();
-      await dataSource.query(`UPDATE "asesor" SET correo = LOWER(correo)`);
+      await dataSource.query(
+        `UPDATE "sales_representatives" SET email = LOWER(email)`,
+      );
     });
 
     it('un usuario ASESOR sin registro en ASESOR recibe 403', async () => {
@@ -389,7 +391,7 @@ describe('Autenticación y roles (e2e, PostgreSQL real)', () => {
       );
       expect(n).toBe(2);
       const [{ a }] = await dataSource.query(
-        `SELECT count(*)::int AS a FROM "asesor" WHERE LOWER(correo) = $1`,
+        `SELECT count(*)::int AS a FROM "sales_representatives" WHERE LOWER(email) = $1`,
         [ASESOR.email],
       );
       expect(a).toBe(1);
