@@ -3,6 +3,7 @@ import { DataSource, DataSourceOptions } from 'typeorm';
 import { AsesorOrmEntity } from '../../../modules/auth/infrastructure/persistence/entities/asesor.orm-entity.js';
 import { CreateAsesorTable1792500000000 } from './migrations/1792500000000-CreateAsesorTable.js';
 import { CreateBetterAuthTables1792500000001 } from './migrations/1792500000001-CreateBetterAuthTables.js';
+import { RenameAsesorToSalesRepresentatives1792600000000 } from './migrations/1792600000000-RenameAsesorToSalesRepresentatives.js';
 
 // Si existe un archivo .env lo cargamos (útil para la CLI de TypeORM y el seed).
 // No pisa variables que ya estén definidas en el entorno.
@@ -29,6 +30,7 @@ export function buildDataSourceOptions(
     migrations: [
       CreateAsesorTable1792500000000,
       CreateBetterAuthTables1792500000001,
+      RenameAsesorToSalesRepresentatives1792600000000,
     ],
     // El esquema solo cambia con migraciones, nunca con synchronize.
     synchronize: false,
