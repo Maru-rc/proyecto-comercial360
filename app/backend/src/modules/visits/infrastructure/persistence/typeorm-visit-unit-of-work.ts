@@ -36,23 +36,23 @@ export class TypeOrmVisitUnitOfWork implements IVisitUnitOfWork {
               const res = await manager
                 .createQueryBuilder()
                 .insert()
-                .into('cotizacion')
+                .into('quotes')
                 .values({
-                  numero: input.number,
-                  id_cliente: input.clientId,
-                  id_asesor: input.advisorId ?? null,
-                  id_visita: input.visitId ?? null,
-                  valor: input.amount,
-                  moneda: input.currency ?? 'COP',
-                  estado: input.status ?? 'DRAFT',
+                  quote_number: input.number,
+                  customer_id: input.clientId,
+                  sales_representative_id: input.advisorId ?? null,
+                  amount: input.amount,
+                  currency: input.currency ?? 'COP',
+                  status: input.status ?? 'ENVIADA',
+                  date: new Date(),
                 })
-                .returning('id_cotizacion, numero')
+                .returning('quote_id, quote_number')
                 .execute();
               const raw = res.raw?.[0];
               return {
-                id: raw?.id_cotizacion ?? 1,
-                number: raw?.numero ?? input.number,
-                quotationNumber: raw?.numero ?? input.number,
+                id: raw?.quote_id ?? 1,
+                number: raw?.quote_number ?? input.number,
+                quotationNumber: raw?.quote_number ?? input.number,
               };
             } catch (err: any) {
               if (err?.code === '23505') {
@@ -69,24 +69,23 @@ export class TypeOrmVisitUnitOfWork implements IVisitUnitOfWork {
               const res = await manager
                 .createQueryBuilder()
                 .insert()
-                .into('pedido')
+                .into('orders')
                 .values({
-                  numero: input.number,
-                  id_cliente: input.clientId,
-                  id_asesor: input.advisorId ?? null,
-                  id_visita: input.visitId ?? null,
-                  id_cotizacion: input.quotationId ?? null,
-                  valor: input.amount,
-                  estado: input.status ?? 'PENDING',
-                  fecha_entrega_estimada: input.estimatedDeliveryDate ?? null,
+                  order_number: input.number,
+                  customer_id: input.clientId,
+                  quote_id: input.quotationId ?? null,
+                  amount: input.amount,
+                  status: input.status ?? 'CERRADO',
+                  date: new Date(),
+                  estimated_delivery_date: input.estimatedDeliveryDate ?? null,
                 })
-                .returning('id_pedido, numero')
+                .returning('order_id, order_number')
                 .execute();
               const raw = res.raw?.[0];
               return {
-                id: raw?.id_pedido ?? 1,
-                number: raw?.numero ?? input.number,
-                orderNumber: raw?.numero ?? input.number,
+                id: raw?.order_id ?? 1,
+                number: raw?.order_number ?? input.number,
+                orderNumber: raw?.order_number ?? input.number,
               };
             } catch (err: any) {
               if (err?.code === '23505') {
@@ -102,34 +101,33 @@ export class TypeOrmVisitUnitOfWork implements IVisitUnitOfWork {
             const res = await manager
               .createQueryBuilder()
               .insert()
-              .into('seguimiento')
+              .into('follow_ups')
               .values({
-                id_cliente: input.clientId,
-                id_visita: input.visitId ?? null,
-                id_asesor_responsable: input.responsibleAdvisorId ?? null,
-                fecha_proxima: input.nextContactDate,
-                actividad: input.activity,
-                observacion: input.observation ?? null,
+                visit_id: input.visitId ?? null,
+                responsible_sales_representative_id:
+                  input.responsibleAdvisorId ?? null,
+                next_date: input.nextContactDate,
+                activity: input.activity,
+                observation: input.observation ?? null,
+                is_completed: false,
               })
-              .returning('id_seguimiento')
+              .returning('follow_up_id')
               .execute();
             const raw = res.raw?.[0];
-            return { id: raw?.id_seguimiento ?? 1 };
+            return { id: raw?.follow_up_id ?? 1 };
           },
 
           recordHistory: async (input: RecordHistoryTransactionalInput) => {
             await manager
               .createQueryBuilder()
               .insert()
-              .into('historial_cliente')
+              .into('customer_history')
               .values({
-                id_cliente: input.clientId,
-                id_visita: input.visitId ?? null,
-                id_cotizacion: input.quotationId ?? null,
-                id_pedido: input.orderId ?? null,
-                accion: input.action,
-                usuario: input.user,
-                descripcion: input.description,
+                customer_id: input.clientId,
+                action: input.action,
+                user: input.user,
+                description: input.description,
+                date: new Date(),
               })
               .execute();
           },

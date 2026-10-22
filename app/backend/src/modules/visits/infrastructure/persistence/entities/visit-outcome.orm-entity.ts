@@ -1,30 +1,22 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity('resultado_visita')
+@Entity('visit_results')
 export class VisitOutcomeOrmEntity {
-  @PrimaryGeneratedColumn({ type: 'int', name: 'id_resultado' })
+  @PrimaryGeneratedColumn({ type: 'int', name: 'visit_result_id' })
   id: number;
 
-  @Column({ type: 'int', name: 'id_visita' })
+  @Column({ type: 'int', name: 'visit_id' })
   visitId: number;
 
-  @Column({ type: 'varchar', length: 50, name: 'resultado' })
-  outcome: string;
+  @Column({ type: 'int', nullable: true, name: 'visit_outcome_id' })
+  outcomeId: number | null;
 
-  @Column({ type: 'text', nullable: true, name: 'motivo_no_venta' })
-  reasonNoSale: string | null;
-
-  @Column({ type: 'text', nullable: true, name: 'observaciones' })
+  @Column({ type: 'text', nullable: true, name: 'observation' })
   observations: string | null;
 
-  @Column({ type: 'text', nullable: true, name: 'evidencia_s3_key' })
-  evidenceS3Key: string | null;
-
-  @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
-  createdAt: Date;
+  // Domain mapped / joined fields
+  outcome?: string;
+  reasonNoSale?: string | null;
+  evidenceS3Key?: string | null;
+  createdAt?: Date;
 }

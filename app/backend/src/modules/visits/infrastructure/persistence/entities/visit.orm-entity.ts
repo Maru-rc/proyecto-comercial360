@@ -1,41 +1,36 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity('visita')
+@Entity('visits')
 export class VisitOrmEntity {
-  @PrimaryGeneratedColumn({ type: 'int', name: 'id_visita' })
+  @PrimaryGeneratedColumn({ type: 'int', name: 'visit_id' })
   id: number;
 
-  @Column({ type: 'int', name: 'id_cliente' })
+  @Column({ type: 'int', name: 'customer_id' })
   clientId: number;
 
-  @Column({ type: 'int', name: 'id_asesor' })
+  @Column({ type: 'int', name: 'sales_representative_id' })
   advisorId: number;
 
-  @Column({ type: 'int', nullable: true, name: 'id_ruta' })
+  @Column({ type: 'int', nullable: true, name: 'route_id' })
   routeId: number | null;
 
-  @Column({ type: 'timestamp', name: 'fecha_programada' })
+  @Column({ type: 'int', nullable: true, name: 'portfolio_id' })
+  portfolioId: number | null;
+
+  @Column({ type: 'timestamp', name: 'scheduled_at' })
   scheduledDate: Date;
 
-  @Column({ type: 'int', default: 1, name: 'orden_visita' })
-  visitOrder: number;
+  @Column({ type: 'timestamp', nullable: true, name: 'actual_at' })
+  actualAt: Date | null;
 
-  @Column({ type: 'varchar', length: 10, nullable: true, name: 'hora_inicio' })
-  startTime: string | null;
-
-  @Column({ type: 'varchar', length: 10, nullable: true, name: 'hora_fin' })
-  endTime: string | null;
+  @Column({ type: 'timestamp', nullable: true, name: 'end_time' })
+  endTime: Date | null;
 
   @Column({
     type: 'varchar',
-    length: 50,
-    default: 'SCHEDULED',
-    name: 'estado_visita',
+    length: 30,
+    default: 'PENDIENTE',
+    name: 'visit_status',
   })
   visitStatus: string;
 
@@ -44,19 +39,31 @@ export class VisitOrmEntity {
     length: 50,
     nullable: true,
     default: 'IN_PERSON',
-    name: 'tipo_visita',
+    name: 'visit_type',
   })
   visitType: string | null;
 
-  @Column({ type: 'text', nullable: true, name: 'objetivo' })
+  @Column({ type: 'varchar', length: 300, nullable: true, name: 'objective' })
   objective: string | null;
 
-  @Column({ type: 'text', nullable: true, name: 'observacion' })
-  observation: string | null;
+  @Column({ type: 'varchar', length: 100, nullable: true, name: 'interest' })
+  interest: string | null;
 
-  @Column({ type: 'text', nullable: true, name: 'evidencia_s3_key' })
-  evidenceS3Key: string | null;
+  @Column({ type: 'varchar', length: 200, nullable: true, name: 'competitor' })
+  competitor: string | null;
 
-  @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
-  createdAt: Date;
+  @Column({
+    type: 'varchar',
+    length: 50,
+    nullable: true,
+    name: 'contact_channel',
+  })
+  contactChannel: string | null;
+
+  // Unpersisted / joined fields for domain mapping
+  visitOrder?: number;
+  startTime?: string | null;
+  observation?: string | null;
+  evidenceS3Key?: string | null;
+  createdAt?: Date;
 }
