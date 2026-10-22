@@ -3,8 +3,8 @@ import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 @Entity('resultado_visita')
 export class ResultadoVisitaOrmEntity {
   @PrimaryGeneratedColumn({ name: 'id_resultado' })
-  idResultado: number;
+  id: number;
 
-  @Column({ length: 100, unique: true })
-  nombre: string;
+  @Column({ name: 'nombre', length: 100, unique: true })
+  name: string;
 }

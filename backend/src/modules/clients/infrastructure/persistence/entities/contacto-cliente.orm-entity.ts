@@ -11,30 +11,30 @@ import { ClienteOrmEntity } from './cliente.orm-entity.js';
 @Entity('contacto_cliente')
 export class ContactoClienteOrmEntity {
   @PrimaryGeneratedColumn({ name: 'id_contacto' })
-  idContacto: number;
+  id: number;
 
-  @ManyToOne(() => ClienteOrmEntity, (c) => c.contactos, {
+  @ManyToOne(() => ClienteOrmEntity, (customer) => customer.contacts, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'id_cliente' })
-  cliente: Relation<ClienteOrmEntity>;
+  customer: Relation<ClienteOrmEntity>;
 
-  @Column({ length: 150 })
-  nombre: string;
+  @Column({ name: 'nombre', length: 150 })
+  name: string;
 
-  @Column({ type: 'varchar', length: 100, nullable: true })
-  cargo: string | null;
+  @Column({ name: 'cargo', type: 'varchar', length: 100, nullable: true })
+  position: string | null;
 
-  @Column({ type: 'varchar', length: 20, nullable: true })
-  telefono: string | null;
+  @Column({ name: 'telefono', type: 'varchar', length: 20, nullable: true })
+  phone: string | null;
 
-  @Column({ type: 'varchar', length: 20, nullable: true })
-  celular: string | null;
+  @Column({ name: 'celular', type: 'varchar', length: 20, nullable: true })
+  mobilePhone: string | null;
 
   @Column({ type: 'varchar', length: 150, nullable: true })
   email: string | null;
 
   // Indicates whether this is the customer's primary contact
-  @Column({ default: false })
-  principal: boolean;
+  @Column({ name: 'principal', default: false })
+  isPrimary: boolean;
 }

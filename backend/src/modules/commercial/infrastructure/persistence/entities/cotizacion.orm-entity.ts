@@ -13,31 +13,37 @@ import { CotizacionDetalleOrmEntity } from './cotizacion-detalle.orm-entity.js';
 @Entity('cotizacion')
 export class CotizacionOrmEntity {
   @PrimaryGeneratedColumn({ name: 'id_cotizacion' })
-  idCotizacion: number;
+  id: number;
 
-  @Column({ unique: true, length: 50 })
-  numero: string;
+  @Column({ name: 'numero', unique: true, length: 50 })
+  quoteNumber: string;
 
   @ManyToOne(() => ClienteOrmEntity)
   @JoinColumn({ name: 'id_cliente' })
-  cliente: ClienteOrmEntity;
+  customer: ClienteOrmEntity;
 
   @ManyToOne(() => AsesorOrmEntity)
   @JoinColumn({ name: 'id_asesor' })
-  asesor: AsesorOrmEntity;
+  salesRepresentative: AsesorOrmEntity;
 
-  @Column({ type: 'date' })
-  fecha: Date;
+  @Column({ name: 'fecha', type: 'date' })
+  date: Date;
 
-  @Column({ type: 'decimal', precision: 15, scale: 2, default: 0 })
-  valor: number;
+  @Column({
+    name: 'valor',
+    type: 'decimal',
+    precision: 15,
+    scale: 2,
+    default: 0,
+  })
+  amount: number;
 
-  @Column({ length: 30, default: 'ENVIADA' })
-  estado: string;
+  @Column({ name: 'estado', length: 30, default: 'ENVIADA' })
+  status: string;
 
-  @Column({ length: 10, default: 'COP' })
-  moneda: string;
+  @Column({ name: 'moneda', length: 10, default: 'COP' })
+  currency: string;
 
-  @OneToMany(() => CotizacionDetalleOrmEntity, (d) => d.cotizacion)
-  detalles: CotizacionDetalleOrmEntity[];
+  @OneToMany(() => CotizacionDetalleOrmEntity, (detail) => detail.quote)
+  details: CotizacionDetalleOrmEntity[];
 }

@@ -11,28 +11,34 @@ import { CotizacionOrmEntity } from './cotizacion.orm-entity.js';
 @Entity('pedido')
 export class PedidoOrmEntity {
   @PrimaryGeneratedColumn({ name: 'id_pedido' })
-  idPedido: number;
+  id: number;
 
-  @Column({ unique: true, length: 50 })
-  numero: string;
+  @Column({ name: 'numero', unique: true, length: 50 })
+  orderNumber: string;
 
   @ManyToOne(() => ClienteOrmEntity)
   @JoinColumn({ name: 'id_cliente' })
-  cliente: ClienteOrmEntity;
+  customer: ClienteOrmEntity;
 
   @ManyToOne(() => CotizacionOrmEntity, { nullable: true })
   @JoinColumn({ name: 'id_cotizacion' })
-  cotizacion: CotizacionOrmEntity | null;
+  quote: CotizacionOrmEntity | null;
 
-  @Column({ type: 'date' })
-  fecha: Date;
+  @Column({ name: 'fecha', type: 'date' })
+  date: Date;
 
-  @Column({ type: 'decimal', precision: 15, scale: 2, default: 0 })
-  valor: number;
+  @Column({
+    name: 'valor',
+    type: 'decimal',
+    precision: 15,
+    scale: 2,
+    default: 0,
+  })
+  amount: number;
 
-  @Column({ length: 30, default: 'CERRADO' })
-  estado: string;
+  @Column({ name: 'estado', length: 30, default: 'CERRADO' })
+  status: string;
 
   @Column({ name: 'fecha_entrega_estimada', type: 'date', nullable: true })
-  fechaEntregaEstimada: Date | null;
+  estimatedDeliveryDate: Date | null;
 }

@@ -12,18 +12,18 @@ import { ResultadoVisitaOrmEntity } from './resultado-visita.orm-entity.js';
 @Entity('visita_resultado')
 export class VisitaResultadoOrmEntity {
   @PrimaryGeneratedColumn({ name: 'id_visita_resultado' })
-  idVisitaResultado: number;
+  id: number;
 
-  @ManyToOne(() => VisitaOrmEntity, (v) => v.resultados, {
+  @ManyToOne(() => VisitaOrmEntity, (visit) => visit.outcomes, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'id_visita' })
-  visita: Relation<VisitaOrmEntity>;
+  visit: Relation<VisitaOrmEntity>;
 
   @ManyToOne(() => ResultadoVisitaOrmEntity)
   @JoinColumn({ name: 'id_resultado' })
-  resultado: ResultadoVisitaOrmEntity;
+  outcome: ResultadoVisitaOrmEntity;
 
-  @Column({ type: 'text', nullable: true })
-  observacion: string | null;
+  @Column({ name: 'observacion', type: 'text', nullable: true })
+  observation: string | null;
 }

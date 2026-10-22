@@ -10,29 +10,29 @@ import {
 import { ClienteOrmEntity } from './cliente.orm-entity.js';
 
 // Composite index for faster history queries
-@Index(['idCliente', 'fecha'])
+@Index(['customerId', 'date'])
 @Entity('historial_cliente')
 export class HistorialClienteOrmEntity {
   @PrimaryGeneratedColumn({ name: 'id_historial' })
-  idHistorial: number;
+  id: number;
 
   @ManyToOne(() => ClienteOrmEntity, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'id_cliente' })
-  cliente: ClienteOrmEntity;
+  customer: ClienteOrmEntity;
 
   // Redundant column for the composite index
   @Column({ name: 'id_cliente', insert: false, update: false })
-  idCliente: number;
+  customerId: number;
 
-  @CreateDateColumn()
-  fecha: Date;
+  @CreateDateColumn({ name: 'fecha' })
+  date: Date;
 
-  @Column({ length: 100 })
-  accion: string;
+  @Column({ name: 'accion', length: 100 })
+  action: string;
 
-  @Column({ length: 150 })
-  usuario: string;
+  @Column({ name: 'usuario', length: 150 })
+  user: string;
 
   @Column({ type: 'text', nullable: true })
-  descripcion: string | null;
+  description: string | null;
 }

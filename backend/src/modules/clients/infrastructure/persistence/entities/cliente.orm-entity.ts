@@ -17,13 +17,13 @@ import { ClientePortafolioOrmEntity } from './cliente-portafolio.orm-entity.js';
 @Entity('cliente')
 export class ClienteOrmEntity {
   @PrimaryGeneratedColumn({ name: 'id_cliente' })
-  idCliente: number;
+  id: number;
 
-  @Column({ unique: true, length: 20 })
-  nit: string;
+  @Column({ name: 'nit', unique: true, length: 20 })
+  taxId: string;
 
   @Column({ name: 'razon_social', length: 200 })
-  razonSocial: string;
+  legalName: string;
 
   @Column({
     name: 'nombre_comercial',
@@ -31,62 +31,81 @@ export class ClienteOrmEntity {
     length: 200,
     nullable: true,
   })
-  nombreComercial: string | null;
+  commercialName: string | null;
 
-  @Column({ type: 'varchar', length: 300, nullable: true })
-  direccion: string | null;
+  @Column({ name: 'direccion', type: 'varchar', length: 300, nullable: true })
+  address: string | null;
 
-  @Column({ type: 'varchar', length: 100, nullable: true })
-  departamento: string | null;
+  @Column({
+    name: 'departamento',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
+  department: string | null;
 
-  @Column({ type: 'varchar', length: 100, nullable: true })
-  municipio: string | null;
+  @Column({ name: 'municipio', type: 'varchar', length: 100, nullable: true })
+  municipality: string | null;
 
-  @Column({ type: 'varchar', length: 100, nullable: true })
-  barrio: string | null;
+  @Column({ name: 'barrio', type: 'varchar', length: 100, nullable: true })
+  neighborhood: string | null;
 
-  @Column({ type: 'varchar', length: 20, nullable: true })
-  telefono: string | null;
+  @Column({ name: 'telefono', type: 'varchar', length: 20, nullable: true })
+  phone: string | null;
 
   @Column({ type: 'varchar', length: 150, nullable: true })
   email: string | null;
 
-  // Coordenadas para el mapa (se llenan con Nominatim)
-  @Column({ type: 'decimal', precision: 10, scale: 7, nullable: true })
-  latitud: number | null;
+  @Column({
+    name: 'latitud',
+    type: 'decimal',
+    precision: 10,
+    scale: 7,
+    nullable: true,
+  })
+  latitude: number | null;
 
-  @Column({ type: 'decimal', precision: 10, scale: 7, nullable: true })
-  longitud: number | null;
+  @Column({
+    name: 'longitud',
+    type: 'decimal',
+    precision: 10,
+    scale: 7,
+    nullable: true,
+  })
+  longitude: number | null;
 
   @Column({ name: 'frecuencia_visita_dias', type: 'int', nullable: true })
-  frecuenciaVisitaDias: number | null;
+  visitFrequencyDays: number | null;
 
   @CreateDateColumn({ name: 'fecha_creacion' })
-  fechaCreacion: Date;
+  createdAt: Date;
 
-  @Column({ default: true })
-  activo: boolean;
+  @Column({ name: 'activo', default: true })
+  isActive: boolean;
 
   // Catalog relationships
   @ManyToOne(() => ZonaOrmEntity, { nullable: true })
   @JoinColumn({ name: 'id_zona' })
-  zona: ZonaOrmEntity | null;
+  zone: ZonaOrmEntity | null;
 
   @ManyToOne(() => TipoClienteOrmEntity, { nullable: true })
   @JoinColumn({ name: 'id_tipo_cliente' })
-  tipoCliente: TipoClienteOrmEntity | null;
+  customerType: TipoClienteOrmEntity | null;
 
   @ManyToOne(() => PotencialOrmEntity, { nullable: true })
   @JoinColumn({ name: 'id_potencial' })
-  potencial: PotencialOrmEntity | null;
+  customerPotential: PotencialOrmEntity | null;
 
   @ManyToOne(() => EstadoClienteOrmEntity, { nullable: true })
   @JoinColumn({ name: 'id_estado_cliente' })
-  estadoCliente: EstadoClienteOrmEntity | null;
+  customerStatus: EstadoClienteOrmEntity | null;
 
-  @OneToMany(() => ContactoClienteOrmEntity, (c) => c.cliente)
-  contactos: ContactoClienteOrmEntity[];
+  @OneToMany(() => ContactoClienteOrmEntity, (contact) => contact.customer)
+  contacts: ContactoClienteOrmEntity[];
 
-  @OneToMany(() => ClientePortafolioOrmEntity, (cp) => cp.cliente)
-  portafolios: ClientePortafolioOrmEntity[];
+  @OneToMany(
+    () => ClientePortafolioOrmEntity,
+    (customerPortfolio) => customerPortfolio.customer,
+  )
+  portfolios: ClientePortafolioOrmEntity[];
 }

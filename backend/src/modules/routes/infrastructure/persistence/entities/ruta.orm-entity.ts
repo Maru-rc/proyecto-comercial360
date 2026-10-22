@@ -13,27 +13,27 @@ import { RutaClienteOrmEntity } from './ruta-cliente.orm-entity.js';
 @Entity('ruta')
 export class RutaOrmEntity {
   @PrimaryGeneratedColumn({ name: 'id_ruta' })
-  idRuta: number;
+  id: number;
 
-  @Column({ length: 200 })
-  nombre: string;
+  @Column({ name: 'nombre', length: 200 })
+  name: string;
 
   @ManyToOne(() => AsesorOrmEntity, { nullable: true })
   @JoinColumn({ name: 'id_asesor' })
-  asesor: AsesorOrmEntity | null;
+  salesRepresentative: AsesorOrmEntity | null;
 
   @ManyToOne(() => ZonaOrmEntity, { nullable: true })
   @JoinColumn({ name: 'id_zona' })
-  zona: ZonaOrmEntity | null;
+  zone: ZonaOrmEntity | null;
 
   @Column({ name: 'fecha_inicio', type: 'date', nullable: true })
-  fechaInicio: Date | null;
+  startDate: Date | null;
 
   @Column({ name: 'fecha_fin', type: 'date', nullable: true })
-  fechaFin: Date | null;
+  endDate: Date | null;
 
-  @Column({ length: 30, default: 'BORRADOR' })
-  estado: string;
+  @Column({ name: 'estado', length: 30, default: 'BORRADOR' })
+  status: string;
 
   @Column({
     name: 'dia_ejecucion',
@@ -41,20 +41,20 @@ export class RutaOrmEntity {
     length: 20,
     nullable: true,
   })
-  diaEjecucion: string | null;
+  executionDay: string | null;
 
-  @Column({ type: 'varchar', length: 20, nullable: true })
-  frecuencia: string | null;
+  @Column({ name: 'frecuencia', type: 'varchar', length: 20, nullable: true })
+  frequency: string | null;
 
   @Column({ name: 'hora_inicio', type: 'time', nullable: true })
-  horaInicio: string | null;
+  startTime: string | null;
 
   @Column({ name: 'hora_fin', type: 'time', nullable: true })
-  horaFin: string | null;
+  endTime: string | null;
 
-  @Column({ type: 'varchar', length: 200, nullable: true })
-  descripcion: string | null;
+  @Column({ name: 'descripcion', type: 'varchar', length: 200, nullable: true })
+  description: string | null;
 
-  @OneToMany(() => RutaClienteOrmEntity, (rc) => rc.ruta)
-  paradas: RutaClienteOrmEntity[];
+  @OneToMany(() => RutaClienteOrmEntity, (routeStop) => routeStop.route)
+  stops: RutaClienteOrmEntity[];
 }

@@ -13,18 +13,18 @@ import { PortafolioOrmEntity } from './portafolio.orm-entity.js';
 @Entity('cliente_portafolio')
 export class ClientePortafolioOrmEntity {
   @PrimaryGeneratedColumn({ name: 'id_cliente_portafolio' })
-  idClientePortafolio: number;
+  id: number;
 
-  @ManyToOne(() => ClienteOrmEntity, (c) => c.portafolios, {
+  @ManyToOne(() => ClienteOrmEntity, (customer) => customer.portfolios, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'id_cliente' })
-  cliente: Relation<ClienteOrmEntity>;
+  customer: Relation<ClienteOrmEntity>;
 
   @ManyToOne(() => PortafolioOrmEntity)
   @JoinColumn({ name: 'id_portafolio' })
-  portafolio: PortafolioOrmEntity;
+  portfolio: PortafolioOrmEntity;
 
   @CreateDateColumn({ name: 'fecha_registro' })
-  fechaRegistro: Date;
+  registeredAt: Date;
 }

@@ -11,23 +11,23 @@ import { CotizacionOrmEntity } from './cotizacion.orm-entity.js';
 @Entity('cotizacion_detalle')
 export class CotizacionDetalleOrmEntity {
   @PrimaryGeneratedColumn({ name: 'id_detalle' })
-  idDetalle: number;
+  id: number;
 
-  @ManyToOne(() => CotizacionOrmEntity, (c) => c.detalles, {
+  @ManyToOne(() => CotizacionOrmEntity, (quote) => quote.details, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'id_cotizacion' })
-  cotizacion: Relation<CotizacionOrmEntity>;
+  quote: Relation<CotizacionOrmEntity>;
 
-  @Column({ length: 200 })
-  producto: string;
+  @Column({ name: 'producto', length: 200 })
+  product: string;
 
-  @Column({ type: 'int' })
-  cantidad: number;
+  @Column({ name: 'cantidad', type: 'int' })
+  quantity: number;
 
-  @Column({ type: 'decimal', precision: 15, scale: 2 })
-  precio: number;
+  @Column({ name: 'precio', type: 'decimal', precision: 15, scale: 2 })
+  unitPrice: number;
 
-  @Column({ type: 'decimal', precision: 15, scale: 2 })
+  @Column({ name: 'subtotal', type: 'decimal', precision: 15, scale: 2 })
   subtotal: number;
 }
