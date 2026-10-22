@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from './store/useAuthStore';
 import { AppLayout } from './components/layout/AppLayout';
@@ -20,8 +20,13 @@ import { ConfiguracionPage } from './pages/ConfiguracionPage';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, isCheckingSession } = useAuthStore();
   const location = useLocation();
+
+  // Mientras se revisa la cookie de sesión no se redirige al login
+  if (isCheckingSession) {
+    return null;
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
@@ -31,6 +36,13 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 };
 
 export const App: React.FC = () => {
+  const checkSession = useAuthStore((state) => state.checkSession);
+
+  // Al abrir o recargar la app se recupera la sesión desde la cookie
+  useEffect(() => {
+    checkSession();
+  }, [checkSession]);
+
   return (
     <ErrorBoundary>
       <BrowserRouter>

@@ -28,16 +28,24 @@ pnpm --filter frontend build
 pnpm --filter frontend lint
 ```
 
+### Conexión con el backend
+
+En desarrollo, Vite reenvía `/api` al backend NestJS (por defecto `http://localhost:3001`). Para usar otra dirección, define `VITE_PROXY_TARGET` (por ejemplo, en `app/frontend/.env`). Como la app y la API quedan en el mismo origen, el navegador guarda la cookie de sesión de Better Auth sin configurar nada más.
+
+El backend tiene que estar corriendo, con las migraciones y el seed aplicados (ver `docs/HU-09-autenticacion-y-roles.md`).
+
 ---
 
 ## 🔐 Credenciales Demo
 
+El login es real (Better Auth). Los usuarios los crea el seed del backend (`pnpm run seed` en `app/backend`):
+
 | Rol | Usuario | Contraseña |
 | :--- | :--- | :--- |
-| **Asesor Comercial** | `asesor@comercial360.co` | `password123` |
-| **Director Regional** | `director@comercial360.co` | `password123` |
+| **Asesor Comercial** | `juan.perez@comercial360.com` | `SEED_ASESOR_PASSWORD` del `.env` del backend |
+| **Director Regional** | `richard.lopez@comercial360.com` | `SEED_DIRECTOR_PASSWORD` del `.env` del backend |
 
-También puedes usar los botones de acceso directo en la pantalla de inicio de sesión (`/login`).
+El inicio de sesión con Microsoft está fuera del alcance: el botón se muestra deshabilitado.
 
 ---
 

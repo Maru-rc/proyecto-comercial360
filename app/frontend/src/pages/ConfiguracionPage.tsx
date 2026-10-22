@@ -5,7 +5,6 @@ import {
   Bell,
   Database,
   Check,
-  Shield,
   Save,
   RotateCcw,
 } from 'lucide-react';
@@ -14,7 +13,7 @@ import { useRouteDraftStore } from '../store/useRouteDraftStore';
 import { Input } from '../components/common/Input';
 
 export const ConfiguracionPage: React.FC = () => {
-  const { user, toggleRole } = useAuthStore();
+  const { user } = useAuthStore();
   const { limpiarRuta } = useRouteDraftStore();
 
   const [activeTab, setActiveTab] = useState<'perfil' | 'rutas' | 'notificaciones' | 'sistema'>('perfil');
@@ -165,30 +164,6 @@ export const ConfiguracionPage: React.FC = () => {
                 onChange={(e) => setCargo(e.target.value)}
               />
             </div>
-          </div>
-
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-orange-100 text-[#EA580C] rounded-lg">
-                <Shield className="h-5 w-5" />
-              </div>
-              <div>
-                <span className="font-bold text-slate-800 text-xs block">
-                  Simulación de Rol Activo
-                </span>
-                <span className="text-[11px] text-slate-500">
-                  Cambie dinámicamente entre vista de Asesor Comercial o Director Regional
-                </span>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={toggleRole}
-              className="px-3.5 py-1.5 rounded-lg bg-[#0F172A] hover:bg-slate-800 text-white text-xs font-bold cursor-pointer transition-colors"
-            >
-              Cambiar a {user?.rol === 'DIRECTOR_REGIONAL' ? 'Asesor Comercial' : 'Director Regional'}
-            </button>
           </div>
         </div>
       )}

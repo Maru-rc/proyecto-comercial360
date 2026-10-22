@@ -1,101 +1,84 @@
 import { create } from 'zustand';
+import axios from 'axios';
 import { IUser, ILoginCredentials } from '../types/auth';
+import { setUnauthorizedHandler } from '../api/client';
+import { getCurrentUser, signIn, signOut } from '../api/auth';
 
 interface AuthState {
   user: IUser | null;
-  token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  /** true mientras se consulta al backend si ya hay una sesión abierta */
+  isCheckingSession: boolean;
   error: string | null;
   login: (credentials: ILoginCredentials) => Promise<boolean>;
-  loginMicrosoft: () => Promise<boolean>;
-  logout: () => void;
+  logout: () => Promise<void>;
+  checkSession: () => Promise<void>;
+  clearSession: () => void;
   setUser: (user: IUser) => void;
-  toggleRole: () => void;
 }
 
-const DEFAULT_USER: IUser = {
-  id: 'usr-001',
-  nombre: 'Juan Pérez',
-  email: 'juan.perez@comercial360.com',
-  rol: 'ASESOR',
-  cargo: 'Asesor Comercial',
-  avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-  asesorId: 'ase-001',
-  territorio: 'NORTE',
+const loginErrorMessage = (error: unknown): string => {
+  if (!axios.isAxiosError(error) || !error.response) {
+    return 'No se pudo conectar con el servidor. Intenta de nuevo.';
+  }
+  if (error.response.status === 401) {
+    return 'Correo o contraseña incorrectos.';
+  }
+  // GET /me responde 403 si un ASESOR no tiene registro de asesor vinculado
+  if (error.response.status === 403 && error.config?.url === '/me') {
+    return 'Tu usuario no tiene un asesor asociado. Contacta al administrador.';
+  }
+  return 'No se pudo iniciar sesión. Intenta de nuevo.';
 };
 
-const DIRECTOR_USER: IUser = {
-  id: 'usr-002',
-  nombre: 'Richard Lopez',
-  email: 'richard.lopez@comercial360.com',
-  rol: 'DIRECTOR_REGIONAL',
-  cargo: 'Director Regional',
-  avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
-  territorio: 'Atlántico',
-};
-
-export const useAuthStore = create<AuthState>((set, get) => ({
-  user: DEFAULT_USER,
-  token: 'mock-jwt-token-comercial360',
-  isAuthenticated: true,
+export const useAuthStore = create<AuthState>((set) => ({
+  user: null,
+  isAuthenticated: false,
   isLoading: false,
+  isCheckingSession: true,
   error: null,
 
   login: async (credentials: ILoginCredentials) => {
     set({ isLoading: true, error: null });
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 600));
-
-    if (credentials.email.includes('richard')) {
-      set({
-        user: DIRECTOR_USER,
-        token: 'mock-jwt-director',
-        isAuthenticated: true,
-        isLoading: false,
-      });
-      return true;
+    try {
+      await signIn(credentials);
+    } catch (error) {
+      set({ isLoading: false, error: loginErrorMessage(error) });
+      return false;
     }
 
-    set({
-      user: DEFAULT_USER,
-      token: 'mock-jwt-asesor',
-      isAuthenticated: true,
-      isLoading: false,
-    });
-    return true;
+    try {
+      const user = await getCurrentUser();
+      set({ user, isAuthenticated: true, isLoading: false });
+      return true;
+    } catch (error) {
+      // La cookie ya se creó: se cierra para no dejar una sesión a medias
+      await signOut().catch(() => undefined);
+      set({ isLoading: false, error: loginErrorMessage(error) });
+      return false;
+    }
   },
 
-  loginMicrosoft: async () => {
-    set({ isLoading: true, error: null });
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    set({
-      user: DEFAULT_USER,
-      token: 'mock-jwt-microsoft-365',
-      isAuthenticated: true,
-      isLoading: false,
-    });
-    return true;
+  logout: async () => {
+    await signOut().catch(() => undefined);
+    set({ user: null, isAuthenticated: false, isLoading: false, error: null });
   },
 
-  logout: () => {
-    set({
-      user: null,
-      token: null,
-      isAuthenticated: false,
-      isLoading: false,
-      error: null,
-    });
+  checkSession: async () => {
+    try {
+      const user = await getCurrentUser();
+      set({ user, isAuthenticated: true });
+    } catch {
+      set({ user: null, isAuthenticated: false });
+    } finally {
+      set({ isCheckingSession: false });
+    }
   },
+
+  clearSession: () => set({ user: null, isAuthenticated: false }),
 
   setUser: (user: IUser) => set({ user }),
-
-  toggleRole: () => {
-    const current = get().user;
-    if (current?.rol === 'DIRECTOR_REGIONAL') {
-      set({ user: DEFAULT_USER });
-    } else {
-      set({ user: DIRECTOR_USER });
-    }
-  },
 }));
+
+setUnauthorizedHandler(() => useAuthStore.getState().clearSession());

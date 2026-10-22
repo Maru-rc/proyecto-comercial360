@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import {
   Mail,
   Lock,
@@ -17,9 +17,9 @@ import { Button } from '../components/common/Button';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { login, loginMicrosoft, isLoading } = useAuthStore();
-  const [email, setEmail] = useState('juan.perez@comercial360.com');
-  const [password, setPassword] = useState('••••••••••');
+  const { login, isLoading, error, isAuthenticated } = useAuthStore();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [forgotModalOpen, setForgotModalOpen] = useState(false);
@@ -32,12 +32,10 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  const handleMicrosoftLogin = async () => {
-    const success = await loginMicrosoft();
-    if (success) {
-      navigate('/');
-    }
-  };
+  // Con una sesión ya abierta no tiene sentido mostrar el login
+  if (isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="min-h-screen w-full flex flex-col justify-between bg-[#F8FAFC]">
@@ -179,16 +177,16 @@ export const LoginPage: React.FC = () => {
               </p>
             </div>
 
-            {/* Microsoft 365 OAuth Button */}
+            {/* Microsoft 365 OAuth Button: fuera del alcance, se muestra deshabilitado */}
             <div className="space-y-3">
               <p className="text-center text-[11px] text-slate-400 font-medium">
                 o continúa con
               </p>
               <button
                 type="button"
-                onClick={handleMicrosoftLogin}
-                disabled={isLoading}
-                className="w-full flex items-center justify-center gap-3 p-3 rounded-xl border-2 border-[#EA580C]/80 hover:border-[#EA580C] hover:bg-orange-50/20 text-slate-800 transition-colors cursor-pointer group shadow-xs"
+                disabled
+                title="Próximamente"
+                className="w-full flex items-center justify-center gap-3 p-3 rounded-xl border-2 border-[#EA580C]/80 text-slate-800 transition-colors group shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {/* Official 4-squares Microsoft logo */}
                 <div className="grid grid-cols-2 gap-0.5 shrink-0">
@@ -285,6 +283,12 @@ export const LoginPage: React.FC = () => {
                   ¿Olvidaste tu contraseña?
                 </a>
               </div>
+
+              {error && (
+                <p role="alert" className="text-xs font-medium text-rose-600">
+                  {error}
+                </p>
+              )}
 
               {/* Submit button */}
               <button

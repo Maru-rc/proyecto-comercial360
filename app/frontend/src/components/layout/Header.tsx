@@ -6,7 +6,6 @@ import {
   Bell,
   ChevronDown,
   LogOut,
-  UserCheck,
   Building2,
 } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -25,7 +24,7 @@ export const Header: React.FC<HeaderProps> = ({
   breadcrumbs,
 }) => {
   const navigate = useNavigate();
-  const { user, logout, toggleRole } = useAuthStore();
+  const { user, logout } = useAuthStore();
   const {
     territorio,
     setTerritorio,
@@ -301,18 +300,6 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 type="button"
                 onClick={() => {
-                  toggleRole();
-                  setUserMenuOpen(false);
-                }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-[#EA580C] rounded-lg cursor-pointer transition-colors"
-              >
-                <UserCheck className="h-4 w-4" />
-                Cambiar a {isDirector ? 'Asesor (Juan Pérez)' : 'Director (Richard Lopez)'}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
                   navigate('/clientes');
                   setUserMenuOpen(false);
                 }}
@@ -326,8 +313,8 @@ export const Header: React.FC<HeaderProps> = ({
 
               <button
                 type="button"
-                onClick={() => {
-                  logout();
+                onClick={async () => {
+                  await logout();
                   navigate('/login');
                 }}
                 className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 rounded-lg cursor-pointer transition-colors"
