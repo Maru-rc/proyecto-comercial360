@@ -18,6 +18,26 @@ NC='\033[0m' # No Color
 
 HAS_ERRORS=0
 
+# Resuelve los "." y ".." de una ruta sin depender de realpath (no es igual en macOS)
+normalize_path() {
+  local -a segments parts=()
+  local segment
+  IFS='/' read -ra segments <<< "$1"
+  for segment in "${segments[@]}"; do
+    case "$segment" in
+      '' | '.') ;;
+      '..')
+        if [ ${#parts[@]} -gt 0 ]; then
+          parts=("${parts[@]:0:${#parts[@]}-1}")
+        fi
+        ;;
+      *) parts+=("$segment") ;;
+    esac
+  done
+  local IFS='/'
+  echo "${parts[*]}"
+}
+
 # Obtener archivos en el área de preparación (staged)
 if [ "$1" == "--all" ]; then
   FILES=$(git ls-files "app/backend/src/**/*.ts" "backend/src/**/*.ts" 2>/dev/null || true)
@@ -103,10 +123,17 @@ for FILE in $FILES; do
   # ==============================================================================
   if [[ "$FILE" =~ src/modules/([^/]+)/ ]]; then
     CURRENT_MOD="${BASH_REMATCH[1]}"
-    if grep -n -E "from ['\"](\.\./)+([^/'\"]+)/(domain|application|infrastructure|interfaces)" "$FILE" > /tmp/cross_err.txt 2>/dev/null; then
+    if grep -n -E "from ['\"]\.\./" "$FILE" > /tmp/cross_err.txt 2>/dev/null; then
       while IFS= read -r line; do
-        TARGET_MOD=$(echo "$line" | sed -E "s/.*from ['\"](\.\.\/)+([^/'\"]+)\/.*/\2/")
-        if [ "$TARGET_MOD" != "$CURRENT_MOD" ] && [ "$TARGET_MOD" != "domain-contracts" ]; then
+        IMPORT_PATH=$(echo "$line" | sed -E "s/.*from ['\"]([^'\"]+)['\"].*/\1/")
+        # Ruta real del import dentro de src/ (ej: modules/auth/domain/role.js)
+        TARGET_PATH=$(normalize_path "$(dirname "$FILE")/$IMPORT_PATH")
+        TARGET_PATH="${TARGET_PATH#*src/}"
+        case "$TARGET_PATH" in
+          "modules/$CURRENT_MOD/"* | domain-contracts/*) continue ;;
+        esac
+        if [[ "$TARGET_PATH" =~ (^|/)(domain|application|infrastructure|interfaces)/ ]]; then
+          TARGET_MOD=$(echo "$TARGET_PATH" | sed -E 's#^modules/##; s#/.*##')
           echo -e "${RED}[ERROR CLEAN ARCHITECTURE / ISP - BARRIL CENTRAL VIOLADO]${NC}"
           echo -e "  Archivo: ${YELLOW}$FILE${NC}"
           echo -e "  Línea ofensiva: $line"
