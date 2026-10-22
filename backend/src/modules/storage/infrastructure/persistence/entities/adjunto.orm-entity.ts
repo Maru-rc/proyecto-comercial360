@@ -22,7 +22,7 @@ export class AdjuntoOrmEntity {
   @Column({ length: 30 })
   categoria: string;
 
-  @Column({ name: 's3_key', length: 500 })
+  @Column({ name: 's3_key', length: 500, unique: true })
   s3Key: string;
 
   @Column({ name: 'nombre_original', length: 255 })

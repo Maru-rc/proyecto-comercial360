@@ -41,23 +41,28 @@ export class VisitaOrmEntity {
   @Column({ name: 'estado_visita', length: 30, default: 'PENDIENTE' })
   estadoVisita: string;
 
-  @Column({ length: 300, nullable: true })
+  @Column({ type: 'varchar', length: 300, nullable: true })
   objetivo: string | null;
 
-  @Column({ name: 'tipo_visita', length: 50, nullable: true })
+  @Column({ name: 'tipo_visita', type: 'varchar', length: 50, nullable: true })
   tipoVisita: string | null;
 
-  @Column({ length: 100, nullable: true })
+  @Column({ type: 'varchar', length: 100, nullable: true })
   interes: string | null;
 
   @ManyToOne(() => PortafolioOrmEntity, { nullable: true })
   @JoinColumn({ name: 'id_portafolio' })
   portafolio: PortafolioOrmEntity | null;
 
-  @Column({ length: 200, nullable: true })
+  @Column({ type: 'varchar', length: 200, nullable: true })
   competencia: string | null;
 
-  @Column({ name: 'canal_contacto', length: 50, nullable: true })
+  @Column({
+    name: 'canal_contacto',
+    type: 'varchar',
+    length: 50,
+    nullable: true,
+  })
   canalContacto: string | null;
 
   @OneToMany(() => VisitaResultadoOrmEntity, (vr) => vr.visita)

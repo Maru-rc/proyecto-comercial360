@@ -25,25 +25,30 @@ export class ClienteOrmEntity {
   @Column({ name: 'razon_social', length: 200 })
   razonSocial: string;
 
-  @Column({ name: 'nombre_comercial', length: 200, nullable: true })
+  @Column({
+    name: 'nombre_comercial',
+    type: 'varchar',
+    length: 200,
+    nullable: true,
+  })
   nombreComercial: string | null;
 
-  @Column({ length: 300, nullable: true })
+  @Column({ type: 'varchar', length: 300, nullable: true })
   direccion: string | null;
 
-  @Column({ length: 100, nullable: true })
+  @Column({ type: 'varchar', length: 100, nullable: true })
   departamento: string | null;
 
-  @Column({ length: 100, nullable: true })
+  @Column({ type: 'varchar', length: 100, nullable: true })
   municipio: string | null;
 
-  @Column({ length: 100, nullable: true })
+  @Column({ type: 'varchar', length: 100, nullable: true })
   barrio: string | null;
 
-  @Column({ length: 20, nullable: true })
+  @Column({ type: 'varchar', length: 20, nullable: true })
   telefono: string | null;
 
-  @Column({ length: 150, nullable: true })
+  @Column({ type: 'varchar', length: 150, nullable: true })
   email: string | null;
 
   // Coordenadas para el mapa (se llenan con Nominatim)

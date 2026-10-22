@@ -11,7 +11,7 @@ export class AsesorOrmEntity {
   @Column({ length: 150, unique: true })
   correo: string;
 
-  @Column({ length: 20, nullable: true })
+  @Column({ type: 'varchar', length: 20, nullable: true })
   telefono: string | null;
 
   // 'ACTIVO' | 'INACTIVO'

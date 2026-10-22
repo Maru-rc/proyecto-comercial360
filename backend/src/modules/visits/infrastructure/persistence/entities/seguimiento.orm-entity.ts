@@ -20,7 +20,7 @@ export class SeguimientoOrmEntity {
   @Column({ name: 'fecha_proxima', type: 'timestamp' })
   fechaProxima: Date;
 
-  @Column({ length: 200, nullable: true })
+  @Column({ type: 'varchar', length: 200, nullable: true })
   actividad: string | null;
 
   @Column({ type: 'text', nullable: true })

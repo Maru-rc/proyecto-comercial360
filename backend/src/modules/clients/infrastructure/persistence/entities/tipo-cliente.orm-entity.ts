@@ -5,6 +5,6 @@ export class TipoClienteOrmEntity {
   @PrimaryGeneratedColumn({ name: 'id_tipo_cliente' })
   idTipoCliente: number;
 
-  @Column({ length: 100 })
+  @Column({ length: 100, unique: true })
   nombre: string;
 }

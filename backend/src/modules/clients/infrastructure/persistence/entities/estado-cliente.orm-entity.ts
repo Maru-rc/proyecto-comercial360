@@ -5,6 +5,6 @@ export class EstadoClienteOrmEntity {
   @PrimaryGeneratedColumn({ name: 'id_estado_cliente' })
   idEstadoCliente: number;
 
-  @Column({ length: 100 })
+  @Column({ length: 100, unique: true })
   nombre: string;
 }

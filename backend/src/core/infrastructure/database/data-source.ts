@@ -1,12 +1,14 @@
 import dotenv from 'dotenv';
-import path from 'path';
 import { DataSource, DataSourceOptions } from 'typeorm';
+import { fileURLToPath } from 'url';
+import { dirname, join, resolve } from 'path';
 import { validateEnv } from '../config/env.schema.js';
 
-// Cargar variables de entorno desde .env
-dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-// Validar variables de entorno con Zod antes de configurar la base de datos
+dotenv.config({ path: resolve(process.cwd(), '.env') });
+
 const env = validateEnv();
 
 export const dataSourceOptions: DataSourceOptions = {
@@ -19,8 +21,13 @@ export const dataSourceOptions: DataSourceOptions = {
   ssl: env.DB_SSL ? { rejectUnauthorized: false } : false,
   synchronize: false,
   logging: env.NODE_ENV === 'development',
-  entities: [path.join(__dirname, '../../../../**/*.orm-entity.{ts,js}')],
-  migrations: [path.join(__dirname, 'migrations/*{.ts,.js}')],
+  entities: [
+    join(
+      __dirname,
+      '../../../modules/**/infrastructure/persistence/entities/*.orm-entity.{ts,js}',
+    ),
+  ],
+  migrations: [join(__dirname, 'migrations/*{.ts,.js}')],
 };
 
 const AppDataSource = new DataSource(dataSourceOptions);

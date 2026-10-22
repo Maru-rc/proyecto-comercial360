@@ -5,6 +5,6 @@ export class ZonaOrmEntity {
   @PrimaryGeneratedColumn({ name: 'id_zona' })
   idZona: number;
 
-  @Column({ length: 100 })
+  @Column({ length: 100, unique: true })
   nombre: string;
 }

@@ -5,7 +5,7 @@ export class PotencialOrmEntity {
   @PrimaryGeneratedColumn({ name: 'id_potencial' })
   idPotencial: number;
 
-  @Column({ length: 100 })
+  @Column({ length: 100, unique: true })
   nombre: string;
 
   // Orden de visualización: 1 = Alto, 2 = Medio, 3 = Bajo
