@@ -85,10 +85,17 @@ function checkCrossModuleDirectImports(filePath, content) {
   lines.forEach((line, index) => {
     if (/^\s*import\s+/.test(line)) {
       // Revisa si hace ../ hacia otro módulo
-      const crossImportMatch = line.match(/from\s+['"](?:\.\.\/)+([^/'"]+)\/(domain|application|infrastructure|interfaces)/);
-      if (crossImportMatch) {
-        const targetModule = crossImportMatch[1];
-        if (targetModule !== currentModule && targetModule !== 'domain-contracts') {
+      const importMatch = line.match(/from\s+['"](\.\.\/[^'"]+)['"]/);
+      if (importMatch) {
+        // Ruta real del import dentro de src/ (ej: modules/auth/domain/role.js)
+        const resolvedPath = path.posix.normalize(path.posix.join(path.posix.dirname(filePath), importMatch[1]));
+        const srcIndex = resolvedPath.indexOf('src/');
+        const targetPath = srcIndex === -1 ? resolvedPath : resolvedPath.slice(srcIndex + 'src/'.length);
+        const isSameModule = targetPath.startsWith(`modules/${currentModule}/`);
+        const isPublicContract = targetPath.startsWith('domain-contracts/');
+        const isInternalLayer = /(^|\/)(domain|application|infrastructure|interfaces)\//.test(targetPath);
+        const targetModule = targetPath.replace(/^modules\//, '').split('/')[0];
+        if (!isSameModule && !isPublicContract && isInternalLayer) {
           console.error(`\x1b[31m[ERROR CLEAN ARCHITECTURE - BARRIL CENTRAL VIOLADO]\x1b[0m`);
           console.error(`  Archivo: \x1b[33m${filePath}:${index + 1}\x1b[0m`);
           console.error(`  Línea ofensiva: \x1b[37m${line.trim()}\x1b[0m`);
