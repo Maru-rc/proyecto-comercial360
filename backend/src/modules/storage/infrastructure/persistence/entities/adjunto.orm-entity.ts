@@ -12,31 +12,31 @@ import { VisitaOrmEntity } from '../../../../visits/infrastructure/persistence/e
 @Entity('adjunto')
 export class AdjuntoOrmEntity {
   @PrimaryGeneratedColumn({ name: 'id_adjunto' })
-  idAdjunto: number;
+  id: number;
 
   @Index()
   @ManyToOne(() => VisitaOrmEntity, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'id_visita' })
-  visita: VisitaOrmEntity | null;
+  visit: VisitaOrmEntity | null;
 
-  @Column({ length: 30 })
-  categoria: string;
+  @Column({ name: 'categoria', length: 30 })
+  category: string;
 
   @Column({ name: 's3_key', length: 500, unique: true })
   s3Key: string;
 
   @Column({ name: 'nombre_original', length: 255 })
-  nombreOriginal: string;
+  originalName: string;
 
   @Column({ name: 'tipo_mime', length: 100 })
-  tipoMime: string;
+  mimeType: string;
 
-  @Column({ type: 'int' })
-  tamano: number;
+  @Column({ name: 'tamano', type: 'int' })
+  size: number;
 
   @CreateDateColumn({ name: 'fecha_carga' })
-  fechaCarga: Date;
+  uploadedAt: Date;
 
-  @Column({ length: 150 })
-  usuario: string;
+  @Column({ name: 'usuario', length: 150 })
+  user: string;
 }

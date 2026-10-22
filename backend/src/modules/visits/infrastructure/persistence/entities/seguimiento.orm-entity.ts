@@ -11,25 +11,25 @@ import { AsesorOrmEntity } from '../../../../commercial/infrastructure/persisten
 @Entity('seguimiento')
 export class SeguimientoOrmEntity {
   @PrimaryGeneratedColumn({ name: 'id_seguimiento' })
-  idSeguimiento: number;
+  id: number;
 
   @ManyToOne(() => VisitaOrmEntity, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'id_visita' })
-  visita: VisitaOrmEntity;
+  visit: VisitaOrmEntity;
 
   @Column({ name: 'fecha_proxima', type: 'timestamp' })
-  fechaProxima: Date;
+  nextDate: Date;
 
-  @Column({ type: 'varchar', length: 200, nullable: true })
-  actividad: string | null;
+  @Column({ name: 'actividad', type: 'varchar', length: 200, nullable: true })
+  activity: string | null;
 
-  @Column({ type: 'text', nullable: true })
-  observacion: string | null;
+  @Column({ name: 'observacion', type: 'text', nullable: true })
+  observation: string | null;
 
-  @Column({ default: false })
-  completado: boolean;
+  @Column({ name: 'completado', default: false })
+  isCompleted: boolean;
 
   @ManyToOne(() => AsesorOrmEntity, { nullable: true })
   @JoinColumn({ name: 'id_asesor_responsable' })
-  asesorResponsable: AsesorOrmEntity | null;
+  responsibleSalesRepresentative: AsesorOrmEntity | null;
 }

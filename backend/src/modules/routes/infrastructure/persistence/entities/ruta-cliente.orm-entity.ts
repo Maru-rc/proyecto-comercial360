@@ -12,19 +12,21 @@ import { ClienteOrmEntity } from '../../../../clients/infrastructure/persistence
 @Entity('ruta_cliente')
 export class RutaClienteOrmEntity {
   @PrimaryGeneratedColumn({ name: 'id_ruta_cliente' })
-  idRutaCliente: number;
+  id: number;
 
-  @ManyToOne(() => RutaOrmEntity, (r) => r.paradas, { onDelete: 'CASCADE' })
+  @ManyToOne(() => RutaOrmEntity, (route) => route.stops, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'id_ruta' })
-  ruta: Relation<RutaOrmEntity>;
+  route: Relation<RutaOrmEntity>;
 
   @ManyToOne(() => ClienteOrmEntity)
   @JoinColumn({ name: 'id_cliente' })
-  cliente: ClienteOrmEntity;
+  customer: ClienteOrmEntity;
 
   @Column({ name: 'orden_visita', type: 'int' })
-  ordenVisita: number;
+  visitOrder: number;
 
   @Column({ name: 'hora_sugerida', type: 'time', nullable: true })
-  horaSugerida: string | null;
+  suggestedTime: string | null;
 }

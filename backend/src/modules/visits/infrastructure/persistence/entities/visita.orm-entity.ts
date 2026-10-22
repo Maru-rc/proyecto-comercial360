@@ -15,47 +15,47 @@ import { VisitaResultadoOrmEntity } from './visita-resultado.orm-entity.js';
 @Entity('visita')
 export class VisitaOrmEntity {
   @PrimaryGeneratedColumn({ name: 'id_visita' })
-  idVisita: number;
+  id: number;
 
   @ManyToOne(() => ClienteOrmEntity)
   @JoinColumn({ name: 'id_cliente' })
-  cliente: ClienteOrmEntity;
+  customer: ClienteOrmEntity;
 
   @ManyToOne(() => AsesorOrmEntity)
   @JoinColumn({ name: 'id_asesor' })
-  asesor: AsesorOrmEntity;
+  salesRepresentative: AsesorOrmEntity;
 
   @ManyToOne(() => RutaOrmEntity, { nullable: true })
   @JoinColumn({ name: 'id_ruta' })
-  ruta: RutaOrmEntity | null;
+  route: RutaOrmEntity | null;
 
   @Column({ name: 'fecha_programada', type: 'timestamp' })
-  fechaProgramada: Date;
+  scheduledAt: Date;
 
   @Column({ name: 'fecha_real', type: 'timestamp', nullable: true })
-  fechaReal: Date | null;
+  actualAt: Date | null;
 
   @Column({ name: 'hora_fin', type: 'timestamp', nullable: true })
-  horaFin: Date | null;
+  endTime: Date | null;
 
   @Column({ name: 'estado_visita', length: 30, default: 'PENDIENTE' })
-  estadoVisita: string;
+  visitStatus: string;
 
-  @Column({ type: 'varchar', length: 300, nullable: true })
-  objetivo: string | null;
+  @Column({ name: 'objetivo', type: 'varchar', length: 300, nullable: true })
+  objective: string | null;
 
   @Column({ name: 'tipo_visita', type: 'varchar', length: 50, nullable: true })
-  tipoVisita: string | null;
+  visitType: string | null;
 
-  @Column({ type: 'varchar', length: 100, nullable: true })
-  interes: string | null;
+  @Column({ name: 'interes', type: 'varchar', length: 100, nullable: true })
+  interest: string | null;
 
   @ManyToOne(() => PortafolioOrmEntity, { nullable: true })
   @JoinColumn({ name: 'id_portafolio' })
-  portafolio: PortafolioOrmEntity | null;
+  portfolio: PortafolioOrmEntity | null;
 
-  @Column({ type: 'varchar', length: 200, nullable: true })
-  competencia: string | null;
+  @Column({ name: 'competencia', type: 'varchar', length: 200, nullable: true })
+  competitor: string | null;
 
   @Column({
     name: 'canal_contacto',
@@ -63,8 +63,8 @@ export class VisitaOrmEntity {
     length: 50,
     nullable: true,
   })
-  canalContacto: string | null;
+  contactChannel: string | null;
 
-  @OneToMany(() => VisitaResultadoOrmEntity, (vr) => vr.visita)
-  resultados: VisitaResultadoOrmEntity[];
+  @OneToMany(() => VisitaResultadoOrmEntity, (visitResult) => visitResult.visit)
+  outcomes: VisitaResultadoOrmEntity[];
 }
