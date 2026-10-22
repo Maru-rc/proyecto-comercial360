@@ -5,8 +5,8 @@ import type { AuthenticatedUser } from '../domain/authenticated-user.js';
 import { Auth, CurrentUser } from './auth.decorator.js';
 import { MeResponseDto } from './dto/me-response.dto.js';
 
-// Es el único endpoint propio de autenticación. Iniciar y cerrar sesión y
-// consultar la sesión los resuelve Better Auth en /api/auth/*.
+// This is the only auth endpoint owned by NestJS. Sign-in, sign-out and
+// session retrieval are handled by Better Auth under /api/auth/*.
 @ApiTags('auth')
 @Controller('me')
 export class MeController {
@@ -14,7 +14,7 @@ export class MeController {
 
   @Get()
   @Auth()
-  @ApiOperation({ summary: 'Perfil del usuario autenticado' })
+  @ApiOperation({ summary: 'Profile of the authenticated user' })
   @ApiOkResponse({ type: MeResponseDto })
   me(@CurrentUser() user: AuthenticatedUser) {
     return this.getMe.execute(user);

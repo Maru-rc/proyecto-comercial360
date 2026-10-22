@@ -1,18 +1,18 @@
-// Errores de negocio de la autorización. La capa de presentación los
-// convierte en 403 Forbidden (ver DomainErrorsFilter).
+// Domain errors for authorization. The presentation layer converts these
+// into 403 Forbidden responses (see DomainErrorsFilter).
 
-/** Un usuario ASESOR que no tiene registro en la tabla ASESOR. */
+/** An ASESOR user who has no matching record in the ASESOR table. */
 export class AsesorNoVinculadoError extends Error {
   constructor(email: string) {
-    super(`No existe un asesor vinculado al correo ${email}`);
+    super(`No asesor record is linked to email ${email}`);
     this.name = 'AsesorNoVinculadoError';
   }
 }
 
-/** Un asesor intentó acceder a datos de otro asesor. */
+/** An asesor attempted to access another asesor's data. */
 export class AsesorFueraDeAlcanceError extends Error {
   constructor() {
-    super('Un asesor solo puede acceder a su propia información');
+    super('An asesor can only access their own information');
     this.name = 'AsesorFueraDeAlcanceError';
   }
 }

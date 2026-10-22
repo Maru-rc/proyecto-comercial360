@@ -1,9 +1,9 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 /**
- * Entidad ORM de la tabla ASESOR.
- * Solo contiene las columnas definidas en los requisitos; las relaciones con
- * otras tablas (rutas, visitas...) se agregarán en sus propias historias.
+ * ORM entity for the ASESOR table.
+ * Only contains the columns defined in the requirements. Relations with other
+ * tables (routes, visits…) will be added in their own stories.
  */
 @Entity({ name: 'asesor' })
 export class AsesorOrmEntity {
@@ -13,7 +13,7 @@ export class AsesorOrmEntity {
   @Column({ type: 'varchar', length: 150 })
   nombre: string;
 
-  // Es el vínculo con el usuario de Better Auth: user.email = asesor.correo
+  // Link to the Better Auth user: user.email = asesor.correo
   @Column({ type: 'varchar', length: 150 })
   correo: string;
 

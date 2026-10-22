@@ -14,17 +14,15 @@ export interface MeResult {
 }
 
 /**
- * Arma el perfil del usuario autenticado (GET /api/me).
+ * Builds the profile of the authenticated user (GET /api/me).
  *
- * La sesión ya es válida (si no, el AuthGuard respondió 401), así que el
- * endpoint responde 200 con los datos del usuario. El bloque `asesor` solo
- * se incluye cuando existe el registro en la tabla `asesor` vinculado por
- * correo (`user.email = asesor.correo`).
+ * The session is already valid at this point (otherwise AuthGuard returned 401),
+ * so this use case always returns 200. The `asesor` block is included only when
+ * a matching record exists in the `asesor` table (linked by email).
  *
- * Un usuario con rol ASESOR sin registro en `asesor` es una inconsistencia de
- * datos: se responde 403 (ver DomainErrorsFilter) porque el frontend no
- * puede construir el alcance del asesor. El DIRECTOR nunca tiene registro de
- * asesor y por eso su `asesor` va en null.
+ * An ASESOR user with no `asesor` record is a data inconsistency: we return 403
+ * (via DomainErrorsFilter) because the frontend cannot build the asesor scope.
+ * A DIRECTOR never has an asesor record, so their `asesor` field is always null.
  */
 @Injectable()
 export class GetMeUseCase {
@@ -40,12 +38,12 @@ export class GetMeUseCase {
       rol: user.role,
     };
 
-    // El director no tiene registro de asesor
+    // Directors never have an asesor record
     if (user.role === 'DIRECTOR') {
       return { ...base, asesor: null };
     }
 
-    // El asesor se vincula por correo: user.email = asesor.correo
+    // Link asesor by email: user.email = asesor.correo
     const asesor = await this.asesores.findByEmail(user.email);
     if (!asesor) throw new AsesorNoVinculadoError(user.email);
 
