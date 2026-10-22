@@ -34,7 +34,7 @@ export class ContactoClienteOrmEntity {
   @Column({ type: 'varchar', length: 150, nullable: true })
   email: string | null;
 
-  // Indica si es el contacto principal del cliente
+  // Indicates whether this is the customer's primary contact
   @Column({ default: false })
   principal: boolean;
 }

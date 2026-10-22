@@ -67,7 +67,7 @@ export class ClienteOrmEntity {
   @Column({ default: true })
   activo: boolean;
 
-  // Relaciones con catálogos
+  // Catalog relationships
   @ManyToOne(() => ZonaOrmEntity, { nullable: true })
   @JoinColumn({ name: 'id_zona' })
   zona: ZonaOrmEntity | null;
