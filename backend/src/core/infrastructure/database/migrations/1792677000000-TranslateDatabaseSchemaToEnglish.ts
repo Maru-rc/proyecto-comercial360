@@ -1,0 +1,188 @@
+import type { MigrationInterface, QueryRunner } from 'typeorm';
+
+const tableRenames = [
+  ['zona', 'zones'],
+  ['tipo_cliente', 'customer_types'],
+  ['potencial', 'potentials'],
+  ['estado_cliente', 'customer_statuses'],
+  ['contacto_cliente', 'customer_contacts'],
+  ['cliente', 'customers'],
+  ['portafolio', 'portfolios'],
+  ['cliente_portafolio', 'customer_portfolios'],
+  ['historial_cliente', 'customer_history'],
+  ['asesor', 'sales_representatives'],
+  ['cotizacion', 'quotes'],
+  ['cotizacion_detalle', 'quote_details'],
+  ['pedido', 'orders'],
+  ['ruta', 'routes'],
+  ['ruta_cliente', 'route_stops'],
+  ['resultado_visita', 'visit_outcomes'],
+  ['visita_resultado', 'visit_results'],
+  ['visita', 'visits'],
+  ['adjunto', 'attachments'],
+  ['seguimiento', 'follow_ups'],
+] as const;
+
+const columnRenames = [
+  ['zones', 'id_zona', 'zone_id'],
+  ['zones', 'nombre', 'name'],
+  ['customer_types', 'id_tipo_cliente', 'customer_type_id'],
+  ['customer_types', 'nombre', 'name'],
+  ['potentials', 'id_potencial', 'potential_id'],
+  ['potentials', 'nombre', 'name'],
+  ['potentials', 'orden', 'sort_order'],
+  ['customer_statuses', 'id_estado_cliente', 'customer_status_id'],
+  ['customer_statuses', 'nombre', 'name'],
+  ['customer_contacts', 'id_contacto', 'contact_id'],
+  ['customer_contacts', 'id_cliente', 'customer_id'],
+  ['customer_contacts', 'nombre', 'name'],
+  ['customer_contacts', 'cargo', 'position'],
+  ['customer_contacts', 'telefono', 'phone'],
+  ['customer_contacts', 'celular', 'mobile_phone'],
+  ['customer_contacts', 'principal', 'is_primary'],
+  ['customers', 'id_cliente', 'customer_id'],
+  ['customers', 'nit', 'tax_id'],
+  ['customers', 'razon_social', 'legal_name'],
+  ['customers', 'nombre_comercial', 'commercial_name'],
+  ['customers', 'direccion', 'address'],
+  ['customers', 'departamento', 'department'],
+  ['customers', 'municipio', 'municipality'],
+  ['customers', 'barrio', 'neighborhood'],
+  ['customers', 'telefono', 'phone'],
+  ['customers', 'latitud', 'latitude'],
+  ['customers', 'longitud', 'longitude'],
+  ['customers', 'frecuencia_visita_dias', 'visit_frequency_days'],
+  ['customers', 'fecha_creacion', 'created_at'],
+  ['customers', 'activo', 'is_active'],
+  ['customers', 'id_zona', 'zone_id'],
+  ['customers', 'id_tipo_cliente', 'customer_type_id'],
+  ['customers', 'id_potencial', 'potential_id'],
+  ['customers', 'id_estado_cliente', 'customer_status_id'],
+  ['portfolios', 'id_portafolio', 'portfolio_id'],
+  ['portfolios', 'nombre', 'name'],
+  ['portfolios', 'descripcion', 'description'],
+  ['customer_portfolios', 'id_cliente_portafolio', 'customer_portfolio_id'],
+  ['customer_portfolios', 'fecha_registro', 'registered_at'],
+  ['customer_portfolios', 'id_cliente', 'customer_id'],
+  ['customer_portfolios', 'id_portafolio', 'portfolio_id'],
+  ['customer_history', 'id_historial', 'customer_history_id'],
+  ['customer_history', 'id_cliente', 'customer_id'],
+  ['customer_history', 'fecha', 'date'],
+  ['customer_history', 'accion', 'action'],
+  ['customer_history', 'usuario', 'user'],
+  ['customer_history', 'descripcion', 'description'],
+  ['sales_representatives', 'id_asesor', 'sales_representative_id'],
+  ['sales_representatives', 'nombre', 'name'],
+  ['sales_representatives', 'correo', 'email'],
+  ['sales_representatives', 'telefono', 'phone'],
+  ['sales_representatives', 'estado', 'status'],
+  ['quotes', 'id_cotizacion', 'quote_id'],
+  ['quotes', 'numero', 'quote_number'],
+  ['quotes', 'fecha', 'date'],
+  ['quotes', 'valor', 'amount'],
+  ['quotes', 'estado', 'status'],
+  ['quotes', 'moneda', 'currency'],
+  ['quotes', 'id_cliente', 'customer_id'],
+  ['quotes', 'id_asesor', 'sales_representative_id'],
+  ['quote_details', 'id_detalle', 'quote_detail_id'],
+  ['quote_details', 'producto', 'product'],
+  ['quote_details', 'cantidad', 'quantity'],
+  ['quote_details', 'precio', 'unit_price'],
+  ['quote_details', 'id_cotizacion', 'quote_id'],
+  ['orders', 'id_pedido', 'order_id'],
+  ['orders', 'numero', 'order_number'],
+  ['orders', 'fecha', 'date'],
+  ['orders', 'valor', 'amount'],
+  ['orders', 'estado', 'status'],
+  ['orders', 'fecha_entrega_estimada', 'estimated_delivery_date'],
+  ['orders', 'id_cliente', 'customer_id'],
+  ['orders', 'id_cotizacion', 'quote_id'],
+  ['routes', 'id_ruta', 'route_id'],
+  ['routes', 'nombre', 'name'],
+  ['routes', 'fecha_inicio', 'start_date'],
+  ['routes', 'fecha_fin', 'end_date'],
+  ['routes', 'estado', 'status'],
+  ['routes', 'dia_ejecucion', 'execution_day'],
+  ['routes', 'frecuencia', 'frequency'],
+  ['routes', 'hora_inicio', 'start_time'],
+  ['routes', 'hora_fin', 'end_time'],
+  ['routes', 'descripcion', 'description'],
+  ['routes', 'id_asesor', 'sales_representative_id'],
+  ['routes', 'id_zona', 'zone_id'],
+  ['route_stops', 'id_ruta_cliente', 'route_stop_id'],
+  ['route_stops', 'orden_visita', 'visit_order'],
+  ['route_stops', 'hora_sugerida', 'suggested_time'],
+  ['route_stops', 'id_ruta', 'route_id'],
+  ['route_stops', 'id_cliente', 'customer_id'],
+  ['visit_outcomes', 'id_resultado', 'visit_outcome_id'],
+  ['visit_outcomes', 'nombre', 'name'],
+  ['visit_results', 'id_visita_resultado', 'visit_result_id'],
+  ['visit_results', 'observacion', 'observation'],
+  ['visit_results', 'id_visita', 'visit_id'],
+  ['visit_results', 'id_resultado', 'visit_outcome_id'],
+  ['visits', 'id_visita', 'visit_id'],
+  ['visits', 'fecha_programada', 'scheduled_at'],
+  ['visits', 'fecha_real', 'actual_at'],
+  ['visits', 'hora_fin', 'end_time'],
+  ['visits', 'estado_visita', 'visit_status'],
+  ['visits', 'objetivo', 'objective'],
+  ['visits', 'tipo_visita', 'visit_type'],
+  ['visits', 'interes', 'interest'],
+  ['visits', 'competencia', 'competitor'],
+  ['visits', 'canal_contacto', 'contact_channel'],
+  ['visits', 'id_cliente', 'customer_id'],
+  ['visits', 'id_asesor', 'sales_representative_id'],
+  ['visits', 'id_ruta', 'route_id'],
+  ['visits', 'id_portafolio', 'portfolio_id'],
+  ['attachments', 'id_adjunto', 'attachment_id'],
+  ['attachments', 'categoria', 'category'],
+  ['attachments', 'nombre_original', 'original_name'],
+  ['attachments', 'tipo_mime', 'mime_type'],
+  ['attachments', 'tamano', 'size'],
+  ['attachments', 'fecha_carga', 'uploaded_at'],
+  ['attachments', 'usuario', 'user'],
+  ['attachments', 'id_visita', 'visit_id'],
+  ['follow_ups', 'id_seguimiento', 'follow_up_id'],
+  ['follow_ups', 'id_visita', 'visit_id'],
+  ['follow_ups', 'fecha_proxima', 'next_date'],
+  ['follow_ups', 'actividad', 'activity'],
+  ['follow_ups', 'observacion', 'observation'],
+  ['follow_ups', 'completado', 'is_completed'],
+  [
+    'follow_ups',
+    'id_asesor_responsable',
+    'responsible_sales_representative_id',
+  ],
+] as const;
+
+export class TranslateDatabaseSchemaToEnglish1792677000000 implements MigrationInterface {
+  name = 'TranslateDatabaseSchemaToEnglish1792677000000';
+
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    for (const [oldName, newName] of tableRenames) {
+      await queryRunner.query(
+        `ALTER TABLE "${oldName}" RENAME TO "${newName}"`,
+      );
+    }
+
+    for (const [table, oldName, newName] of columnRenames) {
+      await queryRunner.query(
+        `ALTER TABLE "${table}" RENAME COLUMN "${oldName}" TO "${newName}"`,
+      );
+    }
+  }
+
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    for (const [table, oldName, newName] of [...columnRenames].reverse()) {
+      await queryRunner.query(
+        `ALTER TABLE "${table}" RENAME COLUMN "${newName}" TO "${oldName}"`,
+      );
+    }
+
+    for (const [oldName, newName] of [...tableRenames].reverse()) {
+      await queryRunner.query(
+        `ALTER TABLE "${newName}" RENAME TO "${oldName}"`,
+      );
+    }
+  }
+}
