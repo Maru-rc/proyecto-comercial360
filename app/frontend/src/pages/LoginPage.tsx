@@ -15,10 +15,34 @@ import { useAuthStore } from '../store/useAuthStore';
 import { Modal } from '../components/common/Modal';
 import { Button } from '../components/common/Button';
 
+// "Recordarme" mantiene la sesión 30 días (Better Auth) y además guarda el
+// correo para el próximo inicio de sesión. La contraseña nunca se guarda.
+const REMEMBERED_EMAIL_KEY = 'comercial360.rememberedEmail';
+
+const readRememberedEmail = (): string => {
+  try {
+    return localStorage.getItem(REMEMBERED_EMAIL_KEY) ?? '';
+  } catch {
+    return '';
+  }
+};
+
+const saveRememberedEmail = (email: string | null) => {
+  try {
+    if (email) {
+      localStorage.setItem(REMEMBERED_EMAIL_KEY, email);
+    } else {
+      localStorage.removeItem(REMEMBERED_EMAIL_KEY);
+    }
+  } catch {
+    // Sin acceso a localStorage (ej. modo privado) solo no se recuerda el correo
+  }
+};
+
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { login, isLoading, error, isAuthenticated } = useAuthStore();
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(readRememberedEmail);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
@@ -28,6 +52,7 @@ export const LoginPage: React.FC = () => {
     e.preventDefault();
     const success = await login({ email, password, rememberMe });
     if (success) {
+      saveRememberedEmail(rememberMe ? email : null);
       navigate('/');
     }
   };
