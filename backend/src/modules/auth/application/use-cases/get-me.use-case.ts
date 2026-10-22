@@ -13,7 +13,19 @@ export interface MeResult {
   asesor: { id_asesor: number; telefono: string | null; estado: string } | null;
 }
 
-/** Arma el perfil del usuario autenticado (GET /api/me). */
+/**
+ * Arma el perfil del usuario autenticado (GET /api/me).
+ *
+ * La sesión ya es válida (si no, el AuthGuard respondió 401), así que el
+ * endpoint responde 200 con los datos del usuario. El bloque `asesor` solo
+ * se incluye cuando existe el registro en la tabla `asesor` vinculado por
+ * correo (`user.email = asesor.correo`).
+ *
+ * Un usuario con rol ASESOR sin registro en `asesor` es una inconsistencia de
+ * datos: se responde 403 (ver DomainErrorsFilter) porque el frontend no
+ * puede construir el alcance del asesor. El DIRECTOR nunca tiene registro de
+ * asesor y por eso su `asesor` va en null.
+ */
 @Injectable()
 export class GetMeUseCase {
   constructor(
