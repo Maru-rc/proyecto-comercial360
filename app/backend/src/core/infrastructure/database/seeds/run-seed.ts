@@ -1,6 +1,6 @@
 import dataSource from '../data-source.js';
 import { createAuth } from '../../../../modules/auth/infrastructure/better-auth/auth.factory.js';
-import { createPgPool } from '../pg-pool.js';
+import { createPgPool } from '../../../../modules/auth/infrastructure/better-auth/pg-pool.js';
 import { seedDemoUsers } from './seed-demo-users.js';
 
 // Seed de usuarios de demostración: un asesor y un director.

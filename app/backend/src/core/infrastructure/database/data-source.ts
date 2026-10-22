@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { DataSource, DataSourceOptions } from 'typeorm';
-import { AsesorOrmEntity } from './entities/asesor.orm-entity.js';
+import { AsesorOrmEntity } from '../../../modules/auth/infrastructure/persistence/entities/asesor.orm-entity.js';
 import { CreateAsesorTable1792500000000 } from './migrations/1792500000000-CreateAsesorTable.js';
 import { CreateBetterAuthTables1792500000001 } from './migrations/1792500000001-CreateBetterAuthTables.js';
 

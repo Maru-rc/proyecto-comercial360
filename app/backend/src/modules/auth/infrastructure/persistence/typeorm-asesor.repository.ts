@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { AsesorOrmEntity } from '../../../../core/infrastructure/database/entities/asesor.orm-entity.js';
+import { AsesorOrmEntity } from './entities/asesor.orm-entity.js';
 import {
   AsesorRecord,
   AsesorRepository,

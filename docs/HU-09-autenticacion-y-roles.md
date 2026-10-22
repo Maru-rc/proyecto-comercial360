@@ -15,7 +15,7 @@ Pantalla: `diseno_01.png`
 
 | Criterio | Estado | Evidencia / Notas |
 | --- | --- | --- |
-| Autenticación con Better Auth mediante correo y contraseña | Implementado | `backend/src/modules/auth/infrastructure/better-auth/auth.factory.ts` (`betterAuth({ emailAndPassword: { enabled: true, disableSignUp: true } })`) |
+| Autenticación con Better Auth mediante correo y contraseña | Implementado | `app/backend/src/modules/auth/infrastructure/better-auth/auth.factory.ts` (`betterAuth({ emailAndPassword: { enabled: true, disableSignUp: true } })`) |
 | Inicio de sesión con credenciales válidas | Implementado y probado | Endpoint `POST /api/auth/sign-in/email` (Better Auth). Prueba e2e: `HU-09: inicio de sesión` "inicia sesión con credenciales válidas y crea una cookie httpOnly" (PASS). |
 | Rechazo de credenciales incorrectas | Implementado y probado | Better Auth devuelve 401. Prueba e2e: "rechaza credenciales incorrectas (contraseña o correo)" (PASS). La cookie no se envía. |
 | Duración de sesión con y sin la opción «Recordarme» | Implementado y probado | `session.expiresIn = 30 días` con `rememberMe: true`, sin `rememberMe` se usa cookie de sesión del navegador y expiración ~1 día. Pruebas e2e (12) confirman `Max-Age=2592000` y ~30 días en BD, y `dont_remember` + ~1 día sin recordarme (PASS). |
@@ -38,7 +38,7 @@ Pantalla: `diseno_01.png`
 | `GET` | `/api/auth/get-session` | Consultar sesión actual | Opcional (lee cookie) | Sin body (lee cookies). | `200 OK` con sesión/usuario si existe, o `null`/vacío según Better Auth. | Según configuración puede devolver 401/otros si no hay sesión válida. | Requiere cookie de sesión. |
 | `POST` | `/api/auth/sign-out` | Cerrar sesión | Requiere sesión válida (cookie) | JSON vacío `{}` (según pruebas). | `200 OK`. Invalida sesión y expira cookie. | `401` si no hay sesión válida. | Elimina/invalida cookie y borra fila en `session`. |
 
-Documentado en Swagger (`backend/src/main.ts`) con descripciones de estos endpoints.
+Documentado en Swagger (`app/backend/src/main.ts`) con descripciones de estos endpoints.
 
 ### Endpoint propio de la aplicación
 
@@ -51,7 +51,7 @@ Documentado en Swagger (`backend/src/main.ts`) con descripciones de estos endpoi
 ## 3. Implementación técnica
 
 ### Configuración de Better Auth
-- **Archivo:** `backend/src/modules/auth/infrastructure/better-auth/auth.factory.ts`
+- **Archivo:** `app/backend/src/modules/auth/infrastructure/better-auth/auth.factory.ts`
 - `betterAuth({ database: pool, secret: BETTER_AUTH_SECRET, baseURL: BETTER_AUTH_URL, trustedOrigins: allowedOrigins(env), ... })`
 - **Validaciones:** `BETTER_AUTH_SECRET` >= 32 chars; `BETTER_AUTH_URL` debe ser origen sin ruta.
 - **emailAndPassword:** `enabled: true`, `disableSignUp: true` (registro público deshabilitado).
@@ -61,8 +61,8 @@ Documentado en Swagger (`backend/src/main.ts`) con descripciones de estos endpoi
 - `allowedOrigins()` combina `FRONTEND_URL` (separados por coma) y origen de `BETTER_AUTH_URL`.
 
 ### Conexión con PostgreSQL
-- **Pool pg:** `backend/src/core/infrastructure/database/pg-pool.ts` (`createPgPool()`) usando variables `DATABASE_HOST/PORT/USER/PASSWORD/NAME/SSL`. Pool max 10.
-- **TypeORM DataSource:** `backend/src/core/infrastructure/database/data-source.ts` (migraciones, `synchronize: false`, `ssl` según env).
+- **Pool pg:** `app/backend/src/modules/auth/infrastructure/better-auth/pg-pool.ts` (`createPgPool()`) usando variables `DATABASE_HOST/PORT/USER/PASSWORD/NAME/SSL`. Pool max 10.
+- **TypeORM DataSource:** `app/backend/src/core/infrastructure/database/data-source.ts` (migraciones, `synchronize: false`, `ssl` según env).
 - **Better Auth usa pool pg directamente:** `AuthModule` inyecta `PG_POOL` y crea `AUTH` con `createAuth(pool)`. Se cierra en `onApplicationShutdown()`.
 
 ### Gestión de sesiones y cookies
@@ -72,22 +72,22 @@ Documentado en Swagger (`backend/src/main.ts`) con descripciones de estos endpoi
 - Better Auth montado en Express: `app.getHttpAdapter().getInstance().all('/api/auth/*splat', toNodeHandler(auth))` antes de pipes JSON de Nest.
 
 ### Manejo de roles ASESOR y DIRECTOR
-- **Dominio:** `backend/src/modules/auth/domain/role.ts` (`isRole`, roles `ASESOR | DIRECTOR`). `backend/src/modules/auth/domain/authenticated-user.ts`.
-- **BD:** Migración `backend/src/core/infrastructure/database/migrations/1792500000001-CreateBetterAuthTables.ts` crea tabla `user` con `role TEXT NOT NULL DEFAULT 'ASESOR'` y `CONSTRAINT "CHK_user_role" CHECK ("role" IN ('ASESOR', 'DIRECTOR'))`. Rol almacenado en BD (no solo cookie).
+- **Dominio:** `app/backend/src/modules/auth/domain/role.ts` (`isRole`, roles `ASESOR | DIRECTOR`). `app/backend/src/modules/auth/domain/authenticated-user.ts`.
+- **BD:** Migración `app/backend/src/core/infrastructure/database/migrations/1792500000001-CreateBetterAuthTables.ts` crea tabla `user` con `role TEXT NOT NULL DEFAULT 'ASESOR'` y `CONSTRAINT "CHK_user_role" CHECK ("role" IN ('ASESOR', 'DIRECTOR'))`. Rol almacenado en BD (no solo cookie).
 - **Protección:** `AuthGuard` valida rol con `isRole()` → 403 si inválido. `RolesGuard` verifica contra metadata de `@Roles()`. `@Auth(...roles)` aplica guards y decoradores Swagger.
 - **Sin elevación de privilegios:** `role` tiene `input: false` en Better Auth; pruebas confirman intento de `update-user` devuelve 400 y cambios vía query/cabecera son ignorados.
 
 ### Guards, decoradores y protección de rutas
-- **Guards:** `backend/src/modules/auth/presentation/auth.guard.ts` (`AuthGuard`), `backend/src/modules/auth/presentation/roles.guard.ts` (`RolesGuard`).
-- **Decoradores:** `backend/src/modules/auth/presentation/auth.decorator.ts` (`@Auth(...roles)`, `@CurrentUser()`), `backend/src/modules/auth/presentation/roles.decorator.ts` (`@Roles()`).
-- **Filtro de errores de dominio:** `backend/src/modules/auth/presentation/domain-errors.filter.ts` convierte `AsesorNoVinculadoError` y `AsesorFueraDeAlcanceError` en `403 Forbidden`. Registrado globalmente en `AuthModule`.
+- **Guards:** `app/backend/src/modules/auth/presentation/auth.guard.ts` (`AuthGuard`), `app/backend/src/modules/auth/presentation/roles.guard.ts` (`RolesGuard`).
+- **Decoradores:** `app/backend/src/modules/auth/presentation/auth.decorator.ts` (`@Auth(...roles)`, `@CurrentUser()`), `app/backend/src/modules/auth/presentation/roles.decorator.ts` (`@Roles()`).
+- **Filtro de errores de dominio:** `app/backend/src/modules/auth/presentation/domain-errors.filter.ts` convierte `AsesorNoVinculadoError` y `AsesorFueraDeAlcanceError` en `403 Forbidden`. Registrado globalmente en `AuthModule`.
 
 ### Funcionamiento de `GET /api/me`
-- **Controlador:** `backend/src/modules/auth/presentation/me.controller.ts` (`GET /me` con `@Auth()`).
-- **Caso de uso:** `backend/src/modules/auth/application/use-cases/get-me.use-case.ts`
+- **Controlador:** `app/backend/src/modules/auth/presentation/me.controller.ts` (`GET /me` con `@Auth()`).
+- **Caso de uso:** `app/backend/src/modules/auth/application/use-cases/get-me.use-case.ts`
   - Si `rol === 'DIRECTOR'` → `asesor: null`.
   - Si `rol === 'ASESOR'` → busca en `asesor` por `correo` (case-insensitive, vía `TypeOrmAsesorRepository`). Si no existe → lanza `AsesorNoVinculadoError` (403). Si existe → devuelve datos del asesor.
-- **DTO:** `backend/src/modules/auth/presentation/dto/me-response.dto.ts` (`MeResponseDto`).
+- **DTO:** `app/backend/src/modules/auth/presentation/dto/me-response.dto.ts` (`MeResponseDto`).
 - **Vinculación:** `user.email = asesor.correo` (comparación case-insensitive).
 
 ### Validaciones y manejo de errores
@@ -101,20 +101,20 @@ Documentado en Swagger (`backend/src/main.ts`) con descripciones de estos endpoi
 ### Archivos principales involucrados
 | Archivo | Responsabilidad |
 | --- | --- |
-| `backend/src/modules/auth/infrastructure/better-auth/auth.factory.ts` | Configuración de Better Auth, constantes de sesión, `allowedOrigins`. |
-| `backend/src/modules/auth/auth.module.ts` | Módulo Auth (pool pg, AUTH, guards, use cases, repositorio). |
-| `backend/src/modules/auth/presentation/auth.guard.ts` | Validación de sesión con Better Auth. |
-| `backend/src/modules/auth/presentation/roles.guard.ts` | Autorización por roles. |
-| `backend/src/modules/auth/presentation/auth.decorator.ts` | `@Auth()` y `@CurrentUser()`. |
-| `backend/src/modules/auth/presentation/me.controller.ts` | Endpoint `GET /me`. |
-| `backend/src/modules/auth/application/use-cases/get-me.use-case.ts` | Lógica de perfil y vínculo asesor/correo. |
-| `backend/src/modules/auth/application/use-cases/resolve-asesor-scope.use-case.ts` | Anti-IDOR para operaciones comerciales (preparado). |
-| `backend/src/modules/auth/infrastructure/persistence/typeorm-asesor.repository.ts` | Búsqueda de asesor por correo (case-insensitive). |
-| `backend/src/core/infrastructure/database/migrations/1792500000000-CreateAsesorTable.ts` | Tabla `asesor`. |
-| `backend/src/core/infrastructure/database/migrations/1792500000001-CreateBetterAuthTables.ts` | Tablas `user/session/account/verification` con `role`. |
-| `backend/src/core/infrastructure/database/seeds/seed-demo-users.ts` | Creación de usuarios demo con hasher nativo de Better Auth. |
-| `backend/src/app.setup.ts` | Montaje de Better Auth en Express, CORS, prefijo `/api`. |
-| `backend/src/main.ts` | Bootstrap, Swagger (incluye docs de endpoints Better Auth). |
+| `app/backend/src/modules/auth/infrastructure/better-auth/auth.factory.ts` | Configuración de Better Auth, constantes de sesión, `allowedOrigins`. |
+| `app/backend/src/modules/auth/auth.module.ts` | Módulo Auth (pool pg, AUTH, guards, use cases, repositorio). |
+| `app/backend/src/modules/auth/presentation/auth.guard.ts` | Validación de sesión con Better Auth. |
+| `app/backend/src/modules/auth/presentation/roles.guard.ts` | Autorización por roles. |
+| `app/backend/src/modules/auth/presentation/auth.decorator.ts` | `@Auth()` y `@CurrentUser()`. |
+| `app/backend/src/modules/auth/presentation/me.controller.ts` | Endpoint `GET /me`. |
+| `app/backend/src/modules/auth/application/use-cases/get-me.use-case.ts` | Lógica de perfil y vínculo asesor/correo. |
+| `app/backend/src/modules/auth/application/use-cases/resolve-asesor-scope.use-case.ts` | Anti-IDOR para operaciones comerciales (preparado). |
+| `app/backend/src/modules/auth/infrastructure/persistence/typeorm-asesor.repository.ts` | Búsqueda de asesor por correo (case-insensitive). |
+| `app/backend/src/core/infrastructure/database/migrations/1792500000000-CreateAsesorTable.ts` | Tabla `asesor`. |
+| `app/backend/src/core/infrastructure/database/migrations/1792500000001-CreateBetterAuthTables.ts` | Tablas `user/session/account/verification` con `role`. |
+| `app/backend/src/core/infrastructure/database/seeds/seed-demo-users.ts` | Creación de usuarios demo con hasher nativo de Better Auth. |
+| `app/backend/src/app.setup.ts` | Montaje de Better Auth en Express, CORS, prefijo `/api`. |
+| `app/backend/src/main.ts` | Bootstrap, Swagger (incluye docs de endpoints Better Auth). |
 
 ---
 
