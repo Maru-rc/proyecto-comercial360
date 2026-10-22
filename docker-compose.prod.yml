@@ -1,0 +1,78 @@
+# ==============================================================================
+# DOCKER COMPOSE - ENTORNO DE PRODUCCIÓN (AWS EC2 + JENKINS)
+# ==============================================================================
+# Uso: docker compose -f docker-compose.prod.yml up -d --build
+# Propósito: Despliegue automatizado por Jenkins en la instancia de AWS EC2.
+# 
+# NOTA CRÍTICA DE ARQUITECTURA:
+# - En producción, la base de datos es el clúster gestionado Amazon Aurora PostgreSQL (RDS).
+# - El almacenamiento de documentos y evidencias es Amazon S3 con URLs prefirmadas.
+# - Por lo tanto, ni PostgreSQL ni MinIO corren en esta máquina; la app se conecta
+#   directamente a los servicios administrados de AWS definidos en el archivo .env de la EC2.
+# ==============================================================================
+
+name: comercial360-prod
+
+services:
+
+  # ==========================================================
+  # 1. API BACKEND NESTJS (MODO PRODUCCIÓN COMPILADO)
+  # ==========================================================
+  backend:
+    build:
+      context: ./app/backend
+      dockerfile: Dockerfile
+    image: comercial360-backend:latest
+    container_name: comercial360-prod-backend
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      APP_ENV: production
+      NODE_ENV: production
+      PORT: 3000
+      # Las migraciones las ejecuta el pipeline de Jenkins; se deja false por defecto
+      RUN_MIGRATIONS: ${RUN_MIGRATIONS:-false}
+      RUN_SEED: ${RUN_SEED:-false}
+    expose:
+      - "3000"
+    networks:
+      - prod-network
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ==========================================================
+  # 2. FRONTEND REACT (SERVIDO POR NGINX EN PUERTO 80)
+  # ==========================================================
+  frontend:
+    build:
+      context: ./app/frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-/api}
+        VITE_ASSETS_URL: ${VITE_ASSETS_URL:-}
+    image: comercial360-frontend:latest
+    container_name: comercial360-prod-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    networks:
+      - prod-network
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# ==========================================================
+# RED PRIVADA DE PRODUCCIÓN
+# ==========================================================
+networks:
+  prod-network:
+    driver: bridge
