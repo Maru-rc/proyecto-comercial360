@@ -5,8 +5,6 @@ import type { AuthenticatedUser } from '../domain/authenticated-user.js';
 import { Auth, CurrentUser } from './auth.decorator.js';
 import { MeResponseDto } from './dto/me-response.dto.js';
 
-// This is the only auth endpoint owned by NestJS. Sign-in, sign-out and
-// session retrieval are handled by Better Auth under /api/auth/*.
 @ApiTags('auth')
 @Controller('me')
 export class MeController {

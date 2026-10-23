@@ -10,7 +10,6 @@ import { Role } from '../domain/role.js';
 import type { RequestWithUser } from './auth.guard.js';
 import { ROLES_KEY } from './roles.decorator.js';
 
-/** Runs after AuthGuard. Returns 403 if role is not allowed. */
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
@@ -20,7 +19,6 @@ export class RolesGuard implements CanActivate {
       ROLES_KEY,
       [context.getHandler(), context.getClass()],
     );
-    // No @Roles decorator means any authenticated user is allowed
     if (!roles || roles.length === 0) return true;
 
     const user = context.switchToHttp().getRequest<RequestWithUser>().authUser;
