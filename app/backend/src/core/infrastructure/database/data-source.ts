@@ -4,6 +4,7 @@ import { AdvisorOrmEntity } from '../../../modules/auth/infrastructure/persisten
 import { CreateSalesRepresentativesTable1792500000000 } from './migrations/1792500000000-CreateSalesRepresentativesTable.js';
 import { CreateBetterAuthTables1792500000001 } from './migrations/1792500000001-CreateBetterAuthTables.js';
 import { InitialSchema1792634405120 } from './migrations/1792634405120-InitialSchema.js';
+import { AddVisitTrackingIndexes1792800000000 } from './migrations/1792800000000-AddVisitTrackingIndexes.js';
 
 try {
   process.loadEnvFile();
@@ -36,6 +37,7 @@ export function buildDataSourceOptions(
       CreateSalesRepresentativesTable1792500000000,
       CreateBetterAuthTables1792500000001,
       InitialSchema1792634405120,
+      AddVisitTrackingIndexes1792800000000,
     ],
     synchronize: false,
     extra: { max: 10 },
