@@ -1,18 +1,26 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { Global, Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AppConfigService } from './infrastructure/config/app-config.service.js';
+import { envValidationSchema } from './infrastructure/config/env.validation.js';
 import { buildDataSourceOptions } from './infrastructure/database/data-source.js';
 
+@Global()
 @Module({
   imports: [
-    // Carga el archivo .env y deja las variables disponibles en process.env
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validationSchema: envValidationSchema,
+    }),
     TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
       useFactory: () => ({
         ...buildDataSourceOptions(),
         autoLoadEntities: true,
       }),
     }),
   ],
+  providers: [AppConfigService],
+  exports: [AppConfigService, ConfigModule],
 })
 export class CoreModule {}

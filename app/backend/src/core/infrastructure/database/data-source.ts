@@ -15,12 +15,15 @@ export function buildDataSourceOptions(
 ): DataSourceOptions {
   return {
     type: 'postgres',
-    host: env.DATABASE_HOST ?? 'localhost',
-    port: Number(env.DATABASE_PORT ?? 5432),
-    username: env.DATABASE_USER,
-    password: env.DATABASE_PASSWORD,
-    database: env.DATABASE_NAME,
-    ssl: env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : false,
+    host: env.DATABASE_HOST ?? env.DB_HOST ?? 'localhost',
+    port: Number(env.DATABASE_PORT ?? env.DB_PORT ?? 5432),
+    username: env.DATABASE_USER ?? env.DB_USER,
+    password: env.DATABASE_PASSWORD ?? env.DB_PASSWORD,
+    database: env.DATABASE_NAME ?? env.DB_NAME,
+    ssl:
+      (env.DATABASE_SSL ?? env.DB_SSL) === 'true'
+        ? { rejectUnauthorized: false }
+        : false,
     entities: [AsesorOrmEntity],
     migrations: [
       CreateAsesorTable1792500000000,
