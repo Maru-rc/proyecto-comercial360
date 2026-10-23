@@ -4,6 +4,7 @@ import type {
 } from '../../../../domain-contracts/index.js';
 import { Quotation } from '../../domain/entities/quotation.entity.js';
 import type { IQuotationRepository } from '../../domain/repositories/quotation-repository.port.js';
+import { QuotationMapper } from './mappers/quotation.mapper.js';
 
 export class InMemoryQuotationRepository
   implements IQuotationRepository, QuotationReader
@@ -61,20 +62,7 @@ export class InMemoryQuotationRepository
 
   async getQuotationById(id: number): Promise<QuotationContractDto | null> {
     const q = await this.findById(id);
-    if (!q) return null;
-    return {
-      id: q.id ?? 0,
-      quotationNumber: q.number,
-      number: q.number,
-      clientId: q.clientId,
-      advisorId: q.advisorId ?? undefined,
-      visitId: q.visitId ?? null,
-      amount: q.amount,
-      currency: q.currency,
-      status: q.status,
-      date: q.date,
-      createdAt: q.createdAt,
-    };
+    return q ? QuotationMapper.toContract(q) : null;
   }
 
   clear(): void {

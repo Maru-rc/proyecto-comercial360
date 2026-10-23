@@ -30,7 +30,7 @@ export class QuotationOrmEntity {
     transformer: {
       to: (value: number) => value,
       from: (value: string | number) =>
-        typeof value === 'string' ? parseFloat(value) : value,
+        typeof value === 'string' ? Number.parseFloat(value) : value,
     },
   })
   amount: number;

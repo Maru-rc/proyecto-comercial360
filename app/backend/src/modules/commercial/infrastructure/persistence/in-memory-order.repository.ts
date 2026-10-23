@@ -4,6 +4,7 @@ import type {
 } from '../../../../domain-contracts/index.js';
 import { Order } from '../../domain/entities/order.entity.js';
 import type { IOrderRepository } from '../../domain/repositories/order-repository.port.js';
+import { OrderMapper } from './mappers/order.mapper.js';
 
 export class InMemoryOrderRepository implements IOrderRepository, OrderReader {
   private readonly orders: Order[] = [];
@@ -60,21 +61,7 @@ export class InMemoryOrderRepository implements IOrderRepository, OrderReader {
 
   async getOrderById(id: number): Promise<OrderContractDto | null> {
     const o = await this.findById(id);
-    if (!o) return null;
-    return {
-      id: o.id ?? 0,
-      orderNumber: o.number,
-      number: o.number,
-      clientId: o.clientId,
-      advisorId: o.advisorId ?? undefined,
-      visitId: o.visitId ?? null,
-      quotationId: o.quotationId ?? null,
-      amount: o.amount,
-      status: o.status,
-      date: o.date,
-      estimatedDeliveryDate: o.estimatedDeliveryDate,
-      createdAt: o.createdAt,
-    };
+    return o ? OrderMapper.toContract(o) : null;
   }
 
   async hasOrderByVisit(visitId: number): Promise<boolean> {
@@ -83,20 +70,7 @@ export class InMemoryOrderRepository implements IOrderRepository, OrderReader {
 
   async getOrdersByVisit(visitId: number): Promise<OrderContractDto[]> {
     const list = await this.findByVisit(visitId);
-    return list.map((o) => ({
-      id: o.id ?? 0,
-      orderNumber: o.number,
-      number: o.number,
-      clientId: o.clientId,
-      advisorId: o.advisorId ?? undefined,
-      visitId: o.visitId ?? null,
-      quotationId: o.quotationId ?? null,
-      amount: o.amount,
-      status: o.status,
-      date: o.date,
-      estimatedDeliveryDate: o.estimatedDeliveryDate,
-      createdAt: o.createdAt,
-    }));
+    return list.map((o) => OrderMapper.toContract(o));
   }
 
   clear(): void {
