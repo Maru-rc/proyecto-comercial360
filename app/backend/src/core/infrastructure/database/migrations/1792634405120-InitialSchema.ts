@@ -32,7 +32,7 @@ export class InitialSchema1792634405120 implements MigrationInterface {
       `CREATE TABLE "customer_history" ("customer_history_id" SERIAL NOT NULL, "customer_id" integer NOT NULL, "date" TIMESTAMP NOT NULL DEFAULT now(), "action" character varying(100) NOT NULL, "user" character varying(150) NOT NULL, "description" text, CONSTRAINT "PK_f0a65996c953d0e9cba345916b3" PRIMARY KEY ("customer_history_id"))`,
     );
     await queryRunner.query(
-      `CREATE INDEX "IDX_e0cca55ef7e112acd876ba6698" ON "customer_history"  ("customer_id", "date") `,
+      `CREATE INDEX "IDX_e0cca55ef7e112acd876ba6698" ON "customer_history" ("customer_id", "date" DESC)`,
     );
     await queryRunner.query(
       `CREATE TABLE "quotes" ("quote_id" SERIAL NOT NULL, "quote_number" character varying(50) NOT NULL, "date" date NOT NULL, "amount" numeric(15,2) NOT NULL DEFAULT '0', "status" character varying(30) NOT NULL DEFAULT 'ENVIADA', "currency" character varying(10) NOT NULL DEFAULT 'COP', "customer_id" integer, "sales_representative_id" integer, CONSTRAINT "UQ_d0d9025c56f5accfe6161a1b629" UNIQUE ("quote_number"), CONSTRAINT "PK_e46f12fabeba98182ce8ebdb85a" PRIMARY KEY ("quote_id"))`,
@@ -95,7 +95,7 @@ export class InitialSchema1792634405120 implements MigrationInterface {
       `ALTER TABLE "quotes" ADD CONSTRAINT "FK_e1c19b8ad84f6fcf4f71632a18c" FOREIGN KEY ("customer_id") REFERENCES "customers"("customer_id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
-      `ALTER TABLE "quotes" ADD CONSTRAINT "FK_971ac7c96ffe488d394d677ce5a" FOREIGN KEY ("sales_representative_id") REFERENCES "asesor"("id_asesor") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+      `ALTER TABLE "quotes" ADD CONSTRAINT "FK_971ac7c96ffe488d394d677ce5a" FOREIGN KEY ("sales_representative_id") REFERENCES "sales_representatives"("sales_representative_id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
       `ALTER TABLE "quote_details" ADD CONSTRAINT "FK_736948182d045f74541c5fba1ef" FOREIGN KEY ("quote_id") REFERENCES "quotes"("quote_id") ON DELETE CASCADE ON UPDATE NO ACTION`,
@@ -107,7 +107,7 @@ export class InitialSchema1792634405120 implements MigrationInterface {
       `ALTER TABLE "orders" ADD CONSTRAINT "FK_ab0b05a3b9b83f6925ffdd41cdf" FOREIGN KEY ("quote_id") REFERENCES "quotes"("quote_id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
-      `ALTER TABLE "routes" ADD CONSTRAINT "FK_cb378c67305ff4fadd0c0193653" FOREIGN KEY ("sales_representative_id") REFERENCES "asesor"("id_asesor") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+      `ALTER TABLE "routes" ADD CONSTRAINT "FK_cb378c67305ff4fadd0c0193653" FOREIGN KEY ("sales_representative_id") REFERENCES "sales_representatives"("sales_representative_id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
       `ALTER TABLE "routes" ADD CONSTRAINT "FK_bad6ad841c0b5fc0e355779b3b5" FOREIGN KEY ("zone_id") REFERENCES "zones"("zone_id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
@@ -128,7 +128,7 @@ export class InitialSchema1792634405120 implements MigrationInterface {
       `ALTER TABLE "visits" ADD CONSTRAINT "FK_2f8983bc5d181167f33ba3a952a" FOREIGN KEY ("customer_id") REFERENCES "customers"("customer_id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
-      `ALTER TABLE "visits" ADD CONSTRAINT "FK_ef857caf6462fbbfdec35b79d65" FOREIGN KEY ("sales_representative_id") REFERENCES "asesor"("id_asesor") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+      `ALTER TABLE "visits" ADD CONSTRAINT "FK_ef857caf6462fbbfdec35b79d65" FOREIGN KEY ("sales_representative_id") REFERENCES "sales_representatives"("sales_representative_id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
       `ALTER TABLE "visits" ADD CONSTRAINT "FK_450ca807586cd20547adab387e2" FOREIGN KEY ("route_id") REFERENCES "routes"("route_id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
@@ -143,11 +143,129 @@ export class InitialSchema1792634405120 implements MigrationInterface {
       `ALTER TABLE "follow_ups" ADD CONSTRAINT "FK_284df519d9a5bcf0bb15c357361" FOREIGN KEY ("visit_id") REFERENCES "visits"("visit_id") ON DELETE CASCADE ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
-      `ALTER TABLE "follow_ups" ADD CONSTRAINT "FK_895a95217f24666c44a1d97c0f8" FOREIGN KEY ("responsible_sales_representative_id") REFERENCES "asesor"("id_asesor") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+      `ALTER TABLE "follow_ups" ADD CONSTRAINT "FK_895a95217f24666c44a1d97c0f8" FOREIGN KEY ("responsible_sales_representative_id") REFERENCES "sales_representatives"("sales_representative_id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_customer_contacts_customer_id" ON "customer_contacts" ("customer_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_customers_zone_id" ON "customers" ("zone_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_customers_customer_type_id" ON "customers" ("customer_type_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_customers_potential_id" ON "customers" ("potential_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_customers_customer_status_id" ON "customers" ("customer_status_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_customer_portfolios_customer_id" ON "customer_portfolios" ("customer_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_customer_portfolios_portfolio_id" ON "customer_portfolios" ("portfolio_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_quotes_customer_id" ON "quotes" ("customer_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_quotes_sales_representative_id" ON "quotes" ("sales_representative_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_quote_details_quote_id" ON "quote_details" ("quote_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_orders_customer_id" ON "orders" ("customer_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_orders_quote_id" ON "orders" ("quote_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_routes_sales_representative_id" ON "routes" ("sales_representative_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_routes_zone_id" ON "routes" ("zone_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_route_stops_route_id" ON "route_stops" ("route_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_route_stops_customer_id" ON "route_stops" ("customer_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_visit_results_visit_id" ON "visit_results" ("visit_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_visit_results_visit_outcome_id" ON "visit_results" ("visit_outcome_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_visits_customer_id" ON "visits" ("customer_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_visits_sales_representative_id" ON "visits" ("sales_representative_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_visits_route_id" ON "visits" ("route_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_visits_portfolio_id" ON "visits" ("portfolio_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_follow_ups_visit_id" ON "follow_ups" ("visit_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_follow_ups_responsible_sales_representative_id" ON "follow_ups" ("responsible_sales_representative_id")`,
     );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_follow_ups_responsible_sales_representative_id"`,
+    );
+    await queryRunner.query(`DROP INDEX "public"."IDX_follow_ups_visit_id"`);
+    await queryRunner.query(`DROP INDEX "public"."IDX_visits_portfolio_id"`);
+    await queryRunner.query(`DROP INDEX "public"."IDX_visits_route_id"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_visits_sales_representative_id"`,
+    );
+    await queryRunner.query(`DROP INDEX "public"."IDX_visits_customer_id"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_visit_results_visit_outcome_id"`,
+    );
+    await queryRunner.query(`DROP INDEX "public"."IDX_visit_results_visit_id"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_route_stops_customer_id"`,
+    );
+    await queryRunner.query(`DROP INDEX "public"."IDX_route_stops_route_id"`);
+    await queryRunner.query(`DROP INDEX "public"."IDX_routes_zone_id"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_routes_sales_representative_id"`,
+    );
+    await queryRunner.query(`DROP INDEX "public"."IDX_orders_quote_id"`);
+    await queryRunner.query(`DROP INDEX "public"."IDX_orders_customer_id"`);
+    await queryRunner.query(`DROP INDEX "public"."IDX_quote_details_quote_id"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_quotes_sales_representative_id"`,
+    );
+    await queryRunner.query(`DROP INDEX "public"."IDX_quotes_customer_id"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_customer_portfolios_portfolio_id"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_customer_portfolios_customer_id"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_customers_customer_status_id"`,
+    );
+    await queryRunner.query(`DROP INDEX "public"."IDX_customers_potential_id"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_customers_customer_type_id"`,
+    );
+    await queryRunner.query(`DROP INDEX "public"."IDX_customers_zone_id"`);
+    await queryRunner.query(
+      `DROP INDEX "public"."IDX_customer_contacts_customer_id"`,
+    );
     await queryRunner.query(
       `ALTER TABLE "follow_ups" DROP CONSTRAINT "FK_895a95217f24666c44a1d97c0f8"`,
     );
