@@ -3,6 +3,7 @@ import {
   GetObjectCommand,
   PutObjectCommand,
   S3Client,
+  type S3ClientConfig,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Injectable, Logger } from '@nestjs/common';
@@ -34,7 +35,7 @@ export class S3StorageAdapter implements IStorageService {
       'comercial360-multimedia',
     );
 
-    const clientConfig: any = {
+    const clientConfig: S3ClientConfig = {
       region,
       forcePathStyle,
     };

@@ -5,6 +5,7 @@ import type { IStorageService } from '../../../../domain-contracts/index.js';
 import {
   ALLOWED_MIME_TYPES,
   MAX_FILE_SIZE_BYTES,
+  type AllowedMimeType,
 } from '../../domain/storage.constants.js';
 
 export interface GenerateUploadUrlInputDto {
@@ -32,7 +33,7 @@ export class GenerateUploadUrlUseCase {
     dto: GenerateUploadUrlInputDto,
   ): Promise<GenerateUploadUrlOutputDto> {
     const mime = dto.contentType.toLowerCase().trim();
-    if (!ALLOWED_MIME_TYPES.includes(mime as any)) {
+    if (!ALLOWED_MIME_TYPES.includes(mime as AllowedMimeType)) {
       throw new BadRequestException(
         `File type not allowed (${dto.contentType}). Allowed types: images (JPEG, PNG, WEBP) and documents (PDF, Excel, CSV).`,
       );
