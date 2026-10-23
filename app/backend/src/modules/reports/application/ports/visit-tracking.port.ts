@@ -38,6 +38,7 @@ export interface VisitTrackingPage {
 
 export interface IVisitTrackingRepository {
   findPage(filter: VisitTrackingFilter): Promise<VisitTrackingPage>;
+  findAll(filter: VisitTrackingFilter): Promise<VisitTrackingRow[]>;
 }
 
 export const VISIT_TRACKING_REPOSITORY = Symbol('VISIT_TRACKING_REPOSITORY');

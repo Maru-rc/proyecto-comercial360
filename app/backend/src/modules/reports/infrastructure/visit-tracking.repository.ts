@@ -87,6 +87,38 @@ export class VisitTrackingRepository implements IVisitTrackingRepository {
     };
   }
 
+  async findAll(filter: VisitTrackingFilter): Promise<VisitTrackingRow[]> {
+    const whereSql = this.buildWhereSql(filter);
+    const dataRows = await this.db.query<TrackingSqlRow[]>(
+      `
+      SELECT
+        v.visit_id,
+        v.scheduled_at,
+        sr.name AS advisor_name,
+        z.name AS territory,
+        EXTRACT(WEEK FROM v.scheduled_at) AS week,
+        TRIM(TO_CHAR(v.scheduled_at, 'Day')) AS day,
+        r.name AS route_name,
+        COALESCE(c.commercial_name, c.legal_name) AS customer_name,
+        c.municipality,
+        ct.name AS customer_type,
+        p.name AS potential,
+        v.visit_status,
+        outcome.outcome_name,
+        q.quote_number,
+        q.quote_amount,
+        o.order_number,
+        fu.next_date AS next_follow_up_date
+      ${this.buildFromSql()}
+      ${whereSql.sql}
+      ORDER BY v.scheduled_at DESC, v.visit_id DESC
+      `,
+      whereSql.params,
+    );
+
+    return dataRows.map((row) => this.toDomainRow(row));
+  }
+
   private toDomainRow(row: TrackingSqlRow): VisitTrackingRow {
     return {
       visitId: Number(row.visit_id),

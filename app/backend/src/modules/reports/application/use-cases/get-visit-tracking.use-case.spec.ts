@@ -50,6 +50,9 @@ function makeUseCase(
       captured.push(filter);
       return page;
     },
+    async findAll() {
+      return page.rows;
+    },
   };
   const scope = {
     async execute() {
