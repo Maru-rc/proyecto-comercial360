@@ -116,10 +116,9 @@ export class DashboardRepository implements IDashboardRepository {
       `;
     }
 
-    const rows = await this.db.query<{
-      closed_orders: string;
-      billing: string;
-    }>(sql, params);
+    const rows = await this.db.query<
+      { closed_orders: string; billing: string }[]
+    >(sql, params);
     const row = rows[0];
 
     return {
