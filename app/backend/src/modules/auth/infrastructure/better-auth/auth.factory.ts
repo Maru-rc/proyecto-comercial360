@@ -1,29 +1,27 @@
 import { betterAuth } from 'better-auth';
 import type { Pool } from 'pg';
 
-// Token de inyección de la instancia de Better Auth.
+// Injection token for the Better Auth instance.
 export const AUTH = Symbol('AUTH');
 
 /**
- * Duración de la sesión cuando el usuario marca "Recordarme".
- * Es el `session.expiresIn` de Better Auth: la cookie de sesión se guarda con
- * `Max-Age` de 30 días y la fila de `session` expira en 30 días.
+ * Session duration when the user checks "Remember me".
+ * Better Auth sets `Max-Age` on the cookie and the `session` row expires
+ * after 30 days.
  */
-export const REMEMBER_ME_SESSION_SECONDS = 60 * 60 * 24 * 30; // 30 días
+export const REMEMBER_ME_SESSION_SECONDS = 60 * 60 * 24 * 30; // 30 days
 
 /**
- * Duración de la sesión cuando el usuario NO marca "Recordarme".
- * Better Auth la aplica de forma nativa cuando el cliente envía
- * `rememberMe: false` en `POST /api/auth/sign-in/email`: la cookie se envía
- * como cookie de sesión (se borra al cerrar el navegador) y la fila de
- * `session` expira en 1 día. Es el valor que usa Better Auth internamente
- * (`dontRememberMe`), por eso se documenta aquí y se verifica en las pruebas.
+ * Session duration when the user does NOT check "Remember me".
+ * Better Auth applies this natively when the client sends `rememberMe: false`
+ * in `POST /api/auth/sign-in/email`: the cookie is sent as a session cookie
+ * (cleared when the browser closes) and the `session` row expires in 1 day.
  */
-export const SESSION_WITHOUT_REMEMBER_SECONDS = 60 * 60 * 24; // 1 día
+export const SESSION_WITHOUT_REMEMBER_SECONDS = 60 * 60 * 24; // 1 day
 
 /**
- * Cada cuánto se renueva la sesión en el servidor cuando el usuario la usa
- * (evita que la sesión caduque a mitad de uso). 1 día.
+ * How often the session is renewed on the server while the user is active
+ * (prevents the session from expiring mid-use). 1 day.
  */
 export const SESSION_UPDATE_AGE_SECONDS = 60 * 60 * 24;
 
@@ -31,42 +29,40 @@ export function createAuth(pool: Pool, env: NodeJS.ProcessEnv = process.env) {
   const secret = env.BETTER_AUTH_SECRET;
   if (!secret || secret.length < 32) {
     throw new Error(
-      'BETTER_AUTH_SECRET es obligatorio y debe tener al menos 32 caracteres',
+      'BETTER_AUTH_SECRET is required and must be at least 32 characters long',
     );
   }
 
-  // Better Auth cuelga sus rutas de <basePath> (por defecto /api/auth) y esa
-  // ruta es la que monta la aplicación en Express (ver app.setup.ts). Si el
-  // baseURL trajera un path, las rutas de auth quedarían en otro sitio.
+  // Better Auth mounts its routes under <baseURL>/api/auth.
+  // If BETTER_AUTH_URL included a path the auth routes would end up elsewhere.
   const baseURL = env.BETTER_AUTH_URL ?? 'http://localhost:3001';
   const { pathname } = new URL(baseURL);
   if (pathname !== '/' && pathname !== '') {
     throw new Error(
-      'BETTER_AUTH_URL debe ser el origen del backend (sin ruta), por ejemplo https://api.comercial360.com',
+      'BETTER_AUTH_URL must be the backend origin (no path), e.g. https://api.comercial360.com',
     );
   }
 
   return betterAuth({
     database: pool,
     secret,
-    // Better Auth cuelga sus rutas de /api/auth (basePath por defecto)
     baseURL,
-    // Únicos orígenes del navegador autorizados a llamar a los endpoints de auth
+    // Only these browser origins are allowed to call the auth endpoints
     trustedOrigins: allowedOrigins(env),
     emailAndPassword: {
       enabled: true,
-      // No hay registro público: los usuarios los crea el seed/administración.
+      // No public registration: users are created by the seed/admin only.
       disableSignUp: true,
     },
     session: {
-      // Sesión recordada: 30 días de cookie y de fila en `session`.
+      // Remembered session: 30-day cookie and 30-day row in `session`.
       expiresIn: REMEMBER_ME_SESSION_SECONDS,
-      // Se renueva como máximo una vez al día mientras el usuario la usa.
+      // Renewed at most once per day while the user is active.
       updateAge: SESSION_UPDATE_AGE_SECONDS,
     },
     user: {
       additionalFields: {
-        // input:false => el cliente nunca puede enviar ni cambiar su rol
+        // input:false — the client can never send or change their own role
         role: {
           type: 'string',
           required: true,
@@ -76,11 +72,10 @@ export function createAuth(pool: Pool, env: NodeJS.ProcessEnv = process.env) {
       },
     },
     advanced: {
-      // Cookie Secure solo en producción (en desarrollo se usa http://localhost)
+      // Secure cookies only in production (http://localhost is fine in dev)
       useSecureCookies: env.NODE_ENV === 'production',
       defaultCookieAttributes: { httpOnly: true, sameSite: 'lax' },
-      // Verifica siempre el origen de las peticiones con cookies (Better Auth lo
-      // omitiría por defecto si NODE_ENV fuera 'test').
+      // Always verify the request origin — never skip this check.
       disableOriginCheck: false,
     },
   });
@@ -88,7 +83,7 @@ export function createAuth(pool: Pool, env: NodeJS.ProcessEnv = process.env) {
 
 export type Auth = ReturnType<typeof createAuth>;
 
-/** Orígenes del frontend permitidos (CORS y trustedOrigins). */
+/** Frontend origins allowed for CORS and trustedOrigins. */
 export function allowedOrigins(env: NodeJS.ProcessEnv = process.env): string[] {
   const frontendOrigins = (env.FRONTEND_URL ?? 'http://localhost:5173')
     .split(',')

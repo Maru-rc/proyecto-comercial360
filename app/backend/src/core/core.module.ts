@@ -7,7 +7,10 @@ import { buildDataSourceOptions } from './infrastructure/database/data-source.js
   imports: [
     // Carga el archivo .env y deja las variables disponibles en process.env
     ConfigModule.forRoot({ isGlobal: true }),
-    TypeOrmModule.forRootAsync({ useFactory: () => buildDataSourceOptions() }),
+    TypeOrmModule.forRootAsync({
+      useFactory: () => buildDataSourceOptions(),
+      autoLoadEntities: true,
+    }),
   ],
 })
 export class CoreModule {}

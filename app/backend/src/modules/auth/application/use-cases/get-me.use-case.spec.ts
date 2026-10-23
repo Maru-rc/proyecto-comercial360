@@ -18,7 +18,7 @@ const juan: AsesorRecord = {
   nombre: 'Juan',
   correo: 'Juan.Perez@x.com',
   telefono: '300',
-  estado: 'ACTIVO',
+  estado: 'ACTIVE',
 };
 
 describe('GetMeUseCase', () => {
@@ -36,7 +36,7 @@ describe('GetMeUseCase', () => {
       nombre: 'Juan',
       email: 'juan.perez@x.com',
       rol: 'ASESOR',
-      asesor: { id_asesor: 7, telefono: '300', estado: 'ACTIVO' },
+      asesor: { id_asesor: 7, telefono: '300', estado: 'ACTIVE' },
     });
   });
 

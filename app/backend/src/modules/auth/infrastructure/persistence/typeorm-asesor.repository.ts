@@ -15,7 +15,7 @@ export class TypeOrmAsesorRepository implements AsesorRepository {
   ) {}
 
   async findByEmail(email: string): Promise<AsesorRecord | null> {
-    // Better Auth guarda el correo en minúsculas; comparamos sin distinguir mayúsculas.
+    // Better Auth stores emails in lowercase; compare case-insensitively.
     return this.repo
       .createQueryBuilder('a')
       .where('LOWER(a.correo) = LOWER(:email)', { email })
