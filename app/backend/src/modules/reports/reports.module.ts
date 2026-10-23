@@ -1,7 +1,28 @@
 import { Module } from '@nestjs/common';
+import { AuthModule } from '../auth/auth.module.js';
 import { ReportsController } from './reports.controller.js';
+import { VisitTrackingController } from './visit-tracking.controller.js';
+import {
+  GetVisitTrackingUseCase,
+  TRACKING_SCOPE_RESOLVER,
+} from './application/use-cases/get-visit-tracking.use-case.js';
+import { VISIT_TRACKING_REPOSITORY } from './application/ports/visit-tracking.port.js';
+import { VisitTrackingRepository } from './infrastructure/visit-tracking.repository.js';
 
 @Module({
-  controllers: [ReportsController],
+  imports: [AuthModule],
+  controllers: [ReportsController, VisitTrackingController],
+  providers: [
+    {
+      provide: VISIT_TRACKING_REPOSITORY,
+      useClass: VisitTrackingRepository,
+    },
+    {
+      provide: TRACKING_SCOPE_RESOLVER,
+      useFactory: (resolver: unknown) => resolver,
+      inject: ['ResolveAdvisorScopeUseCase'],
+    },
+    GetVisitTrackingUseCase,
+  ],
 })
 export class ReportsModule {}
