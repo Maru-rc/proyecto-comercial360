@@ -12,31 +12,30 @@ import {
 import type { Auth } from './modules/auth/infrastructure/better-auth/auth.factory.js';
 
 /**
- * Configuración común de la app (la usan main.ts y las pruebas e2e).
+ * Common application configuration (used by main.ts and e2e test suite).
  */
 export function configureApp(app: INestApplication) {
-  // 1. Trazabilidad distribuida con Correlation ID en headers y AsyncLocalStorage
+  // 1. Distributed traceability with Correlation ID in headers and AsyncLocalStorage
   const correlationMiddleware = new CorrelationIdMiddleware();
   app.use(correlationMiddleware.use.bind(correlationMiddleware));
 
-  // 2. Cabeceras de seguridad HTTP
+  // 2. HTTP Security headers
   app.use(helmet());
 
-  // 2. Prefijo global de API
+  // 3. Global API prefix
   app.setGlobalPrefix('api');
 
-  // 3. CORS solo para el frontend autorizado, con cookies de sesión
+  // 4. CORS restricted to authorized frontend origins, enabling session cookies
   app.enableCors({ origin: allowedOrigins(), credentials: true });
 
-  // 4. Better Auth atiende /api/auth/*. Se monta aquí, antes de que Nest
-  // active su lector de JSON, porque Better Auth lee el cuerpo por su cuenta.
+  // 5. Better Auth routes mounted under /api/auth/*
   const auth = app.get<Auth>(AUTH);
   app
     .getHttpAdapter()
     .getInstance()
     .all('/api/auth/*splat', toNodeHandler(auth));
 
-  // 5. Validación automática de DTOs con class-validator
+  // 6. Automatic DTO validation with class-validator
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -45,10 +44,10 @@ export function configureApp(app: INestApplication) {
     }),
   );
 
-  // 6. Estandarización de respuestas { data, meta }
+  // 7. Standardization of HTTP responses into { data, meta }
   const reflector = app.get(Reflector);
   app.useGlobalInterceptors(new TransformInterceptor(reflector));
 
-  // 7. Filtro global para traducir DomainExceptions a respuestas HTTP
+  // 8. Global exception filter mapping DomainExceptions to HTTP responses
   app.useGlobalFilters(new DomainExceptionFilter());
 }

@@ -28,9 +28,31 @@ export interface DomainErrorResponseBody {
   correlationId?: string;
 }
 
+export type DomainExceptionConstructor = abstract new (
+  ...args: never[]
+) => DomainException;
+
+const EXCEPTION_STATUS_REGISTRY = new Map<
+  DomainExceptionConstructor,
+  HttpStatus
+>([
+  [EntityNotFoundException, HttpStatus.NOT_FOUND],
+  [ResourceConflictException, HttpStatus.CONFLICT],
+  [ForbiddenOperationException, HttpStatus.FORBIDDEN],
+  [UnauthorizedOperationException, HttpStatus.UNAUTHORIZED],
+  [InvalidOperationException, HttpStatus.BAD_REQUEST],
+]);
+
 @Catch(DomainException)
 export class DomainExceptionFilter implements ExceptionFilter<DomainException> {
   private readonly filterLogger = new Logger(DomainExceptionFilter.name);
+
+  static registerExceptionStatus(
+    exceptionClass: DomainExceptionConstructor,
+    httpStatus: HttpStatus,
+  ): void {
+    EXCEPTION_STATUS_REGISTRY.set(exceptionClass, httpStatus);
+  }
 
   catch(exception: DomainException, host: ArgumentsHost): void {
     const httpContext = host.switchToHttp();
@@ -64,22 +86,23 @@ export class DomainExceptionFilter implements ExceptionFilter<DomainException> {
     httpResponse.status(httpStatusCode).json(errorResponseBody);
   }
 
-  private resolveHttpStatusCode(exception: DomainException): number {
-    if (exception instanceof EntityNotFoundException) {
-      return HttpStatus.NOT_FOUND;
+  private resolveHttpStatusCode(exception: DomainException): HttpStatus {
+    const directMatch = EXCEPTION_STATUS_REGISTRY.get(
+      exception.constructor as DomainExceptionConstructor,
+    );
+    if (directMatch !== undefined) {
+      return directMatch;
     }
-    if (exception instanceof ResourceConflictException) {
-      return HttpStatus.CONFLICT;
+
+    for (const [
+      RegisteredClass,
+      status,
+    ] of EXCEPTION_STATUS_REGISTRY.entries()) {
+      if (exception instanceof (RegisteredClass as Function)) {
+        return status;
+      }
     }
-    if (exception instanceof ForbiddenOperationException) {
-      return HttpStatus.FORBIDDEN;
-    }
-    if (exception instanceof UnauthorizedOperationException) {
-      return HttpStatus.UNAUTHORIZED;
-    }
-    if (exception instanceof InvalidOperationException) {
-      return HttpStatus.BAD_REQUEST;
-    }
+
     return HttpStatus.BAD_REQUEST;
   }
 

@@ -1,28 +1,28 @@
 export interface QuotationContractDto {
-  id: number;
-  quotationNumber: string;
-  number?: string;
-  visitId?: number | null;
-  clientId: number;
-  advisorId?: number;
-  amount: number;
-  currency: string;
-  status: string;
-  date?: Date | string;
-  createdAt?: Date | string;
+  readonly id: number;
+  readonly quotationNumber: string;
+  readonly number?: string;
+  readonly visitId?: number | null;
+  readonly clientId: number;
+  readonly advisorId?: number;
+  readonly amount: number;
+  readonly currency: string;
+  readonly status: string;
+  readonly date?: Date | string;
+  readonly createdAt?: Date | string;
 }
 
 export interface OrderContractDto {
-  id: number;
-  orderNumber: string;
-  number?: string;
-  visitId?: number | null;
-  quotationId?: number | null;
-  clientId: number;
-  advisorId?: number;
-  amount: number;
-  status: string;
-  date?: Date | string;
-  estimatedDeliveryDate?: Date | string | null;
-  createdAt?: Date | string;
+  readonly id: number;
+  readonly orderNumber: string;
+  readonly number?: string;
+  readonly visitId?: number | null;
+  readonly quotationId?: number | null;
+  readonly clientId: number;
+  readonly advisorId?: number;
+  readonly amount: number;
+  readonly status: string;
+  readonly date?: Date | string;
+  readonly estimatedDeliveryDate?: Date | string | null;
+  readonly createdAt?: Date | string;
 }

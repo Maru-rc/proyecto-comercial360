@@ -18,7 +18,7 @@ import { RolesGuard } from './roles.guard.js';
 /**
  * Protects an endpoint: requires a valid session and, optionally, specific roles.
  *   @Auth()             → any authenticated user
- *   @Auth('DIRECTOR')   → director only (asesor gets 403)
+ *   @Auth('DIRECTOR')   → director only (advisor gets 403)
  */
 export const Auth = (...roles: Role[]) =>
   applyDecorators(

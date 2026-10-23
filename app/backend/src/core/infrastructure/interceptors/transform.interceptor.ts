@@ -13,6 +13,16 @@ import { CorrelationContext } from '../correlation/correlation-context.js';
 import type { RequestWithCorrelation } from '../correlation/correlation-id.middleware.js';
 import { BYPASS_TRANSFORM_METADATA_KEY } from './bypass-transform.decorator.js';
 
+export const SLOW_REQUEST_THRESHOLD_MS = 500;
+
+export const INTERCEPTOR_CONSTANTS = {
+  DEFAULT_HTTP_METHOD: 'REQ',
+  DEFAULT_TRACE_ID: 'no-trace',
+  DEFAULT_STATUS_CODE: 200,
+  SWAGGER_DOCS_PATH_PREFIX: '/api/docs',
+  AUTH_PATH_PREFIX: '/api/auth',
+} as const;
+
 export interface ApiResponseMeta {
   statusCode: number;
   timestamp: string;
@@ -55,46 +65,82 @@ export class TransformInterceptor<T> implements NestInterceptor<
           return executionResult as T;
         }
 
-        const httpStatusCode = httpResponse?.statusCode || 200;
-        const requestTimestamp = new Date().toISOString();
-        const requestPath = httpRequest?.url || '';
-        const initialRequestStartTime =
-          httpRequest?.startTime || fallbackStartTime;
-        const executionDurationMs = Date.now() - initialRequestStartTime;
-        const correlationId =
-          CorrelationContext.getCorrelationId() || httpRequest?.correlationId;
+        const standardMetadata = this.buildStandardMetadata(
+          httpResponse,
+          httpRequest,
+          fallbackStartTime,
+        );
 
-        if (executionDurationMs > 500) {
-          this.interceptorLogger.warn(
-            `⚠️ Slow Request: ${httpRequest?.method || 'REQ'} ${requestPath} - ${executionDurationMs}ms [${correlationId || 'no-trace'}]`,
-          );
-        }
-
-        const standardMetadata: ApiResponseMeta = {
-          statusCode: httpStatusCode,
-          timestamp: requestTimestamp,
-          path: requestPath,
-          ...(correlationId ? { correlationId } : {}),
-          durationMs: executionDurationMs,
-        };
-
-        if (this.isAlreadyEnveloped(executionResult)) {
-          const { data: innerPayload, meta: customMetadata } = executionResult;
-          return {
-            data: innerPayload as T,
-            meta: {
-              ...standardMetadata,
-              ...customMetadata,
-            },
-          };
-        }
-
-        return {
-          data: (executionResult === undefined ? null : executionResult) as T,
-          meta: standardMetadata,
-        };
+        return this.wrapExecutionResult(executionResult, standardMetadata);
       }),
     );
+  }
+
+  private buildStandardMetadata(
+    httpResponse: Response | undefined,
+    httpRequest: RequestWithCorrelation | undefined,
+    fallbackStartTime: number,
+  ): ApiResponseMeta {
+    const httpStatusCode =
+      httpResponse?.statusCode || INTERCEPTOR_CONSTANTS.DEFAULT_STATUS_CODE;
+    const requestTimestamp = new Date().toISOString();
+    const requestPath = httpRequest?.url || '';
+    const initialRequestStartTime = httpRequest?.startTime || fallbackStartTime;
+    const executionDurationMs = Date.now() - initialRequestStartTime;
+    const correlationId =
+      CorrelationContext.getCorrelationId() || httpRequest?.correlationId;
+
+    this.logSlowRequestIfNeeded(
+      httpRequest,
+      requestPath,
+      executionDurationMs,
+      correlationId,
+    );
+
+    return {
+      statusCode: httpStatusCode,
+      timestamp: requestTimestamp,
+      path: requestPath,
+      ...(correlationId ? { correlationId } : {}),
+      durationMs: executionDurationMs,
+    };
+  }
+
+  private logSlowRequestIfNeeded(
+    httpRequest: RequestWithCorrelation | undefined,
+    requestPath: string,
+    executionDurationMs: number,
+    correlationId?: string,
+  ): void {
+    if (executionDurationMs > SLOW_REQUEST_THRESHOLD_MS) {
+      const httpMethod =
+        httpRequest?.method || INTERCEPTOR_CONSTANTS.DEFAULT_HTTP_METHOD;
+      const traceId = correlationId || INTERCEPTOR_CONSTANTS.DEFAULT_TRACE_ID;
+      this.interceptorLogger.warn(
+        `⚠️ Slow Request: ${httpMethod} ${requestPath} - ${executionDurationMs}ms [${traceId}]`,
+      );
+    }
+  }
+
+  private wrapExecutionResult(
+    executionResult: unknown,
+    standardMetadata: ApiResponseMeta,
+  ): ApiResponseEnvelope<T> {
+    if (this.isAlreadyEnveloped(executionResult)) {
+      const { data: innerPayload, meta: customMetadata } = executionResult;
+      return {
+        data: innerPayload as T,
+        meta: {
+          ...standardMetadata,
+          ...customMetadata,
+        },
+      };
+    }
+
+    return {
+      data: (executionResult === undefined ? null : executionResult) as T,
+      meta: standardMetadata,
+    };
   }
 
   private shouldBypassTransformation(
@@ -116,7 +162,8 @@ export class TransformInterceptor<T> implements NestInterceptor<
     const requestUrl = httpRequest?.url || '';
 
     return (
-      requestUrl.startsWith('/api/docs') || requestUrl.startsWith('/api/auth')
+      requestUrl.startsWith(INTERCEPTOR_CONSTANTS.SWAGGER_DOCS_PATH_PREFIX) ||
+      requestUrl.startsWith(INTERCEPTOR_CONSTANTS.AUTH_PATH_PREFIX)
     );
   }
 

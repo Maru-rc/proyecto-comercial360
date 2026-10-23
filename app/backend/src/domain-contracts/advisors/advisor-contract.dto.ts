@@ -1,8 +1,10 @@
+import type { UserRole } from '../auth/index.js';
+
 export interface AdvisorContractDto {
-  id: number;
-  name: string;
-  email: string;
-  phone?: string | null;
-  role?: string;
-  isActive: boolean;
+  readonly id: number;
+  readonly name: string;
+  readonly email: string;
+  readonly phone?: string | null;
+  readonly role?: UserRole;
+  readonly isActive: boolean;
 }

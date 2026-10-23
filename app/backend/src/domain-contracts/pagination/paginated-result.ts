@@ -1,12 +1,12 @@
 import { PaginationMeta, createPaginationMeta } from './pagination-meta.js';
 
 export interface PaginatedResult<T> {
-  data: T[];
-  meta: PaginationMeta;
+  readonly data: readonly T[];
+  readonly meta: PaginationMeta;
 }
 
 /**
- * Empaqueta una lista de elementos en el contrato estándar { data, meta } de Comercial360.
+ * Wraps an array of items into the standard { data, meta } contract for Comercial360.
  */
 export function createPaginatedResult<T>(
   items: T[],

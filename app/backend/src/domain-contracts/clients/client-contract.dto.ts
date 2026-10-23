@@ -1,45 +1,45 @@
 export interface ClientCoordinatesContractDto {
-  latitude: number | null;
-  longitude: number | null;
+  readonly latitude: number | null;
+  readonly longitude: number | null;
 }
 
 export interface ClientContactContractDto {
-  name: string;
-  phone: string;
-  email?: string | null;
-  position?: string | null;
+  readonly name: string;
+  readonly phone: string;
+  readonly email?: string | null;
+  readonly position?: string | null;
 }
 
 export interface ClientSummaryContractDto {
-  id: number;
-  nit: string;
-  legalName: string;
-  commercialName?: string | null;
-  address?: string | null;
-  city?: string | null;
-  state?: string | null;
-  phone?: string | null;
-  email?: string | null;
-  isActive: boolean;
-  potential?: string | null;
-  clientStatus?: string | null;
-  latitude?: number | null;
-  longitude?: number | null;
-  primaryContact?: ClientContactContractDto | null;
+  readonly id: number;
+  readonly nit: string;
+  readonly legalName: string;
+  readonly commercialName?: string | null;
+  readonly address?: string | null;
+  readonly city?: string | null;
+  readonly state?: string | null;
+  readonly phone?: string | null;
+  readonly email?: string | null;
+  readonly isActive: boolean;
+  readonly potential?: string | null;
+  readonly clientStatus?: string | null;
+  readonly latitude?: number | null;
+  readonly longitude?: number | null;
+  readonly primaryContact?: ClientContactContractDto | null;
 }
 
 export interface ClientContractDto {
-  id: number;
-  nit: string;
-  legalName: string;
-  commercialName?: string | null;
-  address?: string | null;
-  city?: string | null;
-  state?: string | null;
-  phone?: string | null;
-  email?: string | null;
-  isActive: boolean;
-  latitude?: number | null;
-  longitude?: number | null;
-  createdAt?: Date | string;
+  readonly id: number;
+  readonly nit: string;
+  readonly legalName: string;
+  readonly commercialName?: string | null;
+  readonly address?: string | null;
+  readonly city?: string | null;
+  readonly state?: string | null;
+  readonly phone?: string | null;
+  readonly email?: string | null;
+  readonly isActive: boolean;
+  readonly latitude?: number | null;
+  readonly longitude?: number | null;
+  readonly createdAt?: Date | string;
 }

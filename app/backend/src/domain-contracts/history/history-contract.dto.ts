@@ -1,23 +1,23 @@
 export interface CreateHistoryEntryContractDto {
-  clientId: number;
-  action?: string;
-  eventType?: string;
-  user?: string;
-  author?: string;
-  description: string;
-  visitId?: number | null;
-  metadata?: Record<string, unknown> | null;
+  readonly clientId: number;
+  readonly action?: string;
+  readonly eventType?: string;
+  readonly user?: string;
+  readonly author?: string;
+  readonly description: string;
+  readonly visitId?: number | null;
+  readonly metadata?: Record<string, unknown> | null;
 }
 
 export interface HistoryEntryContractDto {
-  id: number;
-  clientId: number;
-  action?: string;
-  eventType?: string;
-  user?: string;
-  author?: string;
-  description: string;
-  visitId?: number | null;
-  createdAt?: Date | string;
-  metadata?: Record<string, unknown> | null;
+  readonly id: number;
+  readonly clientId: number;
+  readonly action?: string;
+  readonly eventType?: string;
+  readonly user?: string;
+  readonly author?: string;
+  readonly description: string;
+  readonly visitId?: number | null;
+  readonly createdAt?: Date | string;
+  readonly metadata?: Record<string, unknown> | null;
 }

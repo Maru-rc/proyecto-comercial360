@@ -9,6 +9,9 @@ import {
   ROUTE_READER,
   STORAGE_SERVICE,
   VISIT_READER,
+  USER_ROLES,
+  ROLES,
+  isUserRole,
 } from './index.js';
 
 describe('Domain Contracts Central Barrel', () => {
@@ -43,5 +46,15 @@ describe('Domain Contracts Central Barrel', () => {
     expect(FOLLOW_UP_READER.description).toBe('FOLLOW_UP_READER');
     expect(HISTORY_WRITER.description).toBe('HISTORY_WRITER');
     expect(STORAGE_SERVICE.description).toBe('STORAGE_SERVICE');
+  });
+
+  it('should export centralized user roles and type guards', () => {
+    expect(USER_ROLES.ADVISOR).toBe('ADVISOR');
+    expect(USER_ROLES.DIRECTOR).toBe('DIRECTOR');
+    expect(ROLES).toContain(USER_ROLES.ADVISOR);
+    expect(ROLES).toContain(USER_ROLES.DIRECTOR);
+    expect(isUserRole(USER_ROLES.ADVISOR)).toBe(true);
+    expect(isUserRole(USER_ROLES.DIRECTOR)).toBe(true);
+    expect(isUserRole('INVALID_ROLE')).toBe(false);
   });
 });

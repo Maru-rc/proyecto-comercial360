@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { CorrelationContext } from './correlation-context.js';
 
 export const CORRELATION_ID_HEADER = 'x-correlation-id';
+export const REQUEST_ID_HEADER = 'x-request-id';
 
 export interface RequestWithCorrelation extends Request {
   correlationId?: string;
@@ -19,7 +20,7 @@ export class CorrelationIdMiddleware implements NestMiddleware {
   ): void {
     const rawHeaderValue =
       httpRequest.headers[CORRELATION_ID_HEADER] ||
-      httpRequest.headers['x-request-id'];
+      httpRequest.headers[REQUEST_ID_HEADER];
 
     const correlationId =
       typeof rawHeaderValue === 'string' && rawHeaderValue.trim().length > 0

@@ -7,6 +7,7 @@ import { validateEnv } from './infrastructure/config/env.validation.js';
 import { buildDataSourceOptions } from './infrastructure/database/data-source.js';
 
 import { HealthController } from './infrastructure/health/health.controller.js';
+import { SystemHealthProbeService } from './infrastructure/health/system-health-probe.service.js';
 
 @Global()
 @Module({
@@ -25,7 +26,7 @@ import { HealthController } from './infrastructure/health/health.controller.js';
     }),
   ],
   controllers: [HealthController],
-  providers: [AppConfigService],
-  exports: [AppConfigService, ConfigModule],
+  providers: [AppConfigService, SystemHealthProbeService],
+  exports: [AppConfigService, SystemHealthProbeService, ConfigModule],
 })
 export class CoreModule {}

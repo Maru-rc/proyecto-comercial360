@@ -46,7 +46,7 @@ describe('Pagination Contract & Helpers (Clean Architecture)', () => {
   });
 
   it('createPaginatedResult should return { data, meta } structure conforming to API standard', () => {
-    const mockItems = [{ id: 1, name: 'Visita 1' }];
+    const mockItems = [{ id: 1, name: 'Visit 1' }];
     const result = createPaginatedResult(mockItems, 50, 2, 10);
 
     expect(result.data).toEqual(mockItems);

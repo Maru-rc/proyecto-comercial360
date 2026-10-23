@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { ArgumentsHost, HttpStatus } from '@nestjs/common';
 import { DomainExceptionFilter } from './domain-exception.filter.js';
 import {
+  DomainException,
   EntityNotFoundException,
   ForbiddenOperationException,
   InvalidOperationException,
@@ -126,6 +127,35 @@ describe('DomainExceptionFilter', () => {
         code: 'INVALID_OPERATION',
         message: 'State invalid',
         details: { currentStatus: 'CANCELLED' },
+      }),
+    );
+  });
+
+  it('should support registering custom domain exceptions to extend mapping (OCP)', () => {
+    class CustomUnprocessableException extends DomainException {
+      readonly code = 'CUSTOM_UNPROCESSABLE';
+
+      constructor(message: string) {
+        super(message);
+      }
+    }
+
+    DomainExceptionFilter.registerExceptionStatus(
+      CustomUnprocessableException,
+      HttpStatus.UNPROCESSABLE_ENTITY,
+    );
+
+    const filter = new DomainExceptionFilter();
+    const { mockHost, statusMock, jsonMock } = createMockArgumentsHost();
+    const exception = new CustomUnprocessableException('Custom error');
+
+    filter.catch(exception, mockHost);
+
+    expect(statusMock).toHaveBeenCalledWith(HttpStatus.UNPROCESSABLE_ENTITY);
+    expect(jsonMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        statusCode: 422,
+        code: 'CUSTOM_UNPROCESSABLE',
       }),
     );
   });

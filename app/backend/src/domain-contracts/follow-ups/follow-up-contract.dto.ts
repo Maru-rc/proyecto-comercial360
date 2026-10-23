@@ -1,10 +1,10 @@
 export interface FollowUpContractDto {
-  id: number;
-  clientId: number;
-  visitId?: number | null;
-  responsibleAdvisorId?: number | null;
-  nextContactDate: Date | string;
-  activity: string;
-  isCompleted: boolean;
-  observation?: string | null;
+  readonly id: number;
+  readonly clientId: number;
+  readonly visitId?: number | null;
+  readonly responsibleAdvisorId?: number | null;
+  readonly nextContactDate: Date | string;
+  readonly activity: string;
+  readonly isCompleted: boolean;
+  readonly observation?: string | null;
 }
