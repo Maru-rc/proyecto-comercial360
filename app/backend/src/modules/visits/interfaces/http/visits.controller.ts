@@ -12,7 +12,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { CurrentUser, User, UserRole } from '../../../auth/public-api.js';
+import { CurrentUser, UserRole, type User } from '../../../auth/public-api.js';
 import { ListAgendaUseCase } from '../../application/list-agenda/list-agenda.use-case.js';
 import { GetMapUseCase } from '../../application/get-map/get-map.use-case.js';
 import { RecordVisitUseCase } from '../../application/record-visit/record-visit.use-case.js';

@@ -18,56 +18,95 @@ import { ScheduleVisitUseCase } from './application/schedule-visit/schedule-visi
 import { GetVisitUseCase } from './application/get-visit/get-visit.use-case.js';
 import { InMemoryVisitRepository } from './infrastructure/persistence/in-memory-visit.repository.js';
 import {
+  type FollowUpRecord,
+  type HistoryRecord,
   InMemoryVisitUnitOfWork,
   type InMemoryFollowUpStore,
   type InMemoryHistoryStore,
   type InMemoryOrderStore,
   type InMemoryQuotationStore,
+  type OrderRecord,
+  type QuotationRecord,
 } from './infrastructure/persistence/in-memory-visit-unit-of-work.js';
 
 class MockQuotationStore implements InMemoryQuotationStore {
-  public quotations: any[] = [];
+  public quotations: QuotationRecord[] = [];
   public autoIncrementId = 1;
 
-  async findByNumber(number: string) {
+  async findByNumber(number: string): Promise<QuotationRecord | null> {
     return this.quotations.find((q) => q.number === number) ?? null;
   }
 
-  async save(quotation: any) {
-    const record = { id: this.autoIncrementId++, ...quotation };
+  async save(quotation: QuotationRecord): Promise<QuotationRecord> {
+    const record: QuotationRecord = {
+      id: this.autoIncrementId++,
+      ...quotation,
+    };
     this.quotations.push(record);
     return record;
+  }
+
+  getSnapshot() {
+    return {
+      quotations: [...this.quotations],
+      autoIncrementId: this.autoIncrementId,
+    };
+  }
+
+  restoreSnapshot(snapshot: {
+    quotations: QuotationRecord[];
+    autoIncrementId: number;
+  }) {
+    this.quotations.length = 0;
+    this.quotations.push(...snapshot.quotations);
+    this.autoIncrementId = snapshot.autoIncrementId;
   }
 }
 
 class MockOrderStore implements InMemoryOrderStore, OrderReader {
-  public orders: any[] = [];
+  public orders: OrderRecord[] = [];
   public autoIncrementId = 1;
 
-  async findByNumber(number: string) {
+  async findByNumber(number: string): Promise<OrderRecord | null> {
     return this.orders.find((o) => o.number === number) ?? null;
   }
 
-  async save(order: any) {
+  async save(order: OrderRecord): Promise<OrderRecord> {
     if (order.amount <= 0) {
       throw new BadRequestException('Order amount must be greater than zero');
     }
-    const record = { id: this.autoIncrementId++, ...order };
+    const record: OrderRecord = { id: this.autoIncrementId++, ...order };
     this.orders.push(record);
     return record;
+  }
+
+  getSnapshot() {
+    return {
+      orders: [...this.orders],
+      autoIncrementId: this.autoIncrementId,
+    };
+  }
+
+  restoreSnapshot(snapshot: {
+    orders: OrderRecord[];
+    autoIncrementId: number;
+  }) {
+    this.orders.length = 0;
+    this.orders.push(...snapshot.orders);
+    this.autoIncrementId = snapshot.autoIncrementId;
   }
 
   async getOrderById(id: number): Promise<OrderContractDto | null> {
     const order = this.orders.find((o) => o.id === id);
     if (!order) return null;
     return {
-      id: order.id,
+      id: order.id ?? 0,
       orderNumber: order.orderNumber ?? order.number ?? `ORD-${order.id}`,
       number: order.number ?? order.orderNumber ?? `ORD-${order.id}`,
       visitId: order.visitId ?? null,
       quotationId: order.quotationId ?? null,
       clientId: order.clientId,
-      advisorId: order.advisorId,
+      advisorId: order.advisorId ?? undefined,
       amount: order.amount,
       status: order.status ?? 'PENDING',
       date: order.date,
@@ -82,16 +121,32 @@ class MockOrderStore implements InMemoryOrderStore, OrderReader {
 }
 
 class MockFollowUpStore implements InMemoryFollowUpStore {
-  public followUps: any[] = [];
+  public followUps: FollowUpRecord[] = [];
   public autoIncrementId = 1;
 
-  async save(followUp: any) {
+  async save(followUp: FollowUpRecord): Promise<FollowUpRecord> {
     if (!followUp.activity || followUp.activity.trim().length === 0) {
       throw new BadRequestException('Follow-up activity is required');
     }
-    const record = { id: this.autoIncrementId++, ...followUp };
+    const record: FollowUpRecord = { id: this.autoIncrementId++, ...followUp };
     this.followUps.push(record);
     return record;
+  }
+
+  getSnapshot() {
+    return {
+      followUps: [...this.followUps],
+      autoIncrementId: this.autoIncrementId,
+    };
+  }
+
+  restoreSnapshot(snapshot: {
+    followUps: FollowUpRecord[];
+    autoIncrementId: number;
+  }) {
+    this.followUps.length = 0;
+    this.followUps.push(...snapshot.followUps);
+    this.autoIncrementId = snapshot.autoIncrementId;
   }
 
   async findAll() {
@@ -100,13 +155,29 @@ class MockFollowUpStore implements InMemoryFollowUpStore {
 }
 
 class MockHistoryStore implements InMemoryHistoryStore {
-  public entries: any[] = [];
+  public entries: HistoryRecord[] = [];
   public autoIncrementId = 1;
 
-  async save(entry: any) {
-    const record = { id: this.autoIncrementId++, ...entry };
+  async save(entry: HistoryRecord): Promise<HistoryRecord> {
+    const record: HistoryRecord = { id: this.autoIncrementId++, ...entry };
     this.entries.push(record);
     return record;
+  }
+
+  getSnapshot() {
+    return {
+      entries: [...this.entries],
+      autoIncrementId: this.autoIncrementId,
+    };
+  }
+
+  restoreSnapshot(snapshot: {
+    entries: HistoryRecord[];
+    autoIncrementId: number;
+  }) {
+    this.entries.length = 0;
+    this.entries.push(...snapshot.entries);
+    this.autoIncrementId = snapshot.autoIncrementId;
   }
 
   async findAll() {

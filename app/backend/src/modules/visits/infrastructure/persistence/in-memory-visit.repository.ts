@@ -17,6 +17,61 @@ export class InMemoryVisitRepository implements IVisitRepository, VisitReader {
 
   constructor(private readonly clientReader?: ClientReader) {}
 
+  getSnapshot(): {
+    visits: Visit[];
+    outcomes: VisitOutcome[];
+    autoIncrementId: number;
+    autoIncrementOutcomeId: number;
+  } {
+    return {
+      visits: this.visits.map((v) =>
+        Visit.create({
+          id: v.id,
+          clientId: v.clientId,
+          advisorId: v.advisorId,
+          routeId: v.routeId,
+          scheduledDate: new Date(v.scheduledDate),
+          visitOrder: v.visitOrder,
+          startTime: v.startTime,
+          endTime: v.endTime,
+          visitStatus: v.visitStatus,
+          visitType: v.visitType,
+          objective: v.objective,
+          observation: v.observation,
+          evidenceS3Key: v.evidenceS3Key,
+          createdAt: v.createdAt ? new Date(v.createdAt) : undefined,
+        }),
+      ),
+      outcomes: this.outcomes.map((o) =>
+        VisitOutcome.create({
+          id: o.id,
+          visitId: o.visitId,
+          outcome: o.outcome,
+          reasonNoSale: o.reasonNoSale,
+          observations: o.observations,
+          evidenceS3Key: o.evidenceS3Key,
+          createdAt: o.createdAt ? new Date(o.createdAt) : undefined,
+        }),
+      ),
+      autoIncrementId: this.autoIncrementId,
+      autoIncrementOutcomeId: this.autoIncrementOutcomeId,
+    };
+  }
+
+  restoreSnapshot(snapshot: {
+    visits: Visit[];
+    outcomes: VisitOutcome[];
+    autoIncrementId: number;
+    autoIncrementOutcomeId: number;
+  }): void {
+    this.visits.length = 0;
+    this.visits.push(...snapshot.visits);
+    this.outcomes.length = 0;
+    this.outcomes.push(...snapshot.outcomes);
+    this.autoIncrementId = snapshot.autoIncrementId;
+    this.autoIncrementOutcomeId = snapshot.autoIncrementOutcomeId;
+  }
+
   async save(visit: Visit): Promise<Visit> {
     const existingIndex = visit.id
       ? this.visits.findIndex((v) => v.id === visit.id)

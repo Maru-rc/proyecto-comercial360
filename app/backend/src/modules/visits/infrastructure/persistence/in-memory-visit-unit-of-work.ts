@@ -1,5 +1,4 @@
 import { ConflictException } from '@nestjs/common';
-import { Visit } from '../../domain/entities/visit.entity.js';
 import type {
   IVisitUnitOfWork,
   RecordHistoryTransactionalInput,
@@ -10,22 +9,89 @@ import type {
 } from '../../application/ports/visit-unit-of-work.port.js';
 import type { InMemoryVisitRepository } from './in-memory-visit.repository.js';
 
+export interface QuotationRecord {
+  id?: number;
+  number: string;
+  clientId: number;
+  advisorId?: number | null;
+  visitId?: number | null;
+  amount: number;
+  currency?: string;
+  status?: string;
+}
+
+export interface OrderRecord {
+  id?: number;
+  number: string;
+  orderNumber?: string;
+  clientId: number;
+  advisorId?: number | null;
+  visitId?: number | null;
+  quotationId?: number | null;
+  amount: number;
+  status?: string;
+  date?: Date;
+  estimatedDeliveryDate?: Date | null;
+  createdAt?: Date;
+}
+
+export interface FollowUpRecord {
+  id?: number;
+  clientId: number;
+  visitId?: number | null;
+  responsibleAdvisorId?: number | null;
+  nextContactDate: Date;
+  activity: string;
+  observation?: string | null;
+}
+
+export interface HistoryRecord {
+  id?: number;
+  clientId: number;
+  visitId?: number | null;
+  quotationId?: number | null;
+  orderId?: number | null;
+  action: string;
+  user: string;
+  description: string;
+}
+
 export interface InMemoryQuotationStore {
-  findByNumber(number: string): Promise<any>;
-  save(quotation: any): Promise<any>;
+  findByNumber(number: string): Promise<QuotationRecord | null>;
+  save(quotation: QuotationRecord): Promise<QuotationRecord>;
+  getSnapshot?(): { quotations: QuotationRecord[]; autoIncrementId: number };
+  restoreSnapshot?(snapshot: {
+    quotations: QuotationRecord[];
+    autoIncrementId: number;
+  }): void;
 }
 
 export interface InMemoryOrderStore {
-  findByNumber(number: string): Promise<any>;
-  save(order: any): Promise<any>;
+  findByNumber(number: string): Promise<OrderRecord | null>;
+  save(order: OrderRecord): Promise<OrderRecord>;
+  getSnapshot?(): { orders: OrderRecord[]; autoIncrementId: number };
+  restoreSnapshot?(snapshot: {
+    orders: OrderRecord[];
+    autoIncrementId: number;
+  }): void;
 }
 
 export interface InMemoryFollowUpStore {
-  save(followUp: any): Promise<any>;
+  save(followUp: FollowUpRecord): Promise<FollowUpRecord>;
+  getSnapshot?(): { followUps: FollowUpRecord[]; autoIncrementId: number };
+  restoreSnapshot?(snapshot: {
+    followUps: FollowUpRecord[];
+    autoIncrementId: number;
+  }): void;
 }
 
 export interface InMemoryHistoryStore {
-  save(entry: any): Promise<any>;
+  save(entry: HistoryRecord): Promise<HistoryRecord>;
+  getSnapshot?(): { entries: HistoryRecord[]; autoIncrementId: number };
+  restoreSnapshot?(snapshot: {
+    entries: HistoryRecord[];
+    autoIncrementId: number;
+  }): void;
 }
 
 export class InMemoryVisitUnitOfWork implements IVisitUnitOfWork {
@@ -40,63 +106,12 @@ export class InMemoryVisitUnitOfWork implements IVisitUnitOfWork {
   async runInTransaction<T>(
     work: (context: VisitTransactionalContext) => Promise<T>,
   ): Promise<T> {
-    // 1. SNAPSHOT: Deep copy repository states
-    const visitSnapshot = {
-      visits: ((this.visitRepo as any).visits ?? []).map((v: any) =>
-        Visit.create({
-          id: v.id,
-          clientId: v.clientId,
-          advisorId: v.advisorId,
-          routeId: v.routeId,
-          scheduledDate: new Date(v.scheduledDate),
-          visitOrder: v.visitOrder,
-          startTime: v.startTime,
-          endTime: v.endTime,
-          visitStatus: v.visitStatus,
-          visitType: v.visitType,
-          objective: v.objective,
-          observation: v.observation,
-          evidenceS3Key: v.evidenceS3Key,
-          createdAt: v.createdAt,
-        }),
-      ),
-      outcomes: [...((this.visitRepo as any).outcomes ?? [])],
-      autoIncrementId: (this.visitRepo as any).autoIncrementId ?? 1,
-      autoIncrementOutcomeId:
-        (this.visitRepo as any).autoIncrementOutcomeId ?? 1,
-    };
-    const quotationSnapshot = {
-      quotations: this.quotationRepo
-        ? [...((this.quotationRepo as any).quotations ?? [])]
-        : [],
-      autoIncrementId: this.quotationRepo
-        ? ((this.quotationRepo as any).autoIncrementId ?? 1)
-        : 1,
-    };
-    const orderSnapshot = {
-      orders: this.orderRepo ? [...((this.orderRepo as any).orders ?? [])] : [],
-      autoIncrementId: this.orderRepo
-        ? ((this.orderRepo as any).autoIncrementId ?? 1)
-        : 1,
-    };
-    const followUpSnapshot = {
-      followUps: this.followUpRepo
-        ? [...((this.followUpRepo as any).followUps ?? [])]
-        : [],
-      autoIncrementId: this.followUpRepo
-        ? ((this.followUpRepo as any).autoIncrementId ?? 1)
-        : 1,
-    };
-    const historySnapshot = {
-      entries: this.historyRepo
-        ? [...((this.historyRepo as any).entries ?? [])]
-        : [],
-      autoIncrementId: this.historyRepo
-        ? ((this.historyRepo as any).autoIncrementId ?? 1)
-        : 1,
-    };
+    const visitSnapshot = this.visitRepo.getSnapshot();
+    const quotationSnapshot = this.quotationRepo?.getSnapshot?.();
+    const orderSnapshot = this.orderRepo?.getSnapshot?.();
+    const followUpSnapshot = this.followUpRepo?.getSnapshot?.();
+    const historySnapshot = this.historyRepo?.getSnapshot?.();
 
-    // 2. CONTEXT: Construct transactional delegates with constraint checks
     const context: VisitTransactionalContext = {
       visitRepo: this.visitRepo,
 
@@ -183,49 +198,23 @@ export class InMemoryVisitUnitOfWork implements IVisitUnitOfWork {
       },
     };
 
-    // 3. EXECUTE & ROLLBACK ON FAILURE
     try {
       const result = await work(context);
       return result;
     } catch (error) {
-      // ROLLBACK: Restore original snapshot in all repositories
-      if ((this.visitRepo as any).visits) {
-        (this.visitRepo as any).visits.length = 0;
-        (this.visitRepo as any).visits.push(...visitSnapshot.visits);
-        (this.visitRepo as any).outcomes.length = 0;
-        (this.visitRepo as any).outcomes.push(...visitSnapshot.outcomes);
-        (this.visitRepo as any).autoIncrementId = visitSnapshot.autoIncrementId;
-        (this.visitRepo as any).autoIncrementOutcomeId =
-          visitSnapshot.autoIncrementOutcomeId;
+      this.visitRepo.restoreSnapshot(visitSnapshot);
+      if (this.quotationRepo && quotationSnapshot) {
+        this.quotationRepo.restoreSnapshot?.(quotationSnapshot);
       }
-      if (this.quotationRepo && (this.quotationRepo as any).quotations) {
-        (this.quotationRepo as any).quotations.length = 0;
-        (this.quotationRepo as any).quotations.push(
-          ...quotationSnapshot.quotations,
-        );
-        (this.quotationRepo as any).autoIncrementId =
-          quotationSnapshot.autoIncrementId;
+      if (this.orderRepo && orderSnapshot) {
+        this.orderRepo.restoreSnapshot?.(orderSnapshot);
       }
-      if (this.orderRepo && (this.orderRepo as any).orders) {
-        (this.orderRepo as any).orders.length = 0;
-        (this.orderRepo as any).orders.push(...orderSnapshot.orders);
-        (this.orderRepo as any).autoIncrementId = orderSnapshot.autoIncrementId;
+      if (this.followUpRepo && followUpSnapshot) {
+        this.followUpRepo.restoreSnapshot?.(followUpSnapshot);
       }
-      if (this.followUpRepo && (this.followUpRepo as any).followUps) {
-        (this.followUpRepo as any).followUps.length = 0;
-        (this.followUpRepo as any).followUps.push(
-          ...followUpSnapshot.followUps,
-        );
-        (this.followUpRepo as any).autoIncrementId =
-          followUpSnapshot.autoIncrementId;
+      if (this.historyRepo && historySnapshot) {
+        this.historyRepo.restoreSnapshot?.(historySnapshot);
       }
-      if (this.historyRepo && (this.historyRepo as any).entries) {
-        (this.historyRepo as any).entries.length = 0;
-        (this.historyRepo as any).entries.push(...historySnapshot.entries);
-        (this.historyRepo as any).autoIncrementId =
-          historySnapshot.autoIncrementId;
-      }
-
       throw error;
     }
   }

@@ -54,8 +54,13 @@ export class TypeOrmVisitUnitOfWork implements IVisitUnitOfWork {
                 number: raw?.quote_number ?? input.number,
                 quotationNumber: raw?.quote_number ?? input.number,
               };
-            } catch (err: any) {
-              if (err?.code === '23505') {
+            } catch (err: unknown) {
+              if (
+                typeof err === 'object' &&
+                err !== null &&
+                'code' in err &&
+                (err as { code: string }).code === '23505'
+              ) {
                 throw new ConflictException(
                   `Quotation with number ${input.number} already exists`,
                 );
@@ -87,8 +92,13 @@ export class TypeOrmVisitUnitOfWork implements IVisitUnitOfWork {
                 number: raw?.order_number ?? input.number,
                 orderNumber: raw?.order_number ?? input.number,
               };
-            } catch (err: any) {
-              if (err?.code === '23505') {
+            } catch (err: unknown) {
+              if (
+                typeof err === 'object' &&
+                err !== null &&
+                'code' in err &&
+                (err as { code: string }).code === '23505'
+              ) {
                 throw new ConflictException(
                   `Order with number ${input.number} already exists`,
                 );
