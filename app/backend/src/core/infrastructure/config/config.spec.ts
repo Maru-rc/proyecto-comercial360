@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ConfigService } from '@nestjs/config';
+import { AppConfiguration } from '../../../config/app.config.js';
 import { envValidationSchema } from './env.validation.js';
 import { AppConfigService } from './app-config.service.js';
 
@@ -69,5 +70,13 @@ describe('AppConfigService & Environment Validation (Joi)', () => {
     });
 
     expect(error).toBeDefined();
+  });
+
+  it('should load AppConfiguration factory structure with defaults and aliases', () => {
+    const config = AppConfiguration();
+    expect(config.environment).toBeDefined();
+    expect(config.database.port).toBe(5432);
+    expect(config.AWS.S3.bucketName).toBeDefined();
+    expect(config.betterAuth.expiresIn).toBe('1h');
   });
 });
