@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule, ObserveInstrument } from './app.module.js';
 import { configureApp } from './app.setup.js';
+import { AppConfigService } from './core/infrastructure/config/app-config.service.js';
 
 // Las variables del .env se cargan antes de crear la app: CORS, los orígenes
 // permitidos de Better Auth y la conexión a PostgreSQL las leen del entorno.
@@ -141,7 +142,8 @@ async function bootstrap() {
 
   SwaggerModule.setup('api/docs', app, document);
 
-  const port = process.env.PORT ?? 3001;
+  const appConfig = app.get(AppConfigService);
+  const port = appConfig.port;
   await app.listen(port);
   console.log(`🚀 Server running on: http://localhost:${port}/api`);
   console.log(`📄 Swagger documentation: http://localhost:${port}/api/docs`);
