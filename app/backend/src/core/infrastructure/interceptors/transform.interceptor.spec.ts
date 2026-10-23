@@ -84,7 +84,7 @@ describe('TransformInterceptor', () => {
       statusCode: 200,
     });
     const interceptor = new TransformInterceptor(reflectorMock);
-    const plainPayload = { id: 1, clientName: 'Empresa XYZ' };
+    const plainPayload = { id: 1, clientName: 'Acme Corp' };
 
     const interceptedObservable = interceptor.intercept(
       mockContext,

@@ -2,62 +2,62 @@ export type MapPinStatus =
   'VISITED' | 'PENDING' | 'NOT_VISITED' | 'ORDER_CLOSED' | 'RESCHEDULED';
 
 export interface VisitContractDto {
-  id: number;
-  clientId: number;
-  advisorId: number;
-  routeId?: number | null;
-  scheduledDate?: Date | string;
-  actualDate?: Date | string | null;
-  startTime?: string | null;
-  endTime?: string | null;
-  visitStatus?: string;
-  status?: string;
-  objective?: string | null;
-  visitType?: string | null;
-  contactChannel?: string | null;
-  observation?: string | null;
-  observations?: string | null;
-  latitude?: number | null;
-  longitude?: number | null;
+  readonly id: number;
+  readonly clientId: number;
+  readonly advisorId: number;
+  readonly routeId?: number | null;
+  readonly scheduledDate?: Date | string;
+  readonly actualDate?: Date | string | null;
+  readonly startTime?: string | null;
+  readonly endTime?: string | null;
+  readonly visitStatus?: string;
+  readonly status?: string;
+  readonly objective?: string | null;
+  readonly visitType?: string | null;
+  readonly contactChannel?: string | null;
+  readonly observation?: string | null;
+  readonly observations?: string | null;
+  readonly latitude?: number | null;
+  readonly longitude?: number | null;
 }
 
 export interface VisitAgendaItemContractDto {
-  id: number;
-  clientId: number;
-  clientName: string;
-  clientAddress?: string | null;
-  address?: string | null;
-  visitOrder?: number;
-  order?: number;
-  suggestedTime?: string | null;
-  time?: string;
-  visitStatus?: string;
-  status?: string;
-  potential?: string;
-  objective?: string | null;
-  latitude?: number | null;
-  longitude?: number | null;
-  contactName?: string | null;
-  contactPhone?: string | null;
-  primaryContact?: {
-    name: string;
-    phone: string;
+  readonly id: number;
+  readonly clientId: number;
+  readonly clientName: string;
+  readonly clientAddress?: string | null;
+  readonly address?: string | null;
+  readonly visitOrder?: number;
+  readonly order?: number;
+  readonly suggestedTime?: string | null;
+  readonly time?: string;
+  readonly visitStatus?: string;
+  readonly status?: string;
+  readonly potential?: string;
+  readonly objective?: string | null;
+  readonly latitude?: number | null;
+  readonly longitude?: number | null;
+  readonly contactName?: string | null;
+  readonly contactPhone?: string | null;
+  readonly primaryContact?: {
+    readonly name: string;
+    readonly phone: string;
   } | null;
-  isCurrent?: boolean;
-  active?: boolean;
+  readonly isCurrent?: boolean;
+  readonly active?: boolean;
 }
 
 export interface VisitMapStopContractDto {
-  id: number;
-  clientId: number;
-  clientName: string;
-  address?: string | null;
-  order?: number;
-  latitude: number | null;
-  longitude: number | null;
-  pinStatus: MapPinStatus;
-  color?: string;
-  colorHex?: string;
+  readonly id: number;
+  readonly clientId: number;
+  readonly clientName: string;
+  readonly address?: string | null;
+  readonly order?: number;
+  readonly latitude: number | null;
+  readonly longitude: number | null;
+  readonly pinStatus: MapPinStatus;
+  readonly color?: string;
+  readonly colorHex?: string;
 }
 
 export type VisitMapItemContractDto = VisitMapStopContractDto;

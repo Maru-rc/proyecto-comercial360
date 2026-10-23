@@ -1,25 +1,30 @@
 /**
- * Entorno común de las pruebas e2e.
+ * Common environment configuration for e2e tests.
  *
- * Las pruebas e2e SIENPRE corren contra una base propia cuyo nombre termina
- * en `_test`. Nunca contra la base de desarrollo: las pruebas borran datos
- * (usuarios, asesores y sesiones) para partir de un estado conocido.
+ * e2e tests ALWAYS run against an isolated test database ending with `_test`.
+ * Never against the development database: tests purge tables (users, sales representatives, sessions).
  */
 
-/** Nombre de la base de pruebas. Nunca puede ser la de desarrollo. */
+/** Test database name. Must never be the development database. */
 export const TEST_DATABASE_NAME =
   process.env.TEST_DATABASE_NAME ?? 'comercial360_test';
 
 /**
- * Carga el .env del backend y fija las variables que las pruebas necesitan.
- * `process.loadEnvFile()` no pisa variables ya definidas, por eso primero
- * cargamos el archivo y después forzamos la base de pruebas.
+ * Loads the backend .env file and sets variables required for e2e tests.
  */
 export function applyE2eEnv(): void {
   try {
     process.loadEnvFile();
-  } catch {
-    // Sin .env: se usan las variables del entorno.
+  } catch (error: unknown) {
+    if (
+      !(
+        error instanceof Error &&
+        'code' in error &&
+        (error as NodeJS.ErrnoException).code === 'ENOENT'
+      )
+    ) {
+      throw error;
+    }
   }
 
   process.env.NODE_ENV = 'test';
@@ -30,11 +35,11 @@ export function applyE2eEnv(): void {
   process.env.FRONTEND_URL = 'http://localhost:5173';
 }
 
-/** Corta de seguridad: las pruebas e2e solo pueden tocar bases de prueba. */
+/** Safety check: e2e tests must only connect to test databases. */
 export function assertIsTestDatabase(name: string): void {
   if (!name.endsWith('_test')) {
     throw new Error(
-      `Las pruebas e2e exigen una base cuyo nombre termine en _test (recibido: ${name})`,
+      `e2e tests require a database name ending with _test (received: ${name})`,
     );
   }
 }

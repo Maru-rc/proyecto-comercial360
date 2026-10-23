@@ -1,14 +1,14 @@
 export interface PaginationMeta {
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-  hasNextPage: boolean;
-  hasPreviousPage: boolean;
+  readonly total: number;
+  readonly page: number;
+  readonly limit: number;
+  readonly totalPages: number;
+  readonly hasNextPage: boolean;
+  readonly hasPreviousPage: boolean;
 }
 
 /**
- * Genera la metadata estándar de paginación para respuestas { data, meta }.
+ * Generates standard pagination metadata for { data, meta } HTTP responses.
  */
 export function createPaginationMeta(
   total: number,

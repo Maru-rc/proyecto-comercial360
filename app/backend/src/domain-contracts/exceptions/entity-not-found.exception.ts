@@ -1,7 +1,7 @@
 import { DomainException } from './domain.exception.js';
 
 export class EntityNotFoundException extends DomainException {
-  readonly code = 'ENTITY_NOT_FOUND';
+  readonly code: string = 'ENTITY_NOT_FOUND';
 
   constructor(entityName: string, identifier?: string | number) {
     const descriptiveMessage =

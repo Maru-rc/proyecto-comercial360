@@ -1,8 +1,8 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 
 /**
- * Almacén de contexto asíncrono para propagar el ID de correlación (Trace ID)
- * a lo largo de toda la cadena de ejecución sin ensuciar la firma de los métodos.
+ * Asynchronous context store to propagate correlation IDs (Trace IDs)
+ * across the execution chain without polluting method signatures.
  */
 export class CorrelationContext {
   private static readonly storage = new AsyncLocalStorage<string>();

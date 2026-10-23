@@ -1,64 +1,68 @@
-import { AsesorNoVinculadoError } from '../../domain/auth.errors.js';
-import { AsesorRecord, AsesorRepository } from '../ports/asesor.repository.js';
+import { describe, expect, it } from 'vitest';
+import { UnlinkedAdvisorError } from '../../domain/auth.errors.js';
+import { USER_ROLES } from '../../domain/role.js';
+import {
+  AdvisorRecord,
+  AdvisorRepository,
+} from '../ports/advisor.repository.js';
 import { GetMeUseCase } from './get-me.use-case.js';
 
-// Repositorio en memoria: la regla se prueba sin base de datos.
-class InMemoryAsesores implements AsesorRepository {
-  constructor(private readonly items: AsesorRecord[]) {}
+class InMemoryAdvisors implements AdvisorRepository {
+  constructor(private readonly items: AdvisorRecord[]) {}
   async findByEmail(email: string) {
     return (
-      this.items.find((a) => a.correo.toLowerCase() === email.toLowerCase()) ??
+      this.items.find((a) => a.email.toLowerCase() === email.toLowerCase()) ??
       null
     );
   }
 }
 
-const juan: AsesorRecord = {
-  idAsesor: 7,
-  nombre: 'Juan',
-  correo: 'Juan.Perez@x.com',
-  telefono: '300',
-  estado: 'ACTIVE',
+const juan: AdvisorRecord = {
+  idAdvisor: 7,
+  name: 'Juan',
+  email: 'juan.perez@x.com',
+  phone: '300',
+  status: 'ACTIVE',
 };
 
 describe('GetMeUseCase', () => {
-  const useCase = new GetMeUseCase(new InMemoryAsesores([juan]));
+  const useCase = new GetMeUseCase(new InMemoryAdvisors([juan]));
 
-  it('devuelve el asesor vinculado por correo y el rol ASESOR', async () => {
+  it('returns the linked advisor by email and the ADVISOR role', async () => {
     const me = await useCase.execute({
       id: 'u1',
       name: 'Juan',
       email: 'juan.perez@x.com',
-      role: 'ASESOR',
+      role: USER_ROLES.ADVISOR,
     });
     expect(me).toEqual({
       id: 'u1',
-      nombre: 'Juan',
+      name: 'Juan',
       email: 'juan.perez@x.com',
-      rol: 'ASESOR',
-      asesor: { id_asesor: 7, telefono: '300', estado: 'ACTIVE' },
+      role: USER_ROLES.ADVISOR,
+      advisor: { idAdvisor: 7, phone: '300', status: 'ACTIVE' },
     });
   });
 
-  it('el director no trae asesor, aunque exista uno con su correo', async () => {
+  it('director does not return an advisor even if one exists with their email', async () => {
     const me = await useCase.execute({
       id: 'u2',
       name: 'Dir',
       email: 'juan.perez@x.com',
-      role: 'DIRECTOR',
+      role: USER_ROLES.DIRECTOR,
     });
-    expect(me.rol).toBe('DIRECTOR');
-    expect(me.asesor).toBeNull();
+    expect(me.role).toBe(USER_ROLES.DIRECTOR);
+    expect(me.advisor).toBeNull();
   });
 
-  it('un asesor sin registro en ASESOR lanza AsesorNoVinculadoError', async () => {
+  it('an advisor without a record in sales_representatives throws UnlinkedAdvisorError', async () => {
     await expect(
       useCase.execute({
         id: 'u3',
         name: 'X',
         email: 'otro@x.com',
-        role: 'ASESOR',
+        role: USER_ROLES.ADVISOR,
       }),
-    ).rejects.toBeInstanceOf(AsesorNoVinculadoError);
+    ).rejects.toBeInstanceOf(UnlinkedAdvisorError);
   });
 });

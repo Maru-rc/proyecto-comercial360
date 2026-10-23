@@ -1,4 +1,5 @@
 export * from './advisors/index.js';
+export * from './auth/index.js';
 export * from './clients/index.js';
 export * from './commercial/index.js';
 export * from './exceptions/index.js';

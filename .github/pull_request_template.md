@@ -1,22 +1,22 @@
-## 📌 Description
+## Description
 
 <!-- Provide a brief summary of the changes introduced in this Pull Request and the problem they solve. -->
 
-## 🔗 Related Issue / Story (HU)
+## Related Issue / Story (HU)
 
 - **User Story:** `HU-XX` <!-- e.g., HU-05, HU-12, HU-16 -->
 - **Issue / Ticket:** # <!-- e.g., #123 -->
 
 ---
 
-## 👤 Module Ownership & Developer
+## Module Ownership & Developer
 
-- **Author:** <!-- @alejandroesbr | @manulz | @saul | @Andres-1109 | @Frankcanas | @Maru-rc | @valentina -->
+- **Author:** <!-- @alejandroesbr | @manulzweb | @Sauhul | @Andres-1109 | @Frankcanas | @Maru-rc | @valentina27101 -->
 - **Primary Module(s) Affected:** <!-- auth | clients | routes | visits | commercial | dashboard | storage | core -->
 
 ---
 
-## 🛠️ Changes Made
+## Changes Made
 
 - 
 - 
@@ -24,7 +24,7 @@
 
 ---
 
-## 🌐 Public Contracts & Endpoints (Clean Architecture)
+## Public Contracts & Endpoints (Clean Architecture)
 
 - **Endpoints Exposed / Modified:**
   - `METHOD /api/...`
@@ -33,7 +33,7 @@
 
 ---
 
-## 📐 Clean Architecture & Uncle Bob Checklist
+## Clean Architecture & Uncle Bob Checklist
 
 Please verify and mark all applicable boxes:
 
@@ -50,11 +50,11 @@ Please verify and mark all applicable boxes:
   - Consumer interfaces are minimal and segregated.
 - [ ] **Clean Code:**
   - No vague variable names (`data`, `temp`, `res`, `obj`).
-  - No database migrations created outside `@saul`'s ownership.
+  - No database migrations created outside `@Sauhul`'s ownership.
 
 ---
 
-## 🧪 Testing & Verification
+## Testing & Verification
 
 - [ ] **Clean Architecture Auditor:** `./scripts/check-clean-architecture.sh --all` passed with 0 errors.
 - [ ] **Unit Tests:** `pnpm --filter backend test` passed (Vitest).
@@ -63,6 +63,6 @@ Please verify and mark all applicable boxes:
 
 ---
 
-## 📝 Notes & Breaking Changes
+## Notes & Breaking Changes
 
 <!-- Document any breaking changes, environment variable requirements, database migration notices, or coordination needed with other teammates. -->

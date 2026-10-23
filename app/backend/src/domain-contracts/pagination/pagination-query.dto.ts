@@ -4,7 +4,7 @@ import { IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 export type SortOrder = 'ASC' | 'DESC';
 
 /**
- * DTO transversal estándar para consultas paginadas en todos los módulos de Comercial360.
+ * Standard cross-cutting DTO for paginated queries across all Comercial360 modules.
  */
 export class PaginationQueryDto {
   @IsOptional()

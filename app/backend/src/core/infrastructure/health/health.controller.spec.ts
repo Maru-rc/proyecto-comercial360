@@ -3,8 +3,9 @@ import { HttpStatus } from '@nestjs/common';
 import type { Response } from 'express';
 import type { DataSource } from 'typeorm';
 import { HealthController } from './health.controller.js';
+import { SystemHealthProbeService } from './system-health-probe.service.js';
 
-describe('HealthController', () => {
+describe('HealthController & SystemHealthProbeService', () => {
   const createMockResponse = () => {
     const jsonMock = vi.fn();
     const statusMock = vi.fn().mockReturnValue({ json: jsonMock });
@@ -22,7 +23,8 @@ describe('HealthController', () => {
       query: vi.fn().mockResolvedValue([{ '?column?': 1 }]),
     } as unknown as DataSource;
 
-    const controller = new HealthController(mockDataSource);
+    const probeService = new SystemHealthProbeService(mockDataSource);
+    const controller = new HealthController(probeService);
     const { mockResponse, statusMock, jsonMock } = createMockResponse();
 
     await controller.checkHealth(mockResponse);
@@ -46,7 +48,8 @@ describe('HealthController', () => {
       query: vi.fn().mockRejectedValue(new Error('Connection lost')),
     } as unknown as DataSource;
 
-    const controller = new HealthController(mockDataSource);
+    const probeService = new SystemHealthProbeService(mockDataSource);
+    const controller = new HealthController(probeService);
     const { mockResponse, statusMock, jsonMock } = createMockResponse();
 
     await controller.checkHealth(mockResponse);
@@ -70,7 +73,8 @@ describe('HealthController', () => {
       isInitialized: false,
     } as unknown as DataSource;
 
-    const controller = new HealthController(mockDataSource);
+    const probeService = new SystemHealthProbeService(mockDataSource);
+    const controller = new HealthController(probeService);
     const { mockResponse, statusMock, jsonMock } = createMockResponse();
 
     await controller.checkHealth(mockResponse);

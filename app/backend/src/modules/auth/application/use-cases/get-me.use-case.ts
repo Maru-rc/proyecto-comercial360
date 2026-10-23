@@ -1,45 +1,51 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { AuthenticatedUser } from '../../domain/authenticated-user.js';
-import { AsesorNoVinculadoError } from '../../domain/auth.errors.js';
-import { Role } from '../../domain/role.js';
-import { ASESOR_REPOSITORY } from '../ports/asesor.repository.js';
-import type { AsesorRepository } from '../ports/asesor.repository.js';
+import { UnlinkedAdvisorError } from '../../domain/auth.errors.js';
+import { Role, USER_ROLES } from '../../domain/role.js';
+import { ADVISOR_REPOSITORY } from '../ports/advisor.repository.js';
+import type { AdvisorRepository } from '../ports/advisor.repository.js';
 
 export interface MeResult {
-  id: string;
-  nombre: string;
-  email: string;
-  rol: Role;
-  asesor: { id_asesor: number; telefono: string | null; estado: string } | null;
+  readonly id: string;
+  readonly name: string;
+  readonly email: string;
+  readonly role: Role;
+  readonly advisor: {
+    readonly idAdvisor: number;
+    readonly phone: string | null;
+    readonly status: string;
+  } | null;
 }
 
 @Injectable()
 export class GetMeUseCase {
   constructor(
-    @Inject(ASESOR_REPOSITORY) private readonly asesores: AsesorRepository,
+    @Inject(ADVISOR_REPOSITORY) private readonly advisors: AdvisorRepository,
   ) {}
 
   async execute(user: AuthenticatedUser): Promise<MeResult> {
     const base = {
       id: user.id,
-      nombre: user.name,
+      name: user.name,
       email: user.email,
-      rol: user.role,
+      role: user.role,
     };
 
-    if (user.role === 'DIRECTOR') {
-      return { ...base, asesor: null };
+    if (user.role === USER_ROLES.DIRECTOR) {
+      return { ...base, advisor: null };
     }
 
-    const asesor = await this.asesores.findByEmail(user.email);
-    if (!asesor) throw new AsesorNoVinculadoError(user.email);
+    const advisor = await this.advisors.findByEmail(user.email);
+    if (!advisor) {
+      throw new UnlinkedAdvisorError(user.email);
+    }
 
     return {
       ...base,
-      asesor: {
-        id_asesor: asesor.idAsesor,
-        telefono: asesor.telefono,
-        estado: asesor.estado,
+      advisor: {
+        idAdvisor: advisor.idAdvisor,
+        phone: advisor.phone,
+        status: advisor.status,
       },
     };
   }

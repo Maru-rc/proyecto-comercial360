@@ -63,7 +63,7 @@ Audita cada suite de pruebas y caso de prueba con la skill:
   - Configuración de Vitest (`vitest.config.ts`, `vitest.config.e2e.ts`)
   - Configuración de SonarQube Cloud (`sonar-project.properties`)
 - **Archivos Restringidos (NO TOCAR):**
-  - No modificar la lógica de producción de los casos de uso para "hacer pasar" un test. Si un test falla, reporta la falla al responsable de la historia (`@alejandroesbr`, `@manulz`, `@saul`, `@valentina`).
+  - No modificar la lógica de producción de los casos de uso para "hacer pasar" un test. Si un test falla, reporta la falla al responsable de la historia (`@alejandroesbr`, `@manulzweb`, `@Sauhul`, `@valentina27101`).
 
 ---
 

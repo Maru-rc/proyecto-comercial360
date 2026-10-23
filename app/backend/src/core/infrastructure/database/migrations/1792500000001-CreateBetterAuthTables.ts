@@ -13,8 +13,8 @@ export class CreateBetterAuthTables1792500000001 implements MigrationInterface {
         "image" TEXT,
         "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
         "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        "role" TEXT NOT NULL DEFAULT 'ASESOR',
-        CONSTRAINT "CHK_user_role" CHECK ("role" IN ('ASESOR', 'DIRECTOR'))
+        "role" TEXT NOT NULL DEFAULT 'ADVISOR',
+        CONSTRAINT "CHK_user_role" CHECK ("role" IN ('ADVISOR', 'DIRECTOR'))
       )
     `);
     await queryRunner.query(`

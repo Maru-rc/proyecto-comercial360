@@ -25,7 +25,7 @@ Audita cada componente, hook y servicio HTTP con la skill:
 - [ ] **Ciclo de Vida de Leaflet:** La instancia del mapa debe destruirse limpiamente en el retorno de `useEffect()` (`map.remove()`) para evitar que múltiples clics acumulen capas fantasmas y congelen el navegador.
 - [ ] **Cero URLs Hardcodeadas:** Todas las llamadas a la API deben utilizar la variable de entorno `VITE_API_URL` o el proxy configurado en Nginx (`/api/*`).
 - [ ] **Manejo de Estados de Carga y Error:** Toda vista debe reflejar claramente el estado de carga (`loading / skeleton`), estado vacío (`empty state`) y mensajes de error amigables para el usuario.
-- [ ] **Protección de Rutas:** Consumir el estado de autenticación y roles provisto por `@valentina` para restringir accesos a vistas del Director.
+- [ ] **Protección de Rutas:** Consumir el estado de autenticación y roles provisto por `@valentina27101` para restringir accesos a vistas del Director.
 
 ---
 
