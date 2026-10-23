@@ -6,14 +6,13 @@ export class FollowUpMapper {
   static toDomain(orm: FollowUpOrmEntity): FollowUp {
     return FollowUp.create({
       id: orm.id,
-      clientId: orm.clientId,
+      clientId: orm.clientId ?? 0,
       visitId: orm.visitId,
       responsibleAdvisorId: orm.responsibleAdvisorId,
       nextContactDate: orm.nextContactDate,
       activity: orm.activity,
       isCompleted: orm.isCompleted,
       observation: orm.observation,
-      createdAt: orm.createdAt,
     });
   }
 
@@ -29,9 +28,6 @@ export class FollowUpMapper {
     orm.activity = domain.activity;
     orm.isCompleted = domain.isCompleted;
     orm.observation = domain.observation ?? null;
-    if (domain.createdAt) {
-      orm.createdAt = domain.createdAt;
-    }
     return orm;
   }
 
