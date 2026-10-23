@@ -5,11 +5,21 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 export class VisitTrackingQueryDto {
   @ApiPropertyOptional({
     description: 'Period filter. Defaults to the current week.',
-    enum: ['hoy', 'semana', 'mes'],
-    example: 'semana',
+    enum: ['today', 'week', 'month'],
+    example: 'week',
   })
   @IsOptional()
-  @IsIn(['hoy', 'semana', 'mes', 'Hoy', 'Esta semana', 'Este mes'])
+  @IsIn([
+    'today',
+    'week',
+    'month',
+    'hoy',
+    'semana',
+    'mes',
+    'Hoy',
+    'Esta semana',
+    'Este mes',
+  ])
   periodo?: string;
 
   @ApiPropertyOptional({

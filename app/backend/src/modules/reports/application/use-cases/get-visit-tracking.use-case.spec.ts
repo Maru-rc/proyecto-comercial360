@@ -91,18 +91,30 @@ describe('GetVisitTrackingUseCase (HU-17 seguimiento de visitas)', () => {
     expect(filter.limit).toBe(10);
   });
 
-  it('normalizes the Spanish period display values to canonical periods', async () => {
+  it('normalizes period values to canonical English periods', async () => {
     const todayCase = makeUseCase({ rows: [], total: 0 }, 7);
-    await todayCase.useCase.execute(advisorUser, { periodo: 'Hoy' });
+    await todayCase.useCase.execute(advisorUser, { periodo: 'today' });
     expect(todayCase.captured[0].period).toBe('today');
 
     const monthCase = makeUseCase({ rows: [], total: 0 }, 7);
-    await monthCase.useCase.execute(advisorUser, { periodo: 'Este mes' });
+    await monthCase.useCase.execute(advisorUser, { periodo: 'month' });
     expect(monthCase.captured[0].period).toBe('month');
 
     const weekCase = makeUseCase({ rows: [], total: 0 }, 7);
-    await weekCase.useCase.execute(advisorUser, { periodo: 'Esta semana' });
+    await weekCase.useCase.execute(advisorUser, { periodo: 'week' });
     expect(weekCase.captured[0].period).toBe('week');
+
+    const todayEsCase = makeUseCase({ rows: [], total: 0 }, 7);
+    await todayEsCase.useCase.execute(advisorUser, { periodo: 'Hoy' });
+    expect(todayEsCase.captured[0].period).toBe('today');
+
+    const monthEsCase = makeUseCase({ rows: [], total: 0 }, 7);
+    await monthEsCase.useCase.execute(advisorUser, { periodo: 'Este mes' });
+    expect(monthEsCase.captured[0].period).toBe('month');
+
+    const weekEsCase = makeUseCase({ rows: [], total: 0 }, 7);
+    await weekEsCase.useCase.execute(advisorUser, { periodo: 'Esta semana' });
+    expect(weekEsCase.captured[0].period).toBe('week');
   });
 
   it('forwards every filter to the repository', async () => {

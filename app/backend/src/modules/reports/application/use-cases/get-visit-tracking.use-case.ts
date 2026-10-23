@@ -28,18 +28,19 @@ export const TRACKING_SCOPE_RESOLVER = Symbol('TRACKING_SCOPE_RESOLVER');
 
 const PERIOD_ALIASES: Record<string, TrackingPeriod> = {
   today: 'today',
-  hoy: 'today',
   week: 'week',
+  month: 'month',
+  hoy: 'today',
   semana: 'week',
   'esta semana': 'week',
-  month: 'month',
   mes: 'month',
   'este mes': 'month',
 };
 
 function resolvePeriod(value: string | undefined): TrackingPeriod {
   if (!value) return 'week';
-  return PERIOD_ALIASES[value.toLowerCase()] ?? 'week';
+  const normalized = value.trim().toLowerCase();
+  return PERIOD_ALIASES[normalized] ?? 'week';
 }
 
 @Injectable()
