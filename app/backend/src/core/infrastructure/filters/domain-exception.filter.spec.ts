@@ -25,8 +25,8 @@ describe('DomainExceptionFilter', () => {
 
     const mockHost: ArgumentsHost = {
       switchToHttp: () => ({
-        getResponse: () => mockResponse,
-        getRequest: () => mockRequest,
+        getResponse: () => mockResponse as any,
+        getRequest: () => mockRequest as any,
         getNext: vi.fn(),
       }),
       getArgs: vi.fn(),

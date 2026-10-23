@@ -41,12 +41,12 @@ describe('TransformInterceptor', () => {
 
     const mockContext: ExecutionContext = {
       switchToHttp: () => ({
-        getResponse: () => mockResponse,
-        getRequest: () => mockRequest,
+        getResponse: () => mockResponse as any,
+        getRequest: () => mockRequest as any,
         getNext: vi.fn(),
       }),
-      getHandler: () => 'HANDLER',
-      getClass: () => 'CLASS',
+      getHandler: () => 'HANDLER' as any,
+      getClass: () => 'CLASS' as any,
       getArgs: vi.fn(),
       getArgByIndex: vi.fn(),
       switchToRpc: vi.fn(),
