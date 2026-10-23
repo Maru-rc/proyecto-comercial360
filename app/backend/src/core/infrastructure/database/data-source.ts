@@ -1,14 +1,21 @@
 import 'reflect-metadata';
 import { DataSource, DataSourceOptions } from 'typeorm';
-import { AsesorOrmEntity } from '../../../modules/auth/infrastructure/persistence/entities/asesor.orm-entity.js';
-import { CreateAsesorTable1792500000000 } from './migrations/1792500000000-CreateAsesorTable.js';
+import { AdvisorOrmEntity } from '../../../modules/auth/infrastructure/persistence/entities/advisor.orm-entity.js';
+import { CreateSalesRepresentativesTable1792500000000 } from './migrations/1792500000000-CreateSalesRepresentativesTable.js';
 import { CreateBetterAuthTables1792500000001 } from './migrations/1792500000001-CreateBetterAuthTables.js';
-import { RenameAsesorToSalesRepresentatives1792600000000 } from './migrations/1792600000000-RenameAsesorToSalesRepresentatives.js';
 import { InitialSchema1792634405120 } from './migrations/1792634405120-InitialSchema.js';
 
 try {
   process.loadEnvFile();
-} catch {}
+} catch (error: unknown) {
+  if (!(
+    error instanceof Error &&
+    'code' in error &&
+    (error as NodeJS.ErrnoException).code === 'ENOENT'
+  )) {
+    throw error;
+  }
+}
 
 export function buildDataSourceOptions(
   env: NodeJS.ProcessEnv = process.env,
@@ -24,11 +31,10 @@ export function buildDataSourceOptions(
       (env.DATABASE_SSL ?? env.DB_SSL) === 'true'
         ? { rejectUnauthorized: false }
         : false,
-    entities: [AsesorOrmEntity],
+    entities: [AdvisorOrmEntity],
     migrations: [
-      CreateAsesorTable1792500000000,
+      CreateSalesRepresentativesTable1792500000000,
       CreateBetterAuthTables1792500000001,
-      RenameAsesorToSalesRepresentatives1792600000000,
       InitialSchema1792634405120,
     ],
     synchronize: false,

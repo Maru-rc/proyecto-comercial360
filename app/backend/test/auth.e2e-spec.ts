@@ -11,30 +11,32 @@ import { Auth as AuthDecorator } from '../src/modules/auth/presentation/auth.dec
 import { seedDemoUsers } from '../src/core/infrastructure/database/seeds/seed-demo-users.js';
 
 const ORIGIN = 'http://localhost:5173';
-const ASESOR = {
-  email: 'asesor.test@comercial360.com',
-  password: 'Asesor-Test-123!',
+const ADVISOR = {
+  email: 'advisor.test@comercial360.com',
+  password: 'Advisor-Test-123!',
 };
 const DIRECTOR = {
   email: 'director.test@comercial360.com',
   password: 'Director-Test-123!',
 };
-const SIN_REGISTRO = {
-  email: 'sin.registro@comercial360.com',
-  password: 'SinRegistro-123!',
+const UNLINKED = {
+  email: 'unlinked@comercial360.com',
+  password: 'Unlinked-123!',
 };
 
+// Test routes (only exist in this test suite) to verify that real
+// AuthModule guards respond with 401 / 403 / 200.
 @Controller('test-guards')
 class TestGuardsController {
   @Get('director')
   @AuthDecorator('DIRECTOR')
-  soloDirector() {
+  onlyDirector() {
     return { ok: true };
   }
 
-  @Get('cualquiera')
-  @AuthDecorator('ASESOR', 'DIRECTOR')
-  cualquiera() {
+  @Get('any')
+  @AuthDecorator('ADVISOR', 'DIRECTOR')
+  anyRole() {
     return { ok: true };
   }
 }
@@ -42,7 +44,7 @@ class TestGuardsController {
 @Module({ imports: [AuthModule], controllers: [TestGuardsController] })
 class TestGuardsModule {}
 
-describe('Autenticación y roles (e2e, PostgreSQL real)', () => {
+describe('Authentication and Roles (e2e, PostgreSQL)', () => {
   let app: INestApplication;
   let dataSource: DataSource;
   let auth: Auth;
@@ -56,6 +58,7 @@ describe('Autenticación y roles (e2e, PostgreSQL real)', () => {
       .set('Origin', ORIGIN)
       .send({ ...cred, ...(rememberMe === undefined ? {} : { rememberMe }) });
 
+  // Logs in and returns session cookies ready for reuse
   const cookieOf = async (cred: { email: string; password: string }) => {
     const res = await login(cred);
     expect(res.status).toBe(200);
@@ -66,10 +69,10 @@ describe('Autenticación y roles (e2e, PostgreSQL real)', () => {
 
   const demoUsers = () => [
     {
-      name: 'Asesor Test',
-      ...ASESOR,
-      role: 'ASESOR' as const,
-      asesor: { telefono: '3000000000' },
+      name: 'Advisor Test',
+      ...ADVISOR,
+      role: 'ADVISOR' as const,
+      advisor: { phone: '3000000000' },
     },
     { name: 'Director Test', ...DIRECTOR, role: 'DIRECTOR' as const },
   ];
@@ -85,11 +88,13 @@ describe('Autenticación y roles (e2e, PostgreSQL real)', () => {
     dataSource = app.get(DataSource);
     auth = app.get<Auth>(AUTH);
 
+    // Clean database + test users created with the seed utility
     await dataSource.query('DELETE FROM "user"');
     await dataSource.query('DELETE FROM "sales_representatives"');
     await seedDemoUsers(auth, dataSource, demoUsers());
+    // ADVISOR user without a record in SALES_REPRESENTATIVES
     await seedDemoUsers(auth, dataSource, [
-      { name: 'Sin Registro', ...SIN_REGISTRO, role: 'ASESOR' },
+      { name: 'Unlinked Advisor', ...UNLINKED, role: 'ADVISOR' },
     ]);
   });
 
@@ -97,9 +102,9 @@ describe('Autenticación y roles (e2e, PostgreSQL real)', () => {
     await app.close();
   });
 
-  describe('HU-09: inicio de sesión', () => {
-    it('1. inicia sesión con credenciales válidas y crea una cookie httpOnly', async () => {
-      const res = await login(ASESOR);
+  describe('HU-09: Sign In', () => {
+    it('1. signs in with valid credentials and sets an httpOnly cookie', async () => {
+      const res = await login(ADVISOR);
       expect(res.status).toBe(200);
       const cookies = (res.headers['set-cookie'] as unknown as string[]).join(
         ';',
@@ -109,87 +114,87 @@ describe('Autenticación y roles (e2e, PostgreSQL real)', () => {
       expect(cookies).toContain('SameSite=Lax');
     });
 
-    it('2. rechaza credenciales incorrectas (contraseña o correo)', async () => {
-      const mala = await login({
-        email: ASESOR.email,
-        password: 'incorrecta-123',
+    it('2. rejects invalid credentials (wrong password or nonexistent email)', async () => {
+      const wrongPassword = await login({
+        email: ADVISOR.email,
+        password: 'incorrect-password-123',
       });
-      expect(mala.status).toBe(401);
-      expect(mala.headers['set-cookie']).toBeUndefined();
-      const noExiste = await login({
-        email: 'nadie@comercial360.com',
-        password: 'cualquiera-123',
+      expect(wrongPassword.status).toBe(401);
+      expect(wrongPassword.headers['set-cookie']).toBeUndefined();
+      const nonexistent = await login({
+        email: 'nobody@comercial360.com',
+        password: 'any-password-123',
       });
-      expect(noExiste.status).toBe(401);
+      expect(nonexistent.status).toBe(401);
     });
 
-    it('no permite registrar usuarios (el registro público está desactivado)', async () => {
+    it('does not allow user self-registration (public sign-up is disabled)', async () => {
       const res = await request(app.getHttpServer())
         .post('/api/auth/sign-up/email')
         .set('Origin', ORIGIN)
         .send({
-          email: 'nuevo@comercial360.com',
-          password: 'Nuevo-12345!',
-          name: 'Nuevo',
+          email: 'newuser@comercial360.com',
+          password: 'NewUser-12345!',
+          name: 'New User',
         });
       expect(res.status).toBe(400);
       const rows = await dataSource.query(
-        `SELECT 1 FROM "user" WHERE email = 'nuevo@comercial360.com'`,
+        `SELECT 1 FROM "user" WHERE email = 'newuser@comercial360.com'`,
       );
       expect(rows).toHaveLength(0);
     });
 
-    it('rechaza peticiones de auth desde un origen no autorizado', async () => {
+    it('rejects auth requests from an unauthorized origin', async () => {
       const res = await request(app.getHttpServer())
         .post('/api/auth/sign-in/email')
         .set('Origin', 'http://evil.example')
-        .send(ASESOR);
+        .send(ADVISOR);
       expect(res.status).toBe(403);
     });
 
-    it('CORS solo permite el origen del frontend', async () => {
+    it('CORS only permits the frontend origin', async () => {
       const ok = await request(app.getHttpServer())
         .options('/api/me')
         .set('Origin', ORIGIN)
         .set('Access-Control-Request-Method', 'GET');
       expect(ok.headers['access-control-allow-origin']).toBe(ORIGIN);
       expect(ok.headers['access-control-allow-credentials']).toBe('true');
-      const mal = await request(app.getHttpServer())
+      const bad = await request(app.getHttpServer())
         .options('/api/me')
         .set('Origin', 'http://evil.example')
         .set('Access-Control-Request-Method', 'GET');
-      expect(mal.headers['access-control-allow-origin']).toBeUndefined();
+      expect(bad.headers['access-control-allow-origin']).toBeUndefined();
     });
 
-    it('12. "Recordarme" activo: cookie de 30 días y sesión de 30 días en el servidor', async () => {
+    it('12. "Remember Me" enabled: 30-day cookie and 30-day session on server', async () => {
       await dataSource.query('DELETE FROM "session"');
-      const res = await login(ASESOR, true);
+      const res = await login(ADVISOR, true);
       const cookies = (res.headers['set-cookie'] as unknown as string[]).join(
         ';',
       );
       expect(cookies).toContain('Max-Age=2592000');
-      const [{ dias }] = await dataSource.query(
-        `SELECT EXTRACT(EPOCH FROM ("expiresAt" - now())) / 86400 AS dias FROM "session"`,
+      const [{ days }] = await dataSource.query(
+        `SELECT EXTRACT(EPOCH FROM ("expiresAt" - now())) / 86400 AS days FROM "session"`,
       );
-      expect(Number(dias)).toBeGreaterThan(29.9);
+      expect(Number(days)).toBeGreaterThan(29.9);
     });
 
-    it('12. "Recordarme" apagado: cookie de sesión del navegador y 1 día en el servidor', async () => {
+    it('12. "Remember Me" disabled: browser session cookie and 1 day on server', async () => {
       await dataSource.query('DELETE FROM "session"');
-      const res = await login(ASESOR, false);
+      const res = await login(ADVISOR, false);
       const cookies = (res.headers['set-cookie'] as unknown as string[]).join(
         ';',
       );
       expect(cookies).not.toContain('Max-Age=2592000');
       expect(cookies).toContain('better-auth.dont_remember=');
-      const [{ dias }] = await dataSource.query(
-        `SELECT EXTRACT(EPOCH FROM ("expiresAt" - now())) / 86400 AS dias FROM "session"`,
+      const [{ days }] = await dataSource.query(
+        `SELECT EXTRACT(EPOCH FROM ("expiresAt" - now())) / 86400 AS days FROM "session"`,
       );
-      expect(Number(dias)).toBeLessThan(1.01);
+      expect(Number(days)).toBeLessThan(1.01);
     });
 
-    it('11. cerrar sesión invalida la sesión en el servidor', async () => {
-      const cookie = await cookieOf(ASESOR);
+    it('11. signing out invalidates session on server', async () => {
+      const cookie = await cookieOf(ADVISOR);
       await request(app.getHttpServer())
         .get('/api/me')
         .set('Cookie', cookie)
@@ -202,49 +207,52 @@ describe('Autenticación y roles (e2e, PostgreSQL real)', () => {
         .send({})
         .expect(200);
 
+      // Same cookie is now rejected
       await request(app.getHttpServer())
         .get('/api/me')
         .set('Cookie', cookie)
         .expect(401);
+      // And session row is deleted from database
       const token = decodeURIComponent(cookie[0].split('=')[1]).split('.')[0];
-      const sesiones = await dataSource.query(
+      const sessions = await dataSource.query(
         `SELECT 1 FROM session WHERE token = $1`,
         [token],
       );
-      expect(sesiones).toHaveLength(0);
+      expect(sessions).toHaveLength(0);
     });
   });
 
   describe('GET /api/me', () => {
-    it('3. sin sesión responde 401', async () => {
+    it('3. without session responds 401', async () => {
       await request(app.getHttpServer()).get('/api/me').expect(401);
     });
 
-    it('3. con una cookie inventada responde 401', async () => {
+    it('3. with invalid cookie responds 401', async () => {
       await request(app.getHttpServer())
         .get('/api/me')
-        .set('Cookie', 'better-auth.session_token=falso.falso')
+        .set('Cookie', 'better-auth.session_token=fake.fake')
         .expect(401);
     });
 
-    it('4 y 5. con sesión de asesor devuelve el perfil, el rol y su registro de asesor', async () => {
-      const cookie = await cookieOf(ASESOR);
+    it('4 and 5. with advisor session returns profile, role, and linked advisor record', async () => {
+      const cookie = await cookieOf(ADVISOR);
       const res = await request(app.getHttpServer())
         .get('/api/me')
         .set('Cookie', cookie)
         .expect(200);
       expect(res.body).toMatchObject({
-        nombre: 'Asesor Test',
-        email: ASESOR.email,
-        rol: 'ASESOR',
-        asesor: { telefono: '3000000000', estado: 'ACTIVO' },
+        name: 'Advisor Test',
+        email: ADVISOR.email,
+        role: 'ADVISOR',
+        advisor: { phone: '3000000000', status: 'ACTIVE' },
       });
       expect(typeof res.body.id).toBe('string');
-      expect(typeof res.body.asesor.id_asesor).toBe('number');
+      expect(typeof res.body.advisor.idAdvisor).toBe('number');
+      // No internal secrets are exposed
       expect(JSON.stringify(res.body)).not.toMatch(/password|token/i);
     });
 
-    it('5. con sesión de director devuelve rol DIRECTOR y asesor null', async () => {
+    it('5. with director session returns DIRECTOR role and advisor null', async () => {
       const cookie = await cookieOf(DIRECTOR);
       const res = await request(app.getHttpServer())
         .get('/api/me')
@@ -252,29 +260,29 @@ describe('Autenticación y roles (e2e, PostgreSQL real)', () => {
         .expect(200);
       expect(res.body).toMatchObject({
         email: DIRECTOR.email,
-        rol: 'DIRECTOR',
-        asesor: null,
+        role: 'DIRECTOR',
+        advisor: null,
       });
     });
 
-    it('6. vincula al asesor por correo sin distinguir mayúsculas', async () => {
+    it('6. links advisor by email case-insensitively', async () => {
       await dataSource.query(
         `UPDATE "sales_representatives" SET email = UPPER(email) WHERE LOWER(email) = $1`,
-        [ASESOR.email],
+        [ADVISOR.email],
       );
-      const cookie = await cookieOf(ASESOR);
+      const cookie = await cookieOf(ADVISOR);
       const res = await request(app.getHttpServer())
         .get('/api/me')
         .set('Cookie', cookie)
         .expect(200);
-      expect(res.body.asesor).not.toBeNull();
+      expect(res.body.advisor).not.toBeNull();
       await dataSource.query(
         `UPDATE "sales_representatives" SET email = LOWER(email)`,
       );
     });
 
-    it('un usuario ASESOR sin registro en ASESOR recibe 403', async () => {
-      const cookie = await cookieOf(SIN_REGISTRO);
+    it('an ADVISOR user without sales_representatives record receives 403', async () => {
+      const cookie = await cookieOf(UNLINKED);
       const res = await request(app.getHttpServer())
         .get('/api/me')
         .set('Cookie', cookie);
@@ -282,8 +290,8 @@ describe('Autenticación y roles (e2e, PostgreSQL real)', () => {
     });
   });
 
-  describe('HU-10: control de acceso por rol', () => {
-    it('7. el director accede a una ruta exclusiva de director', async () => {
+  describe('HU-10: Role-Based Access Control', () => {
+    it('7. director accesses director-only route', async () => {
       const cookie = await cookieOf(DIRECTOR);
       await request(app.getHttpServer())
         .get('/api/test-guards/director')
@@ -291,27 +299,28 @@ describe('Autenticación y roles (e2e, PostgreSQL real)', () => {
         .expect(200);
     });
 
-    it('8. el asesor recibe 403 en una ruta exclusiva de director', async () => {
-      const cookie = await cookieOf(ASESOR);
+    it('8. advisor receives 403 on director-only route, and 200 on shared route', async () => {
+      const cookie = await cookieOf(ADVISOR);
       await request(app.getHttpServer())
         .get('/api/test-guards/director')
         .set('Cookie', cookie)
         .expect(403);
       await request(app.getHttpServer())
-        .get('/api/test-guards/cualquiera')
+        .get('/api/test-guards/any')
         .set('Cookie', cookie)
         .expect(200);
     });
 
-    it('sin sesión recibe 401 en rutas protegidas', async () => {
+    it('without session receives 401 on protected routes', async () => {
       await request(app.getHttpServer())
         .get('/api/test-guards/director')
         .expect(401);
     });
 
-    it('10. no se puede elevar privilegios enviando DIRECTOR desde el cliente', async () => {
-      const cookie = await cookieOf(ASESOR);
+    it('10. cannot escalate privileges sending DIRECTOR from client', async () => {
+      const cookie = await cookieOf(ADVISOR);
 
+      // a) change role using Better Auth endpoint
       const upd = await request(app.getHttpServer())
         .post('/api/auth/update-user')
         .set('Origin', ORIGIN)
@@ -319,37 +328,39 @@ describe('Autenticación y roles (e2e, PostgreSQL real)', () => {
         .send({ role: 'DIRECTOR' });
       expect(upd.status).toBe(400);
 
+      // b) send role in query string or header
       await request(app.getHttpServer())
         .get('/api/test-guards/director?role=DIRECTOR')
         .set('Cookie', cookie)
         .set('X-Role', 'DIRECTOR')
         .expect(403);
 
+      // c) role remains ADVISOR in database and /api/me
       const [{ role }] = await dataSource.query(
         `SELECT role FROM "user" WHERE email = $1`,
-        [ASESOR.email],
+        [ADVISOR.email],
       );
-      expect(role).toBe('ASESOR');
+      expect(role).toBe('ADVISOR');
       const me = await request(app.getHttpServer())
         .get('/api/me')
         .set('Cookie', cookie)
         .expect(200);
-      expect(me.body.rol).toBe('ASESOR');
+      expect(me.body.role).toBe('ADVISOR');
     });
 
-    it('la base de datos rechaza roles que no sean ASESOR o DIRECTOR', async () => {
+    it('database rejects roles other than ADVISOR or DIRECTOR', async () => {
       await expect(
         dataSource.query(`UPDATE "user" SET role = 'ADMIN' WHERE email = $1`, [
-          ASESOR.email,
+          ADVISOR.email,
         ]),
       ).rejects.toThrow();
     });
 
-    it('si el rol cambia en la base, el cambio aplica de inmediato (el rol no viaja en la cookie)', async () => {
-      const cookie = await cookieOf(ASESOR);
+    it('if role changes in database, change applies immediately (role is not cached in cookie)', async () => {
+      const cookie = await cookieOf(ADVISOR);
       await dataSource.query(
         `UPDATE "user" SET role = 'DIRECTOR' WHERE email = $1`,
-        [ASESOR.email],
+        [ADVISOR.email],
       );
       try {
         await request(app.getHttpServer())
@@ -358,8 +369,8 @@ describe('Autenticación y roles (e2e, PostgreSQL real)', () => {
           .expect(200);
       } finally {
         await dataSource.query(
-          `UPDATE "user" SET role = 'ASESOR' WHERE email = $1`,
-          [ASESOR.email],
+          `UPDATE "user" SET role = 'ADVISOR' WHERE email = $1`,
+          [ADVISOR.email],
         );
       }
       await request(app.getHttpServer())
@@ -370,19 +381,20 @@ describe('Autenticación y roles (e2e, PostgreSQL real)', () => {
   });
 
   describe('Seed', () => {
-    it('es idempotente: ejecutarlo de nuevo no duplica usuarios ni asesores', async () => {
+    it('is idempotent: running again does not duplicate users or sales representatives', async () => {
       await seedDemoUsers(auth, dataSource, demoUsers());
       await seedDemoUsers(auth, dataSource, demoUsers());
       const [{ n }] = await dataSource.query(
         `SELECT count(*)::int AS n FROM "user" WHERE email = ANY($1)`,
-        [[ASESOR.email, DIRECTOR.email]],
+        [[ADVISOR.email, DIRECTOR.email]],
       );
       expect(n).toBe(2);
       const [{ a }] = await dataSource.query(
         `SELECT count(*)::int AS a FROM "sales_representatives" WHERE LOWER(email) = $1`,
-        [ASESOR.email],
+        [ADVISOR.email],
       );
       expect(a).toBe(1);
+      // And users can still log in
       expect((await login(DIRECTOR)).status).toBe(200);
     });
   });

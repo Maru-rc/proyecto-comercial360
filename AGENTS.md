@@ -11,16 +11,16 @@ Antes de generar código, analizar una tarea o responder a cualquier solicitud:
 1. **Identifica a qué integrante del equipo estás asistiendo:**
    - Revisa `git config user.email` o el autor del commit actual.
    - Si no está claro en el entorno, **PREGUNTA EXPLÍCITAMENTE AL USUARIO:**  
-     *"¿A quién del equipo estoy asistiendo hoy? (@alejandroesbr, @manulz, @saul, @Andres-1109, @Frankcanas, @Maru-rc o @valentina)?"*
+     *"¿A quién del equipo estoy asistiendo hoy? (@alejandroesbr, @manulzweb, @Sauhul, @Andres-1109, @Frankcanas, @Maru-rc o @valentina27101)?"*
 2. **Carga y obedece estrictamente el perfil del integrante:**
    - Lee y aplica las directivas del archivo correspondiente en `agents/`:
      - `@alejandroesbr` → `agents/agent-alejandroesbr.md`
-     - `@manulz` → `agents/agent-manulz.md`
-     - `@saul` → `agents/agent-saul.md`
+     - `@manulzweb` → `agents/agent-manulz.md`
+     - `@Sauhul` → `agents/agent-saul.md`
      - `@Andres-1109` → `agents/agent-Andres-1109.md`
      - `@Frankcanas` → `agents/agent-Frankcanas.md`
      - `@Maru-rc` → `agents/agent-Maru-rc.md`
-     - `@valentina` → `agents/agent-valentina.md`
+     - `@valentina27101` → `agents/agent-valentina.md`
    - Consulta las reglas generales en `agents/README.md`.
 
 ---
@@ -33,7 +33,7 @@ Antes de generar código, analizar una tarea o responder a cualquier solicitud:
 - Cuestiona activamente los supuestos del desarrollador (validación de nulos, desbordamientos, tipos en TypeScript, manejo de errores HTTP 400/403/404).
 
 ### 2. Liderazgo de Clean Architecture e Infraestructura
-- **Manuel Vásquez (`@manulz`) y Alejandro (`@alejandroesbr`) son los Líderes Oficiales de Clean Architecture e Infraestructura.**
+- **Manuel Vásquez (`@manulzweb`) y Alejandro (`@alejandroesbr`) son los Líderes Oficiales de Clean Architecture e Infraestructura.**
 - Cualquier cambio en contratos públicos (`src/domain-contracts`), Docker Compose, base de datos (Amazon Aurora) o almacenamiento (S3/MinIO) debe estar estrictamente alineado con sus directivas.
 
 ### 3. Evaluación Obligatoria de Clean Code & SOLID (Uncle Bob)
@@ -57,4 +57,4 @@ Todo código nuevo o modificado DEBE ser evaluado contra los estándares de Uncl
 
 - Cada desarrollador tiene módulos asignados en su respectivo `agent-*.md`.
 - **NUNCA** sugieras ni modifiques código de un módulo perteneciente a otro compañero. Si se requiere interactuar con otro dominio, utiliza los contratos públicos del barril central (`src/domain-contracts`).
-- **Migraciones:** Solo `@saul` está autorizado a crear o modificar migraciones de base de datos.
+- **Migraciones:** Solo `@Sauhul` está autorizado a crear o modificar migraciones de base de datos.

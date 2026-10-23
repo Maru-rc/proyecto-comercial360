@@ -24,7 +24,7 @@ Los agentes de este repositorio **NO** son herramientas de *vibecoding* (generac
    - Prohibido importar TypeORM o NestJS dentro de `domain/`.
    - Prohibido importar carpetas internas de otro módulo; la comunicación entre dominios es **exclusivamente** mediante el barril central `src/domain-contracts`.
 4. **Liderazgo de Arquitectura e Infraestructura:**
-   - **Manuel Vásquez (`@manulz`)** y **Alejandro (`@alejandroesbr`)** son los **Líderes Oficiales de Clean Architecture e Infraestructura**.
+   - **Manuel Vásquez (`@manulzweb`)** y **Alejandro (`@alejandroesbr`)** son los **Líderes Oficiales de Clean Architecture e Infraestructura**.
    - Cualquier modificación al barril de contratos, configuración de Docker Compose, clúster de Amazon Aurora PostgreSQL o almacenamiento S3/MinIO debe contar con su aprobación explícita.
 
 ---
@@ -34,12 +34,12 @@ Los agentes de este repositorio **NO** son herramientas de *vibecoding* (generac
 | Archivo del Agente | Usuario de GitHub | Integrante | Rol Principal en el Tablero |
 |---|---|---|---|
 | [`agent-alejandroesbr.md`](./agent-alejandroesbr.md) | `@alejandroesbr` | Alejandro | **Co-Lead Arquitectura & Infra** / Backend Domain (`HU-01`, `HU-05..HU-09`, `HU-15`) |
-| [`agent-manulz.md`](./agent-manulz.md) | `@manulz` | Manuel Vásquez | **Co-Lead Arquitectura & Infra** / Backend Operations (`HU-10..HU-14`, `HU-19`) |
+| [`agent-manulz.md`](./agent-manulz.md) | `@manulzweb` | Manuel Vásquez | **Co-Lead Arquitectura & Infra** / Backend Operations (`HU-10..HU-14`, `HU-19`) |
 | [`agent-Andres-1109.md`](./agent-Andres-1109.md) | `@Andres-1109` | Andrés | DevOps & Cloud Deployment (`HU-21` Jenkins, EC2, Nginx) |
 | [`agent-Frankcanas.md`](./agent-Frankcanas.md) | `@Frankcanas` | Frank | Frontend Lead & UI/UX (React, Leaflet Maps, 4 Pantallas Mockup) |
 | [`agent-Maru-rc.md`](./agent-Maru-rc.md) | `@Maru-rc` | Manuel Rueda | QA & Testing Specialist (Vitest Unit Tests, Mocks, SonarQube) |
-| [`agent-saul.md`](./agent-saul.md) | `@saul` | Saúl | Database & Analytics Specialist (Migraciones TypeORM, Aurora, KPIs, CSV) |
-| [`agent-valentina.md`](./agent-valentina.md) | `@valentina` | Valentina | Security & Auth Specialist (Better Auth, RBAC Guards, Login UI) |
+| [`agent-saul.md`](./agent-saul.md) | `@Sauhul` | Saúl | Database & Analytics Specialist (Migraciones TypeORM, Aurora, KPIs, CSV) |
+| [`agent-valentina.md`](./agent-valentina.md) | `@valentina27101` | Valentina | Security & Auth Specialist (Better Auth, RBAC Guards, Login UI) |
 
 ---
 

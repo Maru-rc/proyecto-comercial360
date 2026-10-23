@@ -1,5 +1,6 @@
 import { betterAuth } from 'better-auth';
 import type { Pool } from 'pg';
+import { USER_ROLES } from '../../domain/role.js';
 
 export const AUTH = Symbol('AUTH');
 
@@ -43,7 +44,7 @@ export function createAuth(pool: Pool, env: NodeJS.ProcessEnv = process.env) {
         role: {
           type: 'string',
           required: true,
-          defaultValue: 'ASESOR',
+          defaultValue: USER_ROLES.ADVISOR,
           input: false,
         },
       },

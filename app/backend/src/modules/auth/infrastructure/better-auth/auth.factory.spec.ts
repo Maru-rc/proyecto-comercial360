@@ -1,4 +1,5 @@
 import type { Pool } from 'pg';
+import { USER_ROLES } from '../../domain/role.js';
 import {
   allowedOrigins,
   createAuth,
@@ -6,6 +7,8 @@ import {
   SESSION_WITHOUT_REMEMBER_SECONDS,
 } from './auth.factory.js';
 
+// The Better Auth instance does not open connections upon creation
+// (the pool is only used on queries), so no real database is needed here.
 const pool = {
   connect: async () => ({ release: () => {} }),
   query: async () => ({ rows: [] }),
@@ -18,17 +21,17 @@ const ENV = {
   FRONTEND_URL: 'http://localhost:5173',
 };
 
-describe('createAuth (configuración de Better Auth)', () => {
-  it('exige un secreto de al menos 32 caracteres', () => {
+describe('createAuth (Better Auth configuration)', () => {
+  it('requires a secret of at least 32 characters', () => {
     expect(() =>
       createAuth(pool, { ...ENV, BETTER_AUTH_SECRET: undefined }),
     ).toThrow(/BETTER_AUTH_SECRET/);
     expect(() =>
-      createAuth(pool, { ...ENV, BETTER_AUTH_SECRET: 'corta' }),
+      createAuth(pool, { ...ENV, BETTER_AUTH_SECRET: 'short' }),
     ).toThrow(/BETTER_AUTH_SECRET/);
   });
 
-  it('exige que BETTER_AUTH_URL sea un origen sin ruta', () => {
+  it('requires BETTER_AUTH_URL to be an origin without path', () => {
     expect(() =>
       createAuth(pool, {
         ...ENV,
@@ -37,27 +40,27 @@ describe('createAuth (configuración de Better Auth)', () => {
     ).toThrow(/no path/);
   });
 
-  it('deja el registro público deshabilitado', () => {
+  it('leaves public self-registration disabled', () => {
     const auth = createAuth(pool, ENV);
     expect(auth.options.emailAndPassword?.enabled).toBe(true);
     expect(auth.options.emailAndPassword?.disableSignUp).toBe(true);
   });
 
-  it('usa 30 días de sesión para la sesión recordada', () => {
+  it('uses 30 days of session duration for remembered sessions', () => {
     const auth = createAuth(pool, ENV);
     expect(auth.options.session?.expiresIn).toBe(REMEMBER_ME_SESSION_SECONDS);
     expect(REMEMBER_ME_SESSION_SECONDS).toBe(60 * 60 * 24 * 30);
   });
 
-  it('deja el rol fuera de la entrada del cliente (input: false)', () => {
+  it('excludes role from client input (input: false)', () => {
     const auth = createAuth(pool, ENV);
     const role = auth.options.user?.additionalFields?.role as
       { input?: boolean; defaultValue?: string } | undefined;
     expect(role?.input).toBe(false);
-    expect(role?.defaultValue).toBe('ASESOR');
+    expect(role?.defaultValue).toBe(USER_ROLES.ADVISOR);
   });
 
-  it('expone las cookies de sesión como httpOnly', () => {
+  it('exposes session cookies as httpOnly and lax', () => {
     const auth = createAuth(pool, ENV);
     expect(auth.options.advanced?.defaultCookieAttributes).toMatchObject({
       httpOnly: true,
@@ -67,7 +70,7 @@ describe('createAuth (configuración de Better Auth)', () => {
 });
 
 describe('allowedOrigins', () => {
-  it('incluye el origen del frontend y el del backend, sin repetir', () => {
+  it('includes frontend and backend origins without duplicates', () => {
     const origins = allowedOrigins({
       FRONTEND_URL: 'http://localhost:5173,http://localhost:3001',
       BETTER_AUTH_URL: 'http://localhost:3001',
@@ -75,7 +78,7 @@ describe('allowedOrigins', () => {
     expect(origins).toEqual(['http://localhost:5173', 'http://localhost:3001']);
   });
 
-  it('acepta varios frontends separados por coma', () => {
+  it('accepts multiple frontend URLs separated by commas', () => {
     const origins = allowedOrigins({
       FRONTEND_URL: 'http://localhost:5173, https://app.comercial360.com',
       BETTER_AUTH_URL: 'https://api.comercial360.com',
@@ -85,7 +88,7 @@ describe('allowedOrigins', () => {
     expect(origins).toContain('https://api.comercial360.com');
   });
 
-  it('usa los valores por defecto si no hay variables', () => {
+  it('uses default values if environment variables are not provided', () => {
     expect(allowedOrigins({})).toEqual([
       'http://localhost:5173',
       'http://localhost:3001',
@@ -93,8 +96,8 @@ describe('allowedOrigins', () => {
   });
 });
 
-describe('constantes de sesión', () => {
-  it('la sesión sin "Recordarme" dura 1 día', () => {
+describe('Session constants', () => {
+  it('session without rememberMe lasts 1 day', () => {
     expect(SESSION_WITHOUT_REMEMBER_SECONDS).toBe(60 * 60 * 24);
   });
 });

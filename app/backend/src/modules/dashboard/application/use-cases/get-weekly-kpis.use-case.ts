@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import type { Role } from '../../../../domain-contracts/auth/index.js';
 import { DASHBOARD_REPOSITORY } from '../ports/dashboard.repository.port.js';
 import type { IDashboardRepository } from '../ports/dashboard.repository.port.js';
 import { WeeklyKpisQueryDto } from '../dtos/weekly-kpis-query.dto.js';
@@ -7,7 +8,7 @@ import { WeeklyKpisResponseDto } from '../dtos/weekly-kpis-response.dto.js';
 export interface KpiRequestUser {
   id: string;
   email: string;
-  role: 'ASESOR' | 'DIRECTOR';
+  role: Role;
 }
 
 export interface AsesorScopeResolver {

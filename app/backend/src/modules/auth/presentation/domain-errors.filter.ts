@@ -1,17 +1,27 @@
-import { ArgumentsHost, Catch, ExceptionFilter } from '@nestjs/common';
+import {
+  ArgumentsHost,
+  Catch,
+  ExceptionFilter,
+  HttpStatus,
+} from '@nestjs/common';
 import type { Response } from 'express';
 import {
-  AsesorFueraDeAlcanceError,
-  AsesorNoVinculadoError,
+  AdvisorOutOfScopeError,
+  UnlinkedAdvisorError,
 } from '../domain/auth.errors.js';
 
-@Catch(AsesorNoVinculadoError, AsesorFueraDeAlcanceError)
+/** Converts domain authorization errors into HTTP 403 Forbidden. */
+@Catch(UnlinkedAdvisorError, AdvisorOutOfScopeError)
 export class DomainErrorsFilter implements ExceptionFilter {
   catch(error: Error, host: ArgumentsHost) {
-    host.switchToHttp().getResponse<Response>().status(403).json({
-      statusCode: 403,
-      error: 'Forbidden',
-      message: error.message,
-    });
+    host
+      .switchToHttp()
+      .getResponse<Response>()
+      .status(HttpStatus.FORBIDDEN)
+      .json({
+        statusCode: HttpStatus.FORBIDDEN,
+        error: 'Forbidden',
+        message: error.message,
+      });
   }
 }

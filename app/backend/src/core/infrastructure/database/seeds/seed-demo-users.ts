@@ -1,13 +1,13 @@
 import type { DataSource } from 'typeorm';
 import type { Auth } from '../../../../modules/auth/infrastructure/better-auth/auth.factory.js';
-import type { Role } from '../../../../modules/auth/domain/role.js';
+import { USER_ROLES, type Role } from '../../../../modules/auth/domain/role.js';
 
 export interface DemoUser {
   name: string;
   email: string;
   password: string;
   role: Role;
-  asesor?: { telefono: string };
+  advisor?: { phone: string };
 }
 
 export async function seedDemoUsers(
@@ -20,12 +20,12 @@ export async function seedDemoUsers(
   for (const demo of users) {
     const email = demo.email.toLowerCase();
 
-    if (demo.role === 'ASESOR' && demo.asesor) {
+    if (demo.role === USER_ROLES.ADVISOR && demo.advisor) {
       await dataSource.query(
         `INSERT INTO "sales_representatives" ("name", "email", "phone", "status")
          VALUES ($1, $2, $3, 'ACTIVE')
          ON CONFLICT (LOWER("email")) DO NOTHING`,
-        [demo.name, email, demo.asesor.telefono],
+        [demo.name, email, demo.advisor.phone],
       );
     }
 

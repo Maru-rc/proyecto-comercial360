@@ -5,7 +5,7 @@ import type {
 } from '../ports/dashboard.repository.port.js';
 import { GetWeeklyKpisUseCase } from './get-weekly-kpis.use-case.js';
 
-const asesorUser = { id: 'u1', email: 'ana@x.com', role: 'ASESOR' as const };
+const asesorUser = { id: 'u1', email: 'ana@x.com', role: 'ADVISOR' as const };
 const directorUser = {
   id: 'u9',
   email: 'dir@x.com',

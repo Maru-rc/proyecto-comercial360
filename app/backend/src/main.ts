@@ -2,35 +2,50 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule, ObserveInstrument } from './app.module.js';
 import { configureApp } from './app.setup.js';
+import { AppConfigService } from './core/infrastructure/config/app-config.service.js';
 
+// Environment variables are loaded before initializing the app.
 try {
   process.loadEnvFile();
-} catch {}
+} catch (error: unknown) {
+  if (!(
+    error instanceof Error &&
+    'code' in error &&
+    (error as NodeJS.ErrnoException).code === 'ENOENT'
+  )) {
+    throw error;
+  }
+}
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     instrument: ObserveInstrument,
   });
 
+  // Helmet, /api prefix, CORS, Better Auth and validation (see app.setup.ts)
   configureApp(app);
 
+  // Swagger setup at /api/docs
   const config = new DocumentBuilder()
     .setTitle('Comercial 360 API')
-    .setDescription('Plataforma de Gestión Comercial — Clean Architecture')
+    .setDescription('Commercial Management Platform — Clean Architecture')
     .setVersion('1.0')
     .addBearerAuth()
+    // Better Auth session (httpOnly cookie)
     .addCookieAuth('better-auth.session_token')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
 
+  // Better Auth endpoints are mounted directly in Express, so Nest Swagger
+  // does not discover them automatically. We document them here explicitly.
   Object.assign(document.paths, {
     '/api/auth/sign-in/email': {
       post: {
         tags: ['auth'],
-        summary: 'Iniciar sesión con correo y contraseña',
+        summary: 'Sign in with email and password',
         description:
-          'Valida las credenciales y establece la cookie de sesión httpOnly de Better Auth. El registro público está deshabilitado.',
+          'Validates credentials and establishes Better Auth httpOnly session cookie. Public self-registration is disabled.',
         operationId: 'betterAuthSignInEmail',
         requestBody: {
           required: true,
@@ -43,16 +58,17 @@ async function bootstrap() {
                   email: {
                     type: 'string',
                     format: 'email',
-                    example: 'asesor@comercial360.com',
+                    example: 'advisor@comercial360.com',
                   },
                   password: {
                     type: 'string',
                     format: 'password',
-                    example: 'TuContrasena',
+                    example: 'YourPassword123!',
                   },
                   rememberMe: {
                     type: 'boolean',
-                    description: 'Si es true, solicita una sesión persistente.',
+                    description:
+                      'If true, requests a persistent 30-day session.',
                     default: false,
                   },
                 },
@@ -62,14 +78,12 @@ async function bootstrap() {
         },
         responses: {
           '200': {
-            description:
-              'Inicio de sesión correcto. Better Auth establece la cookie de sesión.',
+            description: 'Sign in successful. Better Auth sets session cookie.',
           },
-          '400': { description: 'Datos de entrada inválidos.' },
-          '401': { description: 'Correo o contraseña incorrectos.' },
+          '400': { description: 'Invalid input payload.' },
+          '401': { description: 'Incorrect email or password.' },
           '403': {
-            description:
-              'Solicitud no permitida por la configuración de origen.',
+            description: 'Request forbidden by origin policy.',
           },
         },
       },
@@ -77,14 +91,13 @@ async function bootstrap() {
     '/api/auth/get-session': {
       get: {
         tags: ['auth'],
-        summary: 'Consultar la sesión actual',
-        description:
-          'Lee la sesión desde la cookie de Better Auth enviada por el cliente.',
+        summary: 'Query current session',
+        description: 'Reads session from Better Auth cookie sent by client.',
         operationId: 'betterAuthGetSession',
         responses: {
           '200': {
             description:
-              'Sesión encontrada. Si no hay sesión activa, Better Auth puede devolver null.',
+              'Active session found. Returns null if unauthenticated.',
             content: {
               'application/json': {
                 schema: {
@@ -104,8 +117,7 @@ async function bootstrap() {
             },
           },
           '401': {
-            description:
-              'No hay una sesión válida, si aplica según la respuesta de Better Auth.',
+            description: 'No valid session found.',
           },
         },
       },
@@ -113,15 +125,14 @@ async function bootstrap() {
     '/api/auth/sign-out': {
       post: {
         tags: ['auth'],
-        summary: 'Cerrar sesión',
+        summary: 'Sign out',
         description:
-          'Invalida la sesión actual y expira la cookie de Better Auth.',
+          'Invalidates current session and expires Better Auth session cookie.',
         operationId: 'betterAuthSignOut',
         responses: {
-          '200': { description: 'Sesión cerrada correctamente.' },
+          '200': { description: 'Session closed successfully.' },
           '401': {
-            description:
-              'No hay una sesión válida, si aplica según la respuesta de Better Auth.',
+            description: 'No active session found.',
           },
         },
       },
@@ -130,7 +141,8 @@ async function bootstrap() {
 
   SwaggerModule.setup('api/docs', app, document);
 
-  const port = process.env.PORT ?? 3001;
+  const appConfig = app.get(AppConfigService);
+  const port = appConfig.port;
   await app.listen(port);
   console.log(`🚀 Server running on: http://localhost:${port}/api`);
   console.log(`📄 Swagger documentation: http://localhost:${port}/api/docs`);

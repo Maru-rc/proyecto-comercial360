@@ -16,7 +16,7 @@ import { DashboardController } from './dashboard.controller.js';
     {
       provide: ASESOR_SCOPE_RESOLVER,
       useFactory: (resolver: unknown) => resolver,
-      inject: ['ResolveAsesorScopeUseCase'],
+      inject: ['ResolveAdvisorScopeUseCase'],
     },
     GetWeeklyKpisUseCase,
   ],

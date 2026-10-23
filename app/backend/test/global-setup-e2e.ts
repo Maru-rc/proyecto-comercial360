@@ -7,6 +7,10 @@ import {
   TEST_DATABASE_NAME,
 } from './e2e-env.js';
 
+/**
+ * Creates the test database if it does not already exist. Only database names
+ * ending with `_test` are allowed, preventing any interaction with development databases.
+ */
 async function ensureTestDatabaseExists(): Promise<void> {
   assertIsTestDatabase(TEST_DATABASE_NAME);
 
@@ -29,14 +33,17 @@ async function ensureTestDatabaseExists(): Promise<void> {
       [TEST_DATABASE_NAME],
     );
     if (rows.length === 0) {
+      // Quoted identifier: database name is derived from environment, not user input.
       await client.query(`CREATE DATABASE "${TEST_DATABASE_NAME}"`);
-      console.log(`Base de pruebas creada: ${TEST_DATABASE_NAME}`);
+      console.log(`Test database created: ${TEST_DATABASE_NAME}`);
     }
   } finally {
     await client.end();
   }
 }
 
+// Before e2e tests: ensure the test database schema is up-to-date
+// using the same migrations as the production application.
 export default async function setup() {
   applyE2eEnv();
   assertIsTestDatabase(process.env.DATABASE_NAME ?? '');
