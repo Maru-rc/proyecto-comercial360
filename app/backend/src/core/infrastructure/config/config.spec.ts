@@ -1,13 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { ConfigService } from '@nestjs/config';
 import { AppConfiguration } from '../../../config/app.config.js';
-import { envValidationSchema } from './env.validation.js';
+import { envSchema, validateEnv } from './env.validation.js';
 import { AppConfigService } from './app-config.service.js';
 
-describe('AppConfigService & Environment Validation (Joi)', () => {
+describe('AppConfigService & Environment Validation (Zod)', () => {
   it('should validate default environment values and return valid config', () => {
-    const { error, value } = envValidationSchema.validate({});
-    expect(error).toBeUndefined();
+    const value = validateEnv({});
     expect(value.NODE_ENV).toBe('development');
     expect(value.PORT).toBe(3001);
     expect(value.DB_HOST).toBe('localhost');
@@ -65,11 +64,11 @@ describe('AppConfigService & Environment Validation (Joi)', () => {
   });
 
   it('should reject invalid ports in schema validation', () => {
-    const { error } = envValidationSchema.validate({
-      PORT: 999999, // Exceeds valid port range
-    });
-
-    expect(error).toBeDefined();
+    expect(() =>
+      validateEnv({
+        PORT: 999999, // Exceeds valid port range
+      }),
+    ).toThrow();
   });
 
   it('should load AppConfiguration factory structure with defaults and aliases', () => {

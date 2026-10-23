@@ -3,7 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppConfiguration } from '../config/app.config.js';
 import { AppConfigService } from './infrastructure/config/app-config.service.js';
-import { envValidationSchema } from './infrastructure/config/env.validation.js';
+import { validateEnv } from './infrastructure/config/env.validation.js';
 import { buildDataSourceOptions } from './infrastructure/database/data-source.js';
 
 import { HealthController } from './infrastructure/health/health.controller.js';
@@ -14,7 +14,7 @@ import { HealthController } from './infrastructure/health/health.controller.js';
     ConfigModule.forRoot({
       isGlobal: true,
       load: [AppConfiguration],
-      validationSchema: envValidationSchema,
+      validate: validateEnv,
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
