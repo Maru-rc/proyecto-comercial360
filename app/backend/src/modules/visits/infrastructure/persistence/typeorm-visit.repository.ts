@@ -126,40 +126,7 @@ export class TypeOrmVisitRepository implements IVisitRepository, VisitReader {
     const visits = advisorId
       ? await this.findByAdvisorAndDate(advisorId, date)
       : await this.findByDate(date);
-
-    return Promise.all(
-      visits.map(async (v) => {
-        const clientSummary = this.clientReader
-          ? await this.clientReader.getSummaryById(v.clientId)
-          : null;
-        const coords = this.clientReader
-          ? await this.clientReader.getCoordinatesById(v.clientId)
-          : null;
-
-        return {
-          id: v.id ?? 0,
-          clientId: v.clientId,
-          clientName: clientSummary?.legalName ?? `Client #${v.clientId}`,
-          clientAddress: clientSummary?.address ?? null,
-          address: clientSummary?.address ?? null,
-          visitOrder: v.visitOrder,
-          order: v.visitOrder,
-          suggestedTime: v.startTime,
-          time: v.startTime ?? undefined,
-          visitStatus: v.visitStatus,
-          status: v.visitStatus,
-          objective: v.objective,
-          latitude: coords?.latitude ?? null,
-          longitude: coords?.longitude ?? null,
-          primaryContact: clientSummary?.primaryContact
-            ? {
-                name: clientSummary.primaryContact.name,
-                phone: clientSummary.primaryContact.phone,
-              }
-            : null,
-        };
-      }),
-    );
+    return VisitMapper.toDailyAgenda(visits, this.clientReader);
   }
 
   async getMapStops(
@@ -167,15 +134,6 @@ export class TypeOrmVisitRepository implements IVisitRepository, VisitReader {
     advisorId?: number,
   ): Promise<VisitMapStopContractDto[]> {
     const agenda = await this.getDailyAgenda(date, advisorId);
-    return agenda.map((item) => ({
-      id: item.id,
-      clientId: item.clientId,
-      clientName: item.clientName,
-      address: item.clientAddress ?? null,
-      order: item.visitOrder,
-      latitude: item.latitude ?? null,
-      longitude: item.longitude ?? null,
-      pinStatus: item.visitStatus === 'COMPLETED' ? 'VISITED' : 'PENDING',
-    }));
+    return VisitMapper.toMapStops(agenda);
   }
 }

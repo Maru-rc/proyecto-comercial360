@@ -1,4 +1,9 @@
-import type { VisitContractDto } from '../../../../../domain-contracts/index.js';
+import type {
+  ClientReader,
+  VisitAgendaItemContractDto,
+  VisitContractDto,
+  VisitMapStopContractDto,
+} from '../../../../../domain-contracts/index.js';
 import { Visit } from '../../../domain/entities/visit.entity.js';
 import type { VisitStatus } from '../../../domain/entities/visit.entity.js';
 import { VisitOrmEntity } from '../entities/visit.orm-entity.js';
@@ -79,5 +84,59 @@ export class VisitMapper {
       observation: domain.observation,
       observations: domain.observation,
     };
+  }
+
+  static async toDailyAgenda(
+    visits: Visit[],
+    clientReader?: ClientReader,
+  ): Promise<VisitAgendaItemContractDto[]> {
+    return Promise.all(
+      visits.map(async (v) => {
+        const clientSummary = clientReader
+          ? await clientReader.getSummaryById(v.clientId)
+          : null;
+        const coords = clientReader
+          ? await clientReader.getCoordinatesById(v.clientId)
+          : null;
+
+        return {
+          id: v.id ?? 0,
+          clientId: v.clientId,
+          clientName: clientSummary?.legalName ?? `Client #${v.clientId}`,
+          clientAddress: clientSummary?.address ?? null,
+          address: clientSummary?.address ?? null,
+          visitOrder: v.visitOrder,
+          order: v.visitOrder,
+          suggestedTime: v.startTime,
+          time: v.startTime ?? undefined,
+          visitStatus: v.visitStatus,
+          status: v.visitStatus,
+          objective: v.objective,
+          latitude: coords?.latitude ?? null,
+          longitude: coords?.longitude ?? null,
+          primaryContact: clientSummary?.primaryContact
+            ? {
+                name: clientSummary.primaryContact.name,
+                phone: clientSummary.primaryContact.phone,
+              }
+            : null,
+        };
+      }),
+    );
+  }
+
+  static toMapStops(
+    agenda: VisitAgendaItemContractDto[],
+  ): VisitMapStopContractDto[] {
+    return agenda.map((item) => ({
+      id: item.id,
+      clientId: item.clientId,
+      clientName: item.clientName,
+      address: item.clientAddress ?? null,
+      order: item.visitOrder,
+      latitude: item.latitude ?? null,
+      longitude: item.longitude ?? null,
+      pinStatus: item.visitStatus === 'COMPLETED' ? 'VISITED' : 'PENDING',
+    }));
   }
 }

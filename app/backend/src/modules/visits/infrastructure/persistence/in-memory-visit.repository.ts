@@ -8,6 +8,7 @@ import type {
 import { VisitOutcome } from '../../domain/entities/visit-outcome.entity.js';
 import { Visit } from '../../domain/entities/visit.entity.js';
 import type { IVisitRepository } from '../../domain/repositories/visit-repository.port.js';
+import { VisitMapper } from './mappers/visit.mapper.js';
 
 export class InMemoryVisitRepository implements IVisitRepository, VisitReader {
   private readonly visits: Visit[] = [];
@@ -154,22 +155,7 @@ export class InMemoryVisitRepository implements IVisitRepository, VisitReader {
 
   async getVisitById(id: number): Promise<VisitContractDto | null> {
     const v = await this.findById(id);
-    if (!v) return null;
-    return {
-      id: v.id ?? 0,
-      clientId: v.clientId,
-      advisorId: v.advisorId,
-      routeId: v.routeId,
-      scheduledDate: v.scheduledDate,
-      startTime: v.startTime,
-      endTime: v.endTime,
-      visitStatus: v.visitStatus,
-      status: v.visitStatus,
-      visitType: v.visitType,
-      objective: v.objective,
-      observation: v.observation,
-      observations: v.observation,
-    };
+    return v ? VisitMapper.toContract(v) : null;
   }
 
   async getDailyAgenda(
@@ -179,40 +165,7 @@ export class InMemoryVisitRepository implements IVisitRepository, VisitReader {
     const visits = advisorId
       ? await this.findByAdvisorAndDate(advisorId, date)
       : await this.findByDate(date);
-
-    return Promise.all(
-      visits.map(async (v) => {
-        const summary = this.clientReader
-          ? await this.clientReader.getSummaryById(v.clientId)
-          : null;
-        const coords = this.clientReader
-          ? await this.clientReader.getCoordinatesById(v.clientId)
-          : null;
-
-        return {
-          id: v.id ?? 0,
-          clientId: v.clientId,
-          clientName: summary?.legalName ?? `Client #${v.clientId}`,
-          clientAddress: summary?.address ?? null,
-          address: summary?.address ?? null,
-          visitOrder: v.visitOrder,
-          order: v.visitOrder,
-          suggestedTime: v.startTime,
-          time: v.startTime ?? undefined,
-          visitStatus: v.visitStatus,
-          status: v.visitStatus,
-          objective: v.objective,
-          latitude: coords?.latitude ?? null,
-          longitude: coords?.longitude ?? null,
-          primaryContact: summary?.primaryContact
-            ? {
-                name: summary.primaryContact.name,
-                phone: summary.primaryContact.phone,
-              }
-            : null,
-        };
-      }),
-    );
+    return VisitMapper.toDailyAgenda(visits, this.clientReader);
   }
 
   async getMapStops(
@@ -220,16 +173,7 @@ export class InMemoryVisitRepository implements IVisitRepository, VisitReader {
     advisorId?: number,
   ): Promise<VisitMapStopContractDto[]> {
     const agenda = await this.getDailyAgenda(date, advisorId);
-    return agenda.map((item) => ({
-      id: item.id,
-      clientId: item.clientId,
-      clientName: item.clientName,
-      address: item.clientAddress ?? null,
-      order: item.visitOrder,
-      latitude: item.latitude ?? null,
-      longitude: item.longitude ?? null,
-      pinStatus: item.visitStatus === 'COMPLETED' ? 'VISITED' : 'PENDING',
-    }));
+    return VisitMapper.toMapStops(agenda);
   }
 
   clear(): void {
