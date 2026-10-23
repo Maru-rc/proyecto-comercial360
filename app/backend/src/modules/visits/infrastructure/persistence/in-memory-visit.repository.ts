@@ -1,22 +1,17 @@
-import type {
-  ClientReader,
-  VisitAgendaItemContractDto,
-  VisitContractDto,
-  VisitMapStopContractDto,
-  VisitReader,
-} from '../../../../domain-contracts/index.js';
+import type { ClientReader } from '../../../../domain-contracts/index.js';
 import { VisitOutcome } from '../../domain/entities/visit-outcome.entity.js';
 import { Visit } from '../../domain/entities/visit.entity.js';
-import type { IVisitRepository } from '../../domain/repositories/visit-repository.port.js';
-import { VisitMapper } from './mappers/visit.mapper.js';
+import { BaseVisitRepository } from './base-visit.repository.js';
 
-export class InMemoryVisitRepository implements IVisitRepository, VisitReader {
+export class InMemoryVisitRepository extends BaseVisitRepository {
   private readonly visits: Visit[] = [];
   private readonly outcomes: VisitOutcome[] = [];
   private autoIncrementId = 1;
   private autoIncrementOutcomeId = 1;
 
-  constructor(private readonly clientReader?: ClientReader) {}
+  constructor(clientReader?: ClientReader) {
+    super(clientReader);
+  }
 
   getSnapshot(): {
     visits: Visit[];
@@ -151,29 +146,6 @@ export class InMemoryVisitRepository implements IVisitRepository, VisitReader {
 
   async findOutcomeByVisit(visitId: number): Promise<VisitOutcome | null> {
     return this.outcomes.find((o) => o.visitId === visitId) ?? null;
-  }
-
-  async getVisitById(id: number): Promise<VisitContractDto | null> {
-    const v = await this.findById(id);
-    return v ? VisitMapper.toContract(v) : null;
-  }
-
-  async getDailyAgenda(
-    date: string,
-    advisorId?: number,
-  ): Promise<VisitAgendaItemContractDto[]> {
-    const visits = advisorId
-      ? await this.findByAdvisorAndDate(advisorId, date)
-      : await this.findByDate(date);
-    return VisitMapper.toDailyAgenda(visits, this.clientReader);
-  }
-
-  async getMapStops(
-    date: string,
-    advisorId?: number,
-  ): Promise<VisitMapStopContractDto[]> {
-    const agenda = await this.getDailyAgenda(date, advisorId);
-    return VisitMapper.toMapStops(agenda);
   }
 
   clear(): void {

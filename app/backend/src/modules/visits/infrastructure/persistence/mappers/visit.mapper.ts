@@ -6,7 +6,10 @@ import type {
 } from '../../../../../domain-contracts/index.js';
 import { Visit } from '../../../domain/entities/visit.entity.js';
 import type { VisitStatus } from '../../../domain/entities/visit.entity.js';
+import { VisitOutcome } from '../../../domain/entities/visit-outcome.entity.js';
+import type { OutcomeType } from '../../../domain/entities/visit-outcome.entity.js';
 import { VisitOrmEntity } from '../entities/visit.orm-entity.js';
+import { VisitOutcomeOrmEntity } from '../entities/visit-outcome.orm-entity.js';
 
 function parseTimeToDate(time?: string | null, baseDate?: Date): Date | null {
   if (!time) return null;
@@ -138,5 +141,30 @@ export class VisitMapper {
       longitude: item.longitude ?? null,
       pinStatus: item.visitStatus === 'COMPLETED' ? 'VISITED' : 'PENDING',
     }));
+  }
+
+  static outcomeToDomain(orm: VisitOutcomeOrmEntity): VisitOutcome {
+    return VisitOutcome.create({
+      id: orm.id,
+      visitId: orm.visitId,
+      outcome: orm.outcome as OutcomeType,
+      reasonNoSale: orm.reasonNoSale,
+      observations: orm.observations,
+      evidenceS3Key: orm.evidenceS3Key,
+      createdAt: orm.createdAt,
+    });
+  }
+
+  static outcomeToOrm(domain: VisitOutcome): VisitOutcomeOrmEntity {
+    const orm = new VisitOutcomeOrmEntity();
+    if (domain.id !== undefined) {
+      orm.id = domain.id;
+    }
+    orm.visitId = domain.visitId;
+    orm.outcome = domain.outcome;
+    orm.reasonNoSale = domain.reasonNoSale ?? null;
+    orm.observations = domain.observations ?? null;
+    orm.evidenceS3Key = domain.evidenceS3Key ?? null;
+    return orm;
   }
 }

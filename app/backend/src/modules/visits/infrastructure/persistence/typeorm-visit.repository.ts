@@ -2,23 +2,16 @@ import { Inject, Injectable, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, Repository } from 'typeorm';
 import { CLIENT_READER } from '../../../../domain-contracts/index.js';
-import type {
-  ClientReader,
-  VisitAgendaItemContractDto,
-  VisitContractDto,
-  VisitMapStopContractDto,
-  VisitReader,
-} from '../../../../domain-contracts/index.js';
-import { VisitOutcome } from '../../domain/entities/visit-outcome.entity.js';
-import type { OutcomeType } from '../../domain/entities/visit-outcome.entity.js';
+import type { ClientReader } from '../../../../domain-contracts/index.js';
+import type { VisitOutcome } from '../../domain/entities/visit-outcome.entity.js';
 import type { Visit } from '../../domain/entities/visit.entity.js';
-import type { IVisitRepository } from '../../domain/repositories/visit-repository.port.js';
+import { BaseVisitRepository } from './base-visit.repository.js';
 import { VisitOutcomeOrmEntity } from './entities/visit-outcome.orm-entity.js';
 import { VisitOrmEntity } from './entities/visit.orm-entity.js';
 import { VisitMapper } from './mappers/visit.mapper.js';
 
 @Injectable()
-export class TypeOrmVisitRepository implements IVisitRepository, VisitReader {
+export class TypeOrmVisitRepository extends BaseVisitRepository {
   constructor(
     @InjectRepository(VisitOrmEntity)
     private readonly visitRepo: Repository<VisitOrmEntity>,
@@ -26,8 +19,10 @@ export class TypeOrmVisitRepository implements IVisitRepository, VisitReader {
     private readonly outcomeRepo: Repository<VisitOutcomeOrmEntity>,
     @Optional()
     @Inject(CLIENT_READER)
-    private readonly clientReader?: ClientReader,
-  ) {}
+    clientReader?: ClientReader,
+  ) {
+    super(clientReader);
+  }
 
   async save(visit: Visit): Promise<Visit> {
     const orm = VisitMapper.toOrm(visit);
@@ -78,62 +73,13 @@ export class TypeOrmVisitRepository implements IVisitRepository, VisitReader {
   }
 
   async saveOutcome(outcome: VisitOutcome): Promise<VisitOutcome> {
-    const orm = new VisitOutcomeOrmEntity();
-    if (outcome.id !== undefined) {
-      orm.id = outcome.id;
-    }
-    orm.visitId = outcome.visitId;
-    orm.outcome = outcome.outcome;
-    orm.reasonNoSale = outcome.reasonNoSale ?? null;
-    orm.observations = outcome.observations ?? null;
-    orm.evidenceS3Key = outcome.evidenceS3Key ?? null;
-
+    const orm = VisitMapper.outcomeToOrm(outcome);
     const saved = await this.outcomeRepo.save(orm);
-    return VisitOutcome.create({
-      id: saved.id,
-      visitId: saved.visitId,
-      outcome: saved.outcome as OutcomeType,
-      reasonNoSale: saved.reasonNoSale,
-      observations: saved.observations,
-      evidenceS3Key: saved.evidenceS3Key,
-      createdAt: saved.createdAt,
-    });
+    return VisitMapper.outcomeToDomain(saved);
   }
 
   async findOutcomeByVisit(visitId: number): Promise<VisitOutcome | null> {
     const entity = await this.outcomeRepo.findOne({ where: { visitId } });
-    if (!entity) return null;
-    return VisitOutcome.create({
-      id: entity.id,
-      visitId: entity.visitId,
-      outcome: entity.outcome as OutcomeType,
-      reasonNoSale: entity.reasonNoSale,
-      observations: entity.observations,
-      evidenceS3Key: entity.evidenceS3Key,
-      createdAt: entity.createdAt,
-    });
-  }
-
-  async getVisitById(id: number): Promise<VisitContractDto | null> {
-    const visit = await this.findById(id);
-    return visit ? VisitMapper.toContract(visit) : null;
-  }
-
-  async getDailyAgenda(
-    date: string,
-    advisorId?: number,
-  ): Promise<VisitAgendaItemContractDto[]> {
-    const visits = advisorId
-      ? await this.findByAdvisorAndDate(advisorId, date)
-      : await this.findByDate(date);
-    return VisitMapper.toDailyAgenda(visits, this.clientReader);
-  }
-
-  async getMapStops(
-    date: string,
-    advisorId?: number,
-  ): Promise<VisitMapStopContractDto[]> {
-    const agenda = await this.getDailyAgenda(date, advisorId);
-    return VisitMapper.toMapStops(agenda);
+    return entity ? VisitMapper.outcomeToDomain(entity) : null;
   }
 }
