@@ -1,6 +1,9 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { toNodeHandler } from 'better-auth/node';
 import helmet from 'helmet';
+import { DomainExceptionFilter } from './core/infrastructure/filters/domain-exception.filter.js';
+import { TransformInterceptor } from './core/infrastructure/interceptors/transform.interceptor.js';
 import {
   AUTH,
   allowedOrigins,
@@ -36,4 +39,11 @@ export function configureApp(app: INestApplication) {
       transform: true,
     }),
   );
+
+  // 6. Estandarización de respuestas { data, meta }
+  const reflector = app.get(Reflector);
+  app.useGlobalInterceptors(new TransformInterceptor(reflector));
+
+  // 7. Filtro global para traducir DomainExceptions a respuestas HTTP
+  app.useGlobalFilters(new DomainExceptionFilter());
 }

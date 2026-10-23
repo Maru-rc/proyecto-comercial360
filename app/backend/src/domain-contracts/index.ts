@@ -1,6 +1,7 @@
 export * from './advisors/index.js';
 export * from './clients/index.js';
 export * from './commercial/index.js';
+export * from './exceptions/index.js';
 export * from './follow-ups/index.js';
 export * from './history/index.js';
 export * from './routes/index.js';
