@@ -1,58 +1,20 @@
-import type {
-  IVisitTrackingRepository,
-  VisitTrackingFilter,
-  VisitTrackingRow,
-} from '../ports/visit-tracking.port.js';
 import { ExportVisitTrackingCsvUseCase } from './export-visit-tracking-csv.use-case.js';
-
-const advisorUser = {
-  id: 'u1',
-  email: 'ana@x.com',
-  role: 'ADVISOR' as const,
-};
-const directorUser = {
-  id: 'u9',
-  email: 'dir@x.com',
-  role: 'DIRECTOR' as const,
-};
-
-const baseRow: VisitTrackingRow = {
-  visitId: 42,
-  date: '2026-10-21',
-  advisorName: 'Juan Perez',
-  territory: 'NORTE',
-  week: 43,
-  day: 'Tuesday',
-  route: 'RUT-002',
-  customer: 'Metalurgicas S.A.S',
-  municipality: 'Barranquilla',
-  customerType: 'Industrial',
-  potential: 'Alto',
-  visitStatus: 'VISITADO',
-  outcome: 'Interesado',
-  quoteNumber: 'COT-1242',
-  quoteAmount: 24800000,
-  orderNumber: null,
-  nextFollowUpDate: '2026-10-28',
-};
+import {
+  advisorUser,
+  baseRow,
+  directorUser,
+  makeTrackingRepo,
+  type VisitTrackingFilter,
+} from './visit-tracking-test.helpers.js';
 
 function makeUseCase(
-  rows: VisitTrackingRow[],
+  rows: any[],
   advisorId: number | null,
 ): {
   useCase: ExportVisitTrackingCsvUseCase;
   captured: VisitTrackingFilter[];
 } {
-  const captured: VisitTrackingFilter[] = [];
-  const repo: IVisitTrackingRepository = {
-    async findPage(filter) {
-      return { rows: [], total: 0 };
-    },
-    async findAll(filter) {
-      captured.push(filter);
-      return rows;
-    },
-  };
+  const { repo, captured } = makeTrackingRepo({ rows, total: rows.length });
   const scope = {
     async execute() {
       return advisorId;
