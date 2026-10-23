@@ -7,6 +7,7 @@ import { createPgPool } from './infrastructure/better-auth/pg-pool.js';
 import { ADVISOR_REPOSITORY } from './application/ports/advisor.repository.js';
 import { GetMeUseCase } from './application/use-cases/get-me.use-case.js';
 import { ResolveAdvisorScopeUseCase } from './application/use-cases/resolve-advisor-scope.use-case.js';
+import { ADVISOR_SCOPE_RESOLVER } from '../../domain-contracts/index.js';
 import { AUTH, createAuth } from './infrastructure/better-auth/auth.factory.js';
 import { TypeOrmAdvisorRepository } from './infrastructure/persistence/typeorm-advisor.repository.js';
 import { AuthGuard } from './presentation/auth.guard.js';
@@ -30,6 +31,10 @@ const PG_POOL = Symbol('PG_POOL');
     { provide: APP_FILTER, useClass: DomainErrorsFilter },
     GetMeUseCase,
     ResolveAdvisorScopeUseCase,
+    {
+      provide: ADVISOR_SCOPE_RESOLVER,
+      useExisting: ResolveAdvisorScopeUseCase,
+    },
     AuthGuard,
     RolesGuard,
   ],
@@ -38,6 +43,7 @@ const PG_POOL = Symbol('PG_POOL');
     AuthGuard,
     RolesGuard,
     ResolveAdvisorScopeUseCase,
+    ADVISOR_SCOPE_RESOLVER,
     ADVISOR_REPOSITORY,
   ],
 })
