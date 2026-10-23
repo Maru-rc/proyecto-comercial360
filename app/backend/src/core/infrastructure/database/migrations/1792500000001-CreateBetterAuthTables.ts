@@ -1,16 +1,9 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-/**
- * Tablas que necesita Better Auth (user, session, account, verification).
- * El SQL replica el esquema que genera Better Auth para nuestra configuración
- * (ver `getMigrations` de better-auth/db/migration), más la columna `role`.
- * Better Auth no tiene adaptador de TypeORM, por eso las creamos aquí.
- */
 export class CreateBetterAuthTables1792500000001 implements MigrationInterface {
   name = 'CreateBetterAuthTables1792500000001';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // El rol se guarda en la base y solo admite los dos valores permitidos.
     await queryRunner.query(`
       CREATE TABLE "user" (
         "id" TEXT NOT NULL PRIMARY KEY,

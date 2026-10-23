@@ -1,6 +1,6 @@
 import { Role } from './role.js';
 
-/** Usuario que viene de una sesión válida de Better Auth. */
+/** User coming from a valid Better Auth session. */
 export interface AuthenticatedUser {
   id: string;
   name: string;

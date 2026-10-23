@@ -1,12 +1,5 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-/**
- * Pasa la tabla ASESOR a inglés, como el resto del esquema:
- * asesor -> sales_representatives
- * (id_asesor, nombre, correo, telefono, estado)
- *   -> (sales_representative_id, name, email, phone, status)
- * Solo renombra: conserva los datos y las llaves foráneas que ya apunten a la tabla.
- */
 export class RenameAsesorToSalesRepresentatives1792600000000 implements MigrationInterface {
   name = 'RenameAsesorToSalesRepresentatives1792600000000';
 
@@ -29,7 +22,6 @@ export class RenameAsesorToSalesRepresentatives1792600000000 implements Migratio
     await queryRunner.query(
       `ALTER TABLE "sales_representatives" RENAME COLUMN "estado" TO "status"`,
     );
-    // Índices y secuencia con el nombre nuevo de la tabla
     await queryRunner.query(
       `ALTER INDEX IF EXISTS "asesor_pkey" RENAME TO "sales_representatives_pkey"`,
     );

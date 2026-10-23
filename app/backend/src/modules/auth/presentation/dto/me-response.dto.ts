@@ -4,7 +4,7 @@ class AsesorDto {
   @ApiProperty({ example: 1 }) id_asesor: number;
   @ApiProperty({ example: '3001234567', nullable: true }) telefono:
     string | null;
-  @ApiProperty({ example: 'ACTIVO' }) estado: string;
+  @ApiProperty({ example: 'ACTIVE' }) estado: string;
 }
 
 export class MeResponseDto {

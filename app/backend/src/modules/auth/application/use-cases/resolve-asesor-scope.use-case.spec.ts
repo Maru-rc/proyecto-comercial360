@@ -18,14 +18,14 @@ const asesores = [
     nombre: 'Ana',
     correo: 'ana@x.com',
     telefono: null,
-    estado: 'ACTIVO',
+    estado: 'ACTIVE',
   },
   {
     idAsesor: 2,
     nombre: 'Beto',
     correo: 'beto@x.com',
     telefono: null,
-    estado: 'ACTIVO',
+    estado: 'ACTIVE',
   },
 ];
 const ana = {

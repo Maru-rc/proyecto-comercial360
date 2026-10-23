@@ -1,5 +1,5 @@
-// Roles permitidos en Comercial360. Son los mismos valores que acepta la
-// restricción CHECK de la columna user.role en la base de datos.
+// Roles allowed in Comercial360. These are the same values accepted by the
+// CHECK constraint on the user.role column in the database.
 export const ROLES = ['ASESOR', 'DIRECTOR'] as const;
 
 export type Role = (typeof ROLES)[number];
