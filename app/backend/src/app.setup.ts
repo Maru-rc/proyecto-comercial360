@@ -2,6 +2,7 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { toNodeHandler } from 'better-auth/node';
 import helmet from 'helmet';
+import { CorrelationIdMiddleware } from './core/infrastructure/correlation/correlation-id.middleware.js';
 import { DomainExceptionFilter } from './core/infrastructure/filters/domain-exception.filter.js';
 import { TransformInterceptor } from './core/infrastructure/interceptors/transform.interceptor.js';
 import {
@@ -14,7 +15,11 @@ import type { Auth } from './modules/auth/infrastructure/better-auth/auth.factor
  * Configuración común de la app (la usan main.ts y las pruebas e2e).
  */
 export function configureApp(app: INestApplication) {
-  // 1. Cabeceras de seguridad HTTP
+  // 1. Trazabilidad distribuida con Correlation ID en headers y AsyncLocalStorage
+  const correlationMiddleware = new CorrelationIdMiddleware();
+  app.use(correlationMiddleware.use.bind(correlationMiddleware));
+
+  // 2. Cabeceras de seguridad HTTP
   app.use(helmet());
 
   // 2. Prefijo global de API

@@ -12,6 +12,7 @@ describe('TransformInterceptor', () => {
     headersSent?: boolean;
     bypassHandler?: boolean;
     bypassClass?: boolean;
+    correlationId?: string;
   }) => {
     const requestUrl = options?.url ?? '/api/commercial/quotations';
     const responseStatusCode = options?.statusCode ?? 200;
@@ -24,6 +25,8 @@ describe('TransformInterceptor', () => {
 
     const mockRequest = {
       url: requestUrl,
+      correlationId: options?.correlationId,
+      startTime: Date.now() - 5,
     };
 
     const reflectorMock = {
@@ -58,7 +61,7 @@ describe('TransformInterceptor', () => {
     handle: () => of(result),
   });
 
-  it('should wrap a plain payload in an envelope containing data and meta', async () => {
+  it('should wrap a plain payload in an envelope containing data and meta with durationMs', async () => {
     const { mockContext, reflectorMock } = createMockContext({
       url: '/api/visits/1',
       statusCode: 200,
@@ -78,8 +81,29 @@ describe('TransformInterceptor', () => {
         statusCode: 200,
         timestamp: expect.any(String),
         path: '/api/visits/1',
+        durationMs: expect.any(Number),
       },
     });
+  });
+
+  it('should include correlationId in meta if present on request', async () => {
+    const { mockContext, reflectorMock } = createMockContext({
+      url: '/api/visits/1',
+      statusCode: 200,
+      correlationId: 'trace-abc-123',
+    });
+    const interceptor = new TransformInterceptor(reflectorMock);
+    const plainPayload = { id: 1 };
+
+    const interceptedObservable = interceptor.intercept(
+      mockContext,
+      createMockCallHandler(plainPayload),
+    );
+    const finalResponse = (await lastValueFrom(
+      interceptedObservable,
+    )) as Record<string, any>;
+
+    expect(finalResponse.meta.correlationId).toBe('trace-abc-123');
   });
 
   it('should wrap undefined/void return as data: null with meta', async () => {
@@ -101,6 +125,7 @@ describe('TransformInterceptor', () => {
         statusCode: 204,
         timestamp: expect.any(String),
         path: '/api/storage/delete',
+        durationMs: expect.any(Number),
       },
     });
   });
@@ -132,6 +157,7 @@ describe('TransformInterceptor', () => {
         statusCode: 200,
         timestamp: expect.any(String),
         path: '/api/commercial/orders?page=2',
+        durationMs: expect.any(Number),
         total: 50,
         page: 2,
         limit: 10,

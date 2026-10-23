@@ -2,18 +2,23 @@ import {
   CallHandler,
   ExecutionContext,
   Injectable,
+  Logger,
   NestInterceptor,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { Request, Response } from 'express';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { CorrelationContext } from '../correlation/correlation-context.js';
+import type { RequestWithCorrelation } from '../correlation/correlation-id.middleware.js';
 import { BYPASS_TRANSFORM_METADATA_KEY } from './bypass-transform.decorator.js';
 
 export interface ApiResponseMeta {
   statusCode: number;
   timestamp: string;
   path: string;
+  correlationId?: string;
+  durationMs?: number;
   [key: string]: unknown;
 }
 
@@ -27,6 +32,8 @@ export class TransformInterceptor<T> implements NestInterceptor<
   T,
   ApiResponseEnvelope<T> | T
 > {
+  private readonly interceptorLogger = new Logger(TransformInterceptor.name);
+
   constructor(private readonly metadataReflector: Reflector) {}
 
   intercept(
@@ -37,9 +44,10 @@ export class TransformInterceptor<T> implements NestInterceptor<
       return callHandler.handle();
     }
 
+    const fallbackStartTime = Date.now();
     const httpContext = executionContext.switchToHttp();
     const httpResponse = httpContext.getResponse<Response>();
-    const httpRequest = httpContext.getRequest<Request>();
+    const httpRequest = httpContext.getRequest<RequestWithCorrelation>();
 
     return callHandler.handle().pipe(
       map((executionResult: unknown) => {
@@ -50,15 +58,32 @@ export class TransformInterceptor<T> implements NestInterceptor<
         const httpStatusCode = httpResponse?.statusCode || 200;
         const requestTimestamp = new Date().toISOString();
         const requestPath = httpRequest?.url || '';
+        const initialRequestStartTime =
+          httpRequest?.startTime || fallbackStartTime;
+        const executionDurationMs = Date.now() - initialRequestStartTime;
+        const correlationId =
+          CorrelationContext.getCorrelationId() || httpRequest?.correlationId;
+
+        if (executionDurationMs > 500) {
+          this.interceptorLogger.warn(
+            `⚠️ Slow Request: ${httpRequest?.method || 'REQ'} ${requestPath} - ${executionDurationMs}ms [${correlationId || 'no-trace'}]`,
+          );
+        }
+
+        const standardMetadata: ApiResponseMeta = {
+          statusCode: httpStatusCode,
+          timestamp: requestTimestamp,
+          path: requestPath,
+          ...(correlationId ? { correlationId } : {}),
+          durationMs: executionDurationMs,
+        };
 
         if (this.isAlreadyEnveloped(executionResult)) {
           const { data: innerPayload, meta: customMetadata } = executionResult;
           return {
             data: innerPayload as T,
             meta: {
-              statusCode: httpStatusCode,
-              timestamp: requestTimestamp,
-              path: requestPath,
+              ...standardMetadata,
               ...customMetadata,
             },
           };
@@ -66,11 +91,7 @@ export class TransformInterceptor<T> implements NestInterceptor<
 
         return {
           data: (executionResult === undefined ? null : executionResult) as T,
-          meta: {
-            statusCode: httpStatusCode,
-            timestamp: requestTimestamp,
-            path: requestPath,
-          },
+          meta: standardMetadata,
         };
       }),
     );

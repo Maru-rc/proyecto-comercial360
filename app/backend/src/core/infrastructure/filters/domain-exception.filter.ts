@@ -6,6 +6,8 @@ import {
   Logger,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
+import { CorrelationContext } from '../correlation/correlation-context.js';
+import type { RequestWithCorrelation } from '../correlation/correlation-id.middleware.js';
 import {
   DomainException,
   EntityNotFoundException,
@@ -23,6 +25,7 @@ export interface DomainErrorResponseBody {
   details: unknown;
   timestamp: string;
   path: string;
+  correlationId?: string;
 }
 
 @Catch(DomainException)
@@ -36,6 +39,9 @@ export class DomainExceptionFilter implements ExceptionFilter<DomainException> {
 
     const httpStatusCode = this.resolveHttpStatusCode(exception);
     const requestPath = httpRequest?.url || '';
+    const correlationId =
+      CorrelationContext.getCorrelationId() ||
+      (httpRequest as RequestWithCorrelation)?.correlationId;
 
     const errorResponseBody: DomainErrorResponseBody = {
       statusCode: httpStatusCode,
@@ -45,9 +51,15 @@ export class DomainExceptionFilter implements ExceptionFilter<DomainException> {
       details: exception.details ?? null,
       timestamp: new Date().toISOString(),
       path: requestPath,
+      ...(correlationId ? { correlationId } : {}),
     };
 
-    this.logDispatchedError(httpStatusCode, exception, requestPath);
+    this.logDispatchedError(
+      httpStatusCode,
+      exception,
+      requestPath,
+      correlationId,
+    );
 
     httpResponse.status(httpStatusCode).json(errorResponseBody);
   }
@@ -75,8 +87,10 @@ export class DomainExceptionFilter implements ExceptionFilter<DomainException> {
     statusCode: number,
     exception: DomainException,
     requestPath: string,
+    correlationId?: string,
   ): void {
-    const logMessage = `[${statusCode}] ${requestPath} - ${exception.name}: ${exception.message}`;
+    const traceSuffix = correlationId ? ` [${correlationId}]` : '';
+    const logMessage = `[${statusCode}] ${requestPath} - ${exception.name}: ${exception.message}${traceSuffix}`;
     if (statusCode >= 500) {
       this.filterLogger.error(logMessage, exception.stack);
     } else {

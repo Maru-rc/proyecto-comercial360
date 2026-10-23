@@ -6,6 +6,8 @@ import { AppConfigService } from './infrastructure/config/app-config.service.js'
 import { envValidationSchema } from './infrastructure/config/env.validation.js';
 import { buildDataSourceOptions } from './infrastructure/database/data-source.js';
 
+import { HealthController } from './infrastructure/health/health.controller.js';
+
 @Global()
 @Module({
   imports: [
@@ -22,6 +24,7 @@ import { buildDataSourceOptions } from './infrastructure/database/data-source.js
       }),
     }),
   ],
+  controllers: [HealthController],
   providers: [AppConfigService],
   exports: [AppConfigService, ConfigModule],
 })
