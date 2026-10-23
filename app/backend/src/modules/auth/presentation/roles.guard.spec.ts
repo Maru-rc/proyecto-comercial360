@@ -7,7 +7,6 @@ import { Reflector } from '@nestjs/core';
 import { Roles } from './roles.decorator.js';
 import { RolesGuard } from './roles.guard.js';
 
-// Controlador de ejemplo para leer los metadatos de @Roles
 class Ejemplo {
   @Roles('DIRECTOR')
   soloDirector() {}

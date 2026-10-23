@@ -5,7 +5,6 @@ import {
   AsesorNoVinculadoError,
 } from '../domain/auth.errors.js';
 
-/** Convierte los errores de autorización del dominio en 403 Forbidden. */
 @Catch(AsesorNoVinculadoError, AsesorFueraDeAlcanceError)
 export class DomainErrorsFilter implements ExceptionFilter {
   catch(error: Error, host: ArgumentsHost) {

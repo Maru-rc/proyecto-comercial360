@@ -3,38 +3,27 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule, ObserveInstrument } from './app.module.js';
 import { configureApp } from './app.setup.js';
 
-// Las variables del .env se cargan antes de crear la app: CORS, los orígenes
-// permitidos de Better Auth y la conexión a PostgreSQL las leen del entorno.
-// `loadEnvFile` no pisa variables ya definidas (CI, docker, etc.).
 try {
   process.loadEnvFile();
-} catch {
-  // Sin .env: se usan las variables del entorno.
-}
+} catch {}
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     instrument: ObserveInstrument,
   });
 
-  // Helmet, prefijo /api, CORS, Better Auth y validación (ver app.setup.ts)
   configureApp(app);
 
-  // Swagger en /api/docs
   const config = new DocumentBuilder()
     .setTitle('Comercial 360 API')
     .setDescription('Plataforma de Gestión Comercial — Clean Architecture')
     .setVersion('1.0')
     .addBearerAuth()
-    // Sesión de Better Auth (cookie httpOnly)
     .addCookieAuth('better-auth.session_token')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
 
-  // Better Auth monta sus endpoints directamente en Express, por lo que
-  // Nest Swagger no los descubre automáticamente. Los documentamos aquí
-  // sin duplicar la lógica de autenticación ni crear controladores proxy.
   Object.assign(document.paths, {
     '/api/auth/sign-in/email': {
       post: {

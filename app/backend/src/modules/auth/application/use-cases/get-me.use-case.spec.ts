@@ -2,7 +2,6 @@ import { AsesorNoVinculadoError } from '../../domain/auth.errors.js';
 import { AsesorRecord, AsesorRepository } from '../ports/asesor.repository.js';
 import { GetMeUseCase } from './get-me.use-case.js';
 
-// Repositorio en memoria: la regla se prueba sin base de datos.
 class InMemoryAsesores implements AsesorRepository {
   constructor(private readonly items: AsesorRecord[]) {}
   async findByEmail(email: string) {

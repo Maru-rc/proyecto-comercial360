@@ -24,9 +24,6 @@ const SIN_REGISTRO = {
   password: 'SinRegistro-123!',
 };
 
-// Rutas de prueba (solo existen en estas pruebas) para comprobar que los
-// guards reales de AuthModule responden 401 / 403 / 200. Los módulos de
-// negocio todavía no tienen endpoints, así que no se simulan en la app real.
 @Controller('test-guards')
 class TestGuardsController {
   @Get('director')
@@ -59,7 +56,6 @@ describe('Autenticación y roles (e2e, PostgreSQL real)', () => {
       .set('Origin', ORIGIN)
       .send({ ...cred, ...(rememberMe === undefined ? {} : { rememberMe }) });
 
-  // Inicia sesión y devuelve la cookie lista para reutilizar
   const cookieOf = async (cred: { email: string; password: string }) => {
     const res = await login(cred);
     expect(res.status).toBe(200);
@@ -89,11 +85,9 @@ describe('Autenticación y roles (e2e, PostgreSQL real)', () => {
     dataSource = app.get(DataSource);
     auth = app.get<Auth>(AUTH);
 
-    // Base limpia + usuarios de prueba creados con el mismo seed de la app
     await dataSource.query('DELETE FROM "user"');
     await dataSource.query('DELETE FROM "sales_representatives"');
     await seedDemoUsers(auth, dataSource, demoUsers());
-    // Usuario ASESOR sin registro en la tabla SALES_REPRESENTATIVES
     await seedDemoUsers(auth, dataSource, [
       { name: 'Sin Registro', ...SIN_REGISTRO, role: 'ASESOR' },
     ]);
@@ -208,12 +202,10 @@ describe('Autenticación y roles (e2e, PostgreSQL real)', () => {
         .send({})
         .expect(200);
 
-      // La misma cookie ya no sirve
       await request(app.getHttpServer())
         .get('/api/me')
         .set('Cookie', cookie)
         .expect(401);
-      // Y la fila de esa sesión ya no existe en la base de datos
       const token = decodeURIComponent(cookie[0].split('=')[1]).split('.')[0];
       const sesiones = await dataSource.query(
         `SELECT 1 FROM session WHERE token = $1`,
@@ -249,7 +241,6 @@ describe('Autenticación y roles (e2e, PostgreSQL real)', () => {
       });
       expect(typeof res.body.id).toBe('string');
       expect(typeof res.body.asesor.id_asesor).toBe('number');
-      // No se filtran datos internos
       expect(JSON.stringify(res.body)).not.toMatch(/password|token/i);
     });
 
@@ -321,7 +312,6 @@ describe('Autenticación y roles (e2e, PostgreSQL real)', () => {
     it('10. no se puede elevar privilegios enviando DIRECTOR desde el cliente', async () => {
       const cookie = await cookieOf(ASESOR);
 
-      // a) cambiar el rol con el endpoint de Better Auth
       const upd = await request(app.getHttpServer())
         .post('/api/auth/update-user')
         .set('Origin', ORIGIN)
@@ -329,14 +319,12 @@ describe('Autenticación y roles (e2e, PostgreSQL real)', () => {
         .send({ role: 'DIRECTOR' });
       expect(upd.status).toBe(400);
 
-      // b) enviar el rol en el inicio de sesión o como cabecera/consulta
       await request(app.getHttpServer())
         .get('/api/test-guards/director?role=DIRECTOR')
         .set('Cookie', cookie)
         .set('X-Role', 'DIRECTOR')
         .expect(403);
 
-      // c) el rol sigue siendo ASESOR en la base y en /api/me
       const [{ role }] = await dataSource.query(
         `SELECT role FROM "user" WHERE email = $1`,
         [ASESOR.email],
@@ -395,7 +383,6 @@ describe('Autenticación y roles (e2e, PostgreSQL real)', () => {
         [ASESOR.email],
       );
       expect(a).toBe(1);
-      // Y los usuarios siguen pudiendo iniciar sesión
       expect((await login(DIRECTOR)).status).toBe(200);
     });
   });

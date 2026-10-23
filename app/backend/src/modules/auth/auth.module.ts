@@ -37,7 +37,6 @@ const PG_POOL = Symbol('PG_POOL');
     AuthGuard,
     RolesGuard,
   ],
-  // Los demás módulos usan estos guards, @Auth() y el caso de uso de alcance
   exports: [
     AUTH,
     AuthGuard,

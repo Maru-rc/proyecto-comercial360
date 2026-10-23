@@ -6,9 +6,7 @@ export interface AsesorRecord {
   estado: string;
 }
 
-/** Port: how the application queries asesores (implementation uses TypeORM). */
 export interface AsesorRepository {
-  /** Finds the asesor whose email matches (case-insensitive). */
   findByEmail(email: string): Promise<AsesorRecord | null>;
 }
 

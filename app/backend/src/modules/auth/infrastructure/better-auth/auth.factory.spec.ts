@@ -6,8 +6,6 @@ import {
   SESSION_WITHOUT_REMEMBER_SECONDS,
 } from './auth.factory.js';
 
-// La instancia de Better Auth no abre conexiones al crearse (el pool solo se
-// usa cuando se consulta), así que aquí no hace falta una base de datos.
 const pool = {
   connect: async () => ({ release: () => {} }),
   query: async () => ({ rows: [] }),
