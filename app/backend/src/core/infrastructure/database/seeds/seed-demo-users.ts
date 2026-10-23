@@ -23,7 +23,7 @@ export async function seedDemoUsers(
     if (demo.role === 'ASESOR' && demo.asesor) {
       await dataSource.query(
         `INSERT INTO "sales_representatives" ("name", "email", "phone", "status")
-         VALUES ($1, $2, $3, 'ACTIVO')
+         VALUES ($1, $2, $3, 'ACTIVE')
          ON CONFLICT (LOWER("email")) DO NOTHING`,
         [demo.name, email, demo.asesor.telefono],
       );

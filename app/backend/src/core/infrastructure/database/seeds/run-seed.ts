@@ -89,10 +89,10 @@ async function seedSalesRepresentatives(
   source: typeof dataSource,
 ): Promise<void> {
   await source.query(`
-    INSERT INTO asesor (nombre, correo, telefono, estado) VALUES
-      ('Juan Pérez García', 'juan.perez@comercial360.com', '3001234567', 'ACTIVO'),
-      ('María Rodríguez López', 'maria.rodriguez@comercial360.com', '3109876543', 'ACTIVO'),
-      ('Carlos Martínez Soto', 'carlos.martinez@comercial360.com', '3157654321', 'ACTIVO')
+    INSERT INTO "sales_representatives" ("name", "email", "phone", "status") VALUES
+      ('Juan Pérez García', 'juan.perez@comercial360.com', '3001234567', 'ACTIVE'),
+      ('María Rodríguez López', 'maria.rodriguez@comercial360.com', '3109876543', 'ACTIVE'),
+      ('Carlos Martínez Soto', 'carlos.martinez@comercial360.com', '3157654321', 'ACTIVE')
     ON CONFLICT DO NOTHING
   `);
 }

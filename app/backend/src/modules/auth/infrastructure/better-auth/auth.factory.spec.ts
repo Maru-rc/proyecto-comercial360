@@ -36,7 +36,7 @@ describe('createAuth (configuración de Better Auth)', () => {
         ...ENV,
         BETTER_AUTH_URL: 'http://localhost:3001/api',
       }),
-    ).toThrow(/sin ruta/);
+    ).toThrow(/no path/);
   });
 
   it('deja el registro público deshabilitado', () => {

@@ -10,7 +10,7 @@ export class CreateAsesorTable1792500000000 implements MigrationInterface {
         "nombre" VARCHAR(150) NOT NULL,
         "correo" VARCHAR(150) NOT NULL,
         "telefono" VARCHAR(20),
-        "estado" VARCHAR(20) NOT NULL DEFAULT 'ACTIVO'
+        "estado" VARCHAR(20) NOT NULL DEFAULT 'ACTIVE'
       )
     `);
     await queryRunner.query(

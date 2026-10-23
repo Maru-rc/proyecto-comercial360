@@ -14,6 +14,6 @@ export class AsesorOrmEntity {
   @Column({ name: 'phone', type: 'varchar', length: 20, nullable: true })
   telefono: string | null;
 
-  @Column({ name: 'status', type: 'varchar', length: 20, default: 'ACTIVO' })
+  @Column({ name: 'status', type: 'varchar', length: 20, default: 'ACTIVE' })
   estado: string;
 }
