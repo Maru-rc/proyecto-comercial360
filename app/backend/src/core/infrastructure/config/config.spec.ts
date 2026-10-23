@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ConfigService } from '@nestjs/config';
 import { AppConfiguration } from '../../../config/app.config.js';
-import { envSchema, validateEnv } from './env.validation.js';
+import { validateEnv } from './env.validation.js';
 import { AppConfigService } from './app-config.service.js';
 
 describe('AppConfigService & Environment Validation (Zod)', () => {

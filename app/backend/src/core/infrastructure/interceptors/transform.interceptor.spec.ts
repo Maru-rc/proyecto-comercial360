@@ -1,9 +1,23 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ExecutionContext, CallHandler } from '@nestjs/common';
+import { ExecutionContext, CallHandler, Type } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { of, lastValueFrom } from 'rxjs';
 import { TransformInterceptor } from './transform.interceptor.js';
 import { BYPASS_TRANSFORM_METADATA_KEY } from './bypass-transform.decorator.js';
+
+interface EnvelopedResponse<T> {
+  data: T;
+  meta: {
+    statusCode: number;
+    timestamp: string;
+    path: string;
+    durationMs: number;
+    correlationId?: string;
+    total?: number;
+    page?: number;
+    limit?: number;
+  };
+}
 
 describe('TransformInterceptor', () => {
   const createMockContext = (options?: {
@@ -29,11 +43,14 @@ describe('TransformInterceptor', () => {
       startTime: Date.now() - 5,
     };
 
+    const mockHandler: () => void = () => {};
+    class MockClass {}
+
     const reflectorMock = {
       get: vi.fn((key: string, target: unknown) => {
         if (key === BYPASS_TRANSFORM_METADATA_KEY) {
-          if (target === 'HANDLER') return options?.bypassHandler ?? false;
-          if (target === 'CLASS') return options?.bypassClass ?? false;
+          if (target === mockHandler) return options?.bypassHandler ?? false;
+          if (target === MockClass) return options?.bypassClass ?? false;
         }
         return false;
       }),
@@ -41,12 +58,12 @@ describe('TransformInterceptor', () => {
 
     const mockContext: ExecutionContext = {
       switchToHttp: () => ({
-        getResponse: () => mockResponse as any,
-        getRequest: () => mockRequest as any,
+        getResponse: <T>(): T => mockResponse as unknown as T,
+        getRequest: <T>(): T => mockRequest as unknown as T,
         getNext: vi.fn(),
       }),
-      getHandler: () => 'HANDLER' as any,
-      getClass: () => 'CLASS' as any,
+      getHandler: () => mockHandler,
+      getClass: <T>(): Type<T> => MockClass as unknown as Type<T>,
       getArgs: vi.fn(),
       getArgByIndex: vi.fn(),
       switchToRpc: vi.fn(),
@@ -73,17 +90,15 @@ describe('TransformInterceptor', () => {
       mockContext,
       createMockCallHandler(plainPayload),
     );
-    const finalResponse = await lastValueFrom(interceptedObservable);
+    const finalResponse = (await lastValueFrom(
+      interceptedObservable,
+    )) as EnvelopedResponse<typeof plainPayload>;
 
-    expect(finalResponse).toEqual({
-      data: plainPayload,
-      meta: {
-        statusCode: 200,
-        timestamp: expect.any(String),
-        path: '/api/visits/1',
-        durationMs: expect.any(Number),
-      },
-    });
+    expect(finalResponse.data).toEqual(plainPayload);
+    expect(finalResponse.meta.statusCode).toBe(200);
+    expect(finalResponse.meta.path).toBe('/api/visits/1');
+    expect(typeof finalResponse.meta.timestamp).toBe('string');
+    expect(typeof finalResponse.meta.durationMs).toBe('number');
   });
 
   it('should include correlationId in meta if present on request', async () => {
@@ -101,7 +116,7 @@ describe('TransformInterceptor', () => {
     );
     const finalResponse = (await lastValueFrom(
       interceptedObservable,
-    )) as Record<string, any>;
+    )) as EnvelopedResponse<typeof plainPayload>;
 
     expect(finalResponse.meta.correlationId).toBe('trace-abc-123');
   });
@@ -117,17 +132,15 @@ describe('TransformInterceptor', () => {
       mockContext,
       createMockCallHandler(undefined),
     );
-    const finalResponse = await lastValueFrom(interceptedObservable);
+    const finalResponse = (await lastValueFrom(
+      interceptedObservable,
+    )) as EnvelopedResponse<null>;
 
-    expect(finalResponse).toEqual({
-      data: null,
-      meta: {
-        statusCode: 204,
-        timestamp: expect.any(String),
-        path: '/api/storage/delete',
-        durationMs: expect.any(Number),
-      },
-    });
+    expect(finalResponse.data).toBeNull();
+    expect(finalResponse.meta.statusCode).toBe(204);
+    expect(finalResponse.meta.path).toBe('/api/storage/delete');
+    expect(typeof finalResponse.meta.timestamp).toBe('string');
+    expect(typeof finalResponse.meta.durationMs).toBe('number');
   });
 
   it('should preserve and merge existing meta when response is pre-enveloped (e.g. pagination)', async () => {
@@ -149,20 +162,18 @@ describe('TransformInterceptor', () => {
       mockContext,
       createMockCallHandler(paginatedResponse),
     );
-    const finalResponse = await lastValueFrom(interceptedObservable);
+    const finalResponse = (await lastValueFrom(
+      interceptedObservable,
+    )) as EnvelopedResponse<typeof paginatedResponse.data>;
 
-    expect(finalResponse).toEqual({
-      data: paginatedResponse.data,
-      meta: {
-        statusCode: 200,
-        timestamp: expect.any(String),
-        path: '/api/commercial/orders?page=2',
-        durationMs: expect.any(Number),
-        total: 50,
-        page: 2,
-        limit: 10,
-      },
-    });
+    expect(finalResponse.data).toEqual(paginatedResponse.data);
+    expect(finalResponse.meta.statusCode).toBe(200);
+    expect(finalResponse.meta.path).toBe('/api/commercial/orders?page=2');
+    expect(finalResponse.meta.total).toBe(50);
+    expect(finalResponse.meta.page).toBe(2);
+    expect(finalResponse.meta.limit).toBe(10);
+    expect(typeof finalResponse.meta.timestamp).toBe('string');
+    expect(typeof finalResponse.meta.durationMs).toBe('number');
   });
 
   it('should bypass transformation when @BypassTransform is set on handler', async () => {

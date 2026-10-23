@@ -1,7 +1,6 @@
 import {
   Controller,
   Get,
-  HttpCode,
   HttpStatus,
   Inject,
   Optional,
@@ -116,11 +115,13 @@ export class HealthController {
         status: 'up',
         responseTimeMs: Date.now() - checkStartTime,
       };
-    } catch (dbError: any) {
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown database error';
       return {
         status: 'down',
         responseTimeMs: Date.now() - checkStartTime,
-        error: dbError?.message || 'Unknown database error',
+        error: errorMessage,
       };
     }
   }
