@@ -1,5 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { Role } from '../../../../domain-contracts/auth/index.js';
+import {
+  ADVISOR_SCOPE_RESOLVER,
+  type AdvisorScopeResolver,
+  USER_ROLES,
+  type Role,
+} from '../../../../domain-contracts/index.js';
 import { DASHBOARD_REPOSITORY } from '../ports/dashboard.repository.port.js';
 import type { IDashboardRepository } from '../ports/dashboard.repository.port.js';
 import { WeeklyKpisQueryDto } from '../dtos/weekly-kpis-query.dto.js';
@@ -8,19 +13,13 @@ import { WeeklyKpisResponseDto } from '../dtos/weekly-kpis-response.dto.js';
 export interface KpiRequestUser {
   id: string;
   email: string;
-  role: Role;
+  role: Role | 'ASESOR';
 }
-
-export interface AsesorScopeResolver {
-  execute(user: KpiRequestUser, requestedId?: number): Promise<number | null>;
-}
-
-export const ASESOR_SCOPE_RESOLVER = Symbol('ASESOR_SCOPE_RESOLVER');
 
 function resolveWeekBounds(isoWeek: string): [Date, Date] {
   const [yearStr, weekStr] = isoWeek.split('-W');
-  const year = parseInt(yearStr, 10);
-  const week = parseInt(weekStr, 10);
+  const year = Number.parseInt(yearStr, 10);
+  const week = Number.parseInt(weekStr, 10);
 
   const jan4 = new Date(Date.UTC(year, 0, 4));
   const dayOfWeek = jan4.getUTCDay() || 7;
@@ -46,8 +45,8 @@ function currentIsoWeek(): string {
 @Injectable()
 export class GetWeeklyKpisUseCase {
   constructor(
-    @Inject(ASESOR_SCOPE_RESOLVER)
-    private readonly scope: AsesorScopeResolver,
+    @Inject(ADVISOR_SCOPE_RESOLVER)
+    private readonly scope: AdvisorScopeResolver,
     @Inject(DASHBOARD_REPOSITORY)
     private readonly repo: IDashboardRepository,
   ) {}
@@ -58,14 +57,19 @@ export class GetWeeklyKpisUseCase {
   ): Promise<WeeklyKpisResponseDto> {
     const week = dto.week ?? dto.semana ?? currentIsoWeek();
     const [weekStart, weekEnd] = resolveWeekBounds(week);
-    const asesorId = await this.scope.execute(user);
+    const normalizedRole =
+      user.role === 'ASESOR' ? USER_ROLES.ADVISOR : user.role;
+    const advisorId = await this.scope.execute({
+      ...user,
+      role: normalizedRole,
+    });
     const zone = dto.zone ?? dto.zona ?? null;
-    const zoneId = user.role === 'DIRECTOR' ? zone : null;
+    const zoneId = user.role === USER_ROLES.DIRECTOR ? zone : null;
 
     const raw = await this.repo.getWeeklyKpis({
       weekStart,
       weekEnd,
-      asesorId,
+      asesorId: advisorId,
       zoneId,
     });
 

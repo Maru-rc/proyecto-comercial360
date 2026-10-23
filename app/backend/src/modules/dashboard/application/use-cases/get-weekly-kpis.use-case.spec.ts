@@ -5,7 +5,7 @@ import type {
 } from '../ports/dashboard.repository.port.js';
 import { GetWeeklyKpisUseCase } from './get-weekly-kpis.use-case.js';
 
-const asesorUser = { id: 'u1', email: 'ana@x.com', role: 'ADVISOR' as const };
+const asesorUser = { id: 'u1', email: 'ana@x.com', role: 'ASESOR' as const };
 const directorUser = {
   id: 'u9',
   email: 'dir@x.com',
@@ -39,8 +39,8 @@ function makeUseCase(
   return { useCase, captured };
 }
 
-describe('GetWeeklyKpisUseCase (HU-16 KPI comerciales de la semana)', () => {
-  it('calcula efectividad, metas y montos a partir de los valores crudos', async () => {
+describe('GetWeeklyKpisUseCase (HU-16 weekly commercial KPIs)', () => {
+  it('calculates effectiveness, goals and amounts from raw values', async () => {
     const { useCase } = makeUseCase(baseRaw, 7);
 
     const result = await useCase.execute(asesorUser, { week: '2026-W42' });
@@ -59,7 +59,7 @@ describe('GetWeeklyKpisUseCase (HU-16 KPI comerciales de la semana)', () => {
     });
   });
 
-  it('usa la semana ISO actual cuando no llega filtro de semana', async () => {
+  it('uses the current ISO week when no week filter is provided', async () => {
     const { useCase, captured } = makeUseCase(baseRaw, 7);
 
     const result = await useCase.execute(asesorUser, {});
@@ -72,7 +72,7 @@ describe('GetWeeklyKpisUseCase (HU-16 KPI comerciales de la semana)', () => {
     expect(diffDays).toBe(7);
   });
 
-  it('resuelve los límites de una semana ISO conocida (2026-W01)', async () => {
+  it('resolves the bounds of a known ISO week (2026-W01)', async () => {
     const { useCase, captured } = makeUseCase(baseRaw, 7);
 
     await useCase.execute(asesorUser, { week: '2026-W01' });
@@ -82,7 +82,7 @@ describe('GetWeeklyKpisUseCase (HU-16 KPI comerciales de la semana)', () => {
     expect(filter.weekEnd.toISOString().slice(0, 10)).toBe('2026-01-05');
   });
 
-  it('acepta el alias en español de la semana', async () => {
+  it('accepts the Spanish alias of the week', async () => {
     const { useCase } = makeUseCase(baseRaw, 7);
 
     const result = await useCase.execute(asesorUser, { semana: '2026-W10' });
@@ -90,7 +90,7 @@ describe('GetWeeklyKpisUseCase (HU-16 KPI comerciales de la semana)', () => {
     expect(result.week).toBe('2026-W10');
   });
 
-  it('devuelve efectividad 0 cuando no hay visitas programadas', async () => {
+  it('returns 0 effectiveness when there are no scheduled visits', async () => {
     const { useCase } = makeUseCase(
       { ...baseRaw, visits: { scheduled: 0, completed: 0 }, weeklyTarget: 0 },
       7,
@@ -106,7 +106,7 @@ describe('GetWeeklyKpisUseCase (HU-16 KPI comerciales de la semana)', () => {
     });
   });
 
-  it('usa las visitas programadas como meta cuando la ruta no aporta meta', async () => {
+  it('uses scheduled visits as goal when the route provides no goal', async () => {
     const { useCase } = makeUseCase(
       { ...baseRaw, visits: { scheduled: 12, completed: 3 }, weeklyTarget: 0 },
       7,
@@ -121,7 +121,7 @@ describe('GetWeeklyKpisUseCase (HU-16 KPI comerciales de la semana)', () => {
     });
   });
 
-  it('fuerza el alcance propio del asesor e ignora el filtro de zona', async () => {
+  it('forces the advisor own scope and ignores the zone filter', async () => {
     const { useCase, captured } = makeUseCase(baseRaw, 7);
 
     await useCase.execute(asesorUser, { week: '2026-W42', zone: 9 });
@@ -131,7 +131,7 @@ describe('GetWeeklyKpisUseCase (HU-16 KPI comerciales de la semana)', () => {
     expect(filter.zoneId).toBeNull();
   });
 
-  it('ignora también el alias en español de zona para el asesor', async () => {
+  it('also ignores the Spanish alias of zone for the advisor', async () => {
     const { useCase, captured } = makeUseCase(baseRaw, 7);
 
     await useCase.execute(asesorUser, { week: '2026-W42', zona: 9 });
@@ -141,7 +141,7 @@ describe('GetWeeklyKpisUseCase (HU-16 KPI comerciales de la semana)', () => {
     expect(filter.zoneId).toBeNull();
   });
 
-  it('al director lo deja ver todos los datos cuando no filtra zona', async () => {
+  it('lets the director see all data when no zone is filtered', async () => {
     const { useCase, captured } = makeUseCase(baseRaw, null);
 
     await useCase.execute(directorUser, { week: '2026-W42' });
@@ -151,7 +151,7 @@ describe('GetWeeklyKpisUseCase (HU-16 KPI comerciales de la semana)', () => {
     expect(filter.zoneId).toBeNull();
   });
 
-  it('permite al director filtrar por zona con ambos nombres de filtro', async () => {
+  it('lets the director filter by zone with both filter names', async () => {
     const english = makeUseCase(baseRaw, null);
     await english.useCase.execute(directorUser, { week: '2026-W42', zone: 4 });
     expect(english.captured[0].zoneId).toBe(4);
@@ -159,5 +159,19 @@ describe('GetWeeklyKpisUseCase (HU-16 KPI comerciales de la semana)', () => {
     const spanish = makeUseCase(baseRaw, null);
     await spanish.useCase.execute(directorUser, { week: '2026-W42', zona: 5 });
     expect(spanish.captured[0].zoneId).toBe(5);
+  });
+
+  it('works correctly with a user of role ADVISOR in English', async () => {
+    const advisorUser = {
+      id: 'u1',
+      email: 'ana@x.com',
+      role: 'ADVISOR' as const,
+    };
+    const { useCase, captured } = makeUseCase(baseRaw, 7);
+
+    const result = await useCase.execute(advisorUser, { week: '2026-W42' });
+
+    expect(result.week).toBe('2026-W42');
+    expect(captured[0].asesorId).toBe(7);
   });
 });
