@@ -30,6 +30,10 @@ const PG_POOL = Symbol('PG_POOL');
     { provide: APP_FILTER, useClass: DomainErrorsFilter },
     GetMeUseCase,
     ResolveAsesorScopeUseCase,
+    {
+      provide: 'ResolveAsesorScopeUseCase',
+      useExisting: ResolveAsesorScopeUseCase,
+    },
     AuthGuard,
     RolesGuard,
   ],
