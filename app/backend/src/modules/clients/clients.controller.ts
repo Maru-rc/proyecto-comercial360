@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -8,18 +9,32 @@ import {
   ParseIntPipe,
   Post,
   Query,
+  Res,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import type { Response } from 'express';
 import {
   Auth,
   CurrentUser,
+  BypassTransform,
   type AuthenticatedUser,
 } from '../../domain-contracts/index.js';
 import { CreateClientUseCase } from './application/use-cases/create-client.use-case.js';
 import { ListClientsUseCase } from './application/use-cases/list-clients.use-case.js';
 import { GetClientByIdUseCase } from './application/use-cases/get-client-by-id.use-case.js';
 import { GetCatalogsUseCase } from './application/use-cases/get-catalogs.use-case.js';
+import { ImportClientsUseCase } from './application/use-cases/import-clients.use-case.js';
 import { CreateClientDto } from './presentation/dto/create-client.dto.js';
 import { ListClientsDto } from './presentation/dto/list-clients.dto.js';
+
+interface UploadedFilePayload {
+  buffer: Buffer;
+  originalname: string;
+  mimetype: string;
+  size: number;
+}
 
 function extractPrimaryContact(dto: CreateClientDto) {
   const primaryFromList =
@@ -43,6 +58,7 @@ export class ClientsController {
     private readonly listClientsUseCase: ListClientsUseCase,
     private readonly getClientByIdUseCase: GetClientByIdUseCase,
     private readonly getCatalogsUseCase: GetCatalogsUseCase,
+    private readonly importClientsUseCase: ImportClientsUseCase,
   ) {}
 
   @Post()
@@ -82,6 +98,59 @@ export class ClientsController {
   @Get('catalogos')
   async getCatalogos() {
     return this.getCatalogsUseCase.execute();
+  }
+
+  @Post('importar')
+  @Auth('DIRECTOR')
+  @UseInterceptors(FileInterceptor('archivo'))
+  async importar(
+    @UploadedFile() file: UploadedFilePayload | undefined,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    if (!file || !file.buffer) {
+      throw new BadRequestException(
+        'Debe proporcionar un archivo CSV o Excel válido en el campo "archivo"',
+      );
+    }
+
+    const filename = file.originalname || 'importacion.csv';
+    const isAllowed =
+      filename.endsWith('.csv') ||
+      filename.endsWith('.xlsx') ||
+      filename.endsWith('.xls') ||
+      file.mimetype.includes('csv') ||
+      file.mimetype.includes('spreadsheet') ||
+      file.mimetype.includes('excel');
+
+    if (!isAllowed) {
+      throw new BadRequestException(
+        'Formato no compatible. Solo se admiten archivos .csv y .xlsx',
+      );
+    }
+
+    return this.importClientsUseCase.execute(
+      {
+        buffer: file.buffer,
+        filename,
+        mimeType: file.mimetype,
+      },
+      user,
+    );
+  }
+
+  @Get('plantilla')
+  @BypassTransform()
+  getPlantilla(@Res() res: Response) {
+    const csvContent =
+      'nit,razon_social,nombre_comercial,direccion,departamento,municipio,barrio,telefono,email,zona,tipo_cliente,potencial,estado_cliente,frecuencia_visita_dias,latitud,longitud,contacto_nombre,contacto_cargo,contacto_telefono,contacto_celular,contacto_email\n' +
+      '900.123.456-1,Metalúrgicas S.A.S,Metalúrgicas,Cra 38 # 74-120,Atlántico,Barranquilla,Betania,3001234567,contacto@metalurgicas.com,NORTE,Industrial,Alto,Activo,7,,,Carlos Julio Mendoza,Jefe de Compras,3001234567,3001234567,cmendoza@metalurgicas.com\n';
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename="plantilla_clientes.csv"',
+    );
+    return res.send(csvContent);
   }
 
   @Get()
