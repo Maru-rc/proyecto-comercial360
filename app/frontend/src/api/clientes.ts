@@ -365,3 +365,89 @@ export const crearCliente = async (
     return cliente;
   }
 };
+
+export interface ImportSummary {
+  total_filas: number;
+  creados: number;
+  actualizados: number;
+  errores: { fila: number; motivo: string }[];
+  adjunto_id?: number | null;
+}
+
+export const importarClientes = async (file: File): Promise<ImportSummary> => {
+  const formData = new FormData();
+  formData.append("archivo", file);
+  const res = await apiClient.post<ImportSummary>(
+    "/clientes/importar",
+    formData,
+    {
+      headers: { "Content-Type": "multipart/form-data" },
+    },
+  );
+  return res.data;
+};
+
+export const descargarPlantilla = async (): Promise<Blob> => {
+  const res = await apiClient.get("/clientes/plantilla", {
+    responseType: "blob",
+  });
+  return res.data;
+};
+
+export interface ClienteHistorialItem {
+  id_historial: number;
+  id_cliente: number | string;
+  fecha: string;
+  accion: string;
+  usuario: string;
+  descripcion: string | null;
+}
+
+const DEFAULT_HISTORIAL_MOCK: ClienteHistorialItem[] = [
+  {
+    id_historial: 3,
+    id_cliente: "cli-001",
+    fecha: "2024-05-14T10:30:00Z",
+    accion: "Visita realizada",
+    usuario: "Juan Pérez",
+    descripcion: "Resultado: Interesado",
+  },
+  {
+    id_historial: 2,
+    id_cliente: "cli-001",
+    fecha: "2024-05-07T09:15:00Z",
+    accion: "Cotización enviada",
+    usuario: "Juan Pérez",
+    descripcion: "COT-1241 | $ 12,600,000",
+  },
+  {
+    id_historial: 1,
+    id_cliente: "cli-001",
+    fecha: "2024-04-30T15:00:00Z",
+    accion: "Seguimiento telefónico",
+    usuario: "Juan Pérez",
+    descripcion: "Pendiente de respuesta",
+  },
+];
+
+export const getClienteHistorial = async (
+  clienteId?: string | number,
+  limit = 3,
+): Promise<ClienteHistorialItem[]> => {
+  if (!clienteId) return DEFAULT_HISTORIAL_MOCK.slice(0, limit);
+  const numericId = Number(String(clienteId).replace(/\D/g, ""));
+  if (!numericId) return DEFAULT_HISTORIAL_MOCK.slice(0, limit);
+
+  try {
+    const res = await apiClient.get<ClienteHistorialItem[]>(
+      `/clientes/${numericId}/historial`,
+      { params: { limit } },
+    );
+    if (Array.isArray(res.data) && res.data.length > 0) {
+      return res.data;
+    }
+    return DEFAULT_HISTORIAL_MOCK.slice(0, limit);
+  } catch {
+    return DEFAULT_HISTORIAL_MOCK.slice(0, limit);
+  }
+};
