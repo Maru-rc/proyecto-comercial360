@@ -42,6 +42,14 @@ class InMemoryRouteRepository implements RouteRepository {
       (r) => r.name.toLowerCase() === name.trim().toLowerCase(),
     );
   }
+
+  async setStops(): Promise<any[]> {
+    return [];
+  }
+
+  async getStops(): Promise<any[]> {
+    return [];
+  }
 }
 
 describe('CreateRouteUseCase (TDD - HU-07)', () => {
