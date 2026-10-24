@@ -1,17 +1,17 @@
-import React from 'react';
+import React from "react";
 
-export type BadgeVariant = 
-  | 'visitado' 
-  | 'pendiente' 
-  | 'reprogramado' 
-  | 'sin_visitar' 
-  | 'pedido_cerrado' 
-  | 'activo' 
-  | 'inactivo' 
-  | 'alto' 
-  | 'medio' 
-  | 'bajo'
-  | 'default';
+export type BadgeVariant =
+  | "visitado"
+  | "pendiente"
+  | "reprogramado"
+  | "sin_visitar"
+  | "pedido_cerrado"
+  | "activo"
+  | "inactivo"
+  | "alto"
+  | "medio"
+  | "bajo"
+  | "default";
 
 interface BadgeProps {
   children: React.ReactNode;
@@ -22,30 +22,51 @@ interface BadgeProps {
 
 export const Badge: React.FC<BadgeProps> = ({
   children,
-  variant = 'default',
-  className = '',
+  variant = "default",
+  className = "",
   icon,
 }) => {
-  const normalized = (variant || '').toLowerCase().replace(/\s+/g, '_');
+  const normalized = (variant || "").toLowerCase().replace(/\s+/g, "_");
 
-  let variantStyles = 'bg-slate-100 text-slate-700 border-slate-200';
+  let variantStyles = "bg-slate-100 text-slate-700 border-slate-200";
 
-  if (normalized.includes('visitado') || normalized === 'activo') {
-    variantStyles = 'bg-emerald-50 text-emerald-700 border-emerald-200';
-  } else if (normalized.includes('pendiente')) {
-    variantStyles = 'bg-amber-50 text-amber-700 border-amber-200';
-  } else if (normalized.includes('reprogramado')) {
-    variantStyles = 'bg-rose-50 text-rose-700 border-rose-200';
-  } else if (normalized.includes('sin_visitar')) {
-    variantStyles = 'bg-slate-100 text-slate-600 border-slate-200';
-  } else if (normalized.includes('pedido') || normalized.includes('cerrado')) {
-    variantStyles = 'bg-blue-50 text-blue-700 border-blue-200';
-  } else if (normalized === 'alto') {
-    variantStyles = 'bg-orange-50 text-orange-700 border-orange-200';
-  } else if (normalized === 'medio') {
-    variantStyles = 'bg-amber-50 text-amber-700 border-amber-200';
-  } else if (normalized === 'bajo') {
-    variantStyles = 'bg-slate-100 text-slate-600 border-slate-200';
+  if (
+    normalized.includes("visit") ||
+    normalized === "activo" ||
+    normalized === "active"
+  ) {
+    variantStyles = "bg-emerald-50 text-emerald-700 border-emerald-200";
+  } else if (
+    normalized.includes("pend") ||
+    normalized === "scheduled" ||
+    normalized === "programada"
+  ) {
+    variantStyles = "bg-amber-50 text-amber-700 border-amber-200";
+  } else if (
+    normalized.includes("reprogramado") ||
+    normalized.includes("rescheduled")
+  ) {
+    variantStyles = "bg-rose-50 text-rose-700 border-rose-200";
+  } else if (
+    normalized.includes("sin_visitar") ||
+    normalized.includes("not_visited") ||
+    normalized.includes("cancelled") ||
+    normalized.includes("cancelada")
+  ) {
+    variantStyles = "bg-slate-100 text-slate-600 border-slate-200";
+  } else if (
+    normalized.includes("pedido") ||
+    normalized.includes("order") ||
+    normalized.includes("cerrado") ||
+    normalized.includes("closed")
+  ) {
+    variantStyles = "bg-blue-50 text-blue-700 border-blue-200";
+  } else if (normalized === "alto" || normalized === "high") {
+    variantStyles = "bg-orange-50 text-orange-700 border-orange-200";
+  } else if (normalized === "medio" || normalized === "medium") {
+    variantStyles = "bg-amber-50 text-amber-700 border-amber-200";
+  } else if (normalized === "bajo" || normalized === "low") {
+    variantStyles = "bg-slate-100 text-slate-600 border-slate-200";
   }
 
   return (

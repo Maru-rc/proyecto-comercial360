@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Calendar as CalendarIcon,
   MapPin,
@@ -10,24 +10,55 @@ import {
   ChevronRight,
   CheckCircle2,
   CalendarCheck,
-} from 'lucide-react';
-import { MOCK_AGENDA_ITEMS } from '../api/kpis';
-import { Badge } from '../components/common/Badge';
-import { Modal } from '../components/common/Modal';
-import { Button } from '../components/common/Button';
-import { Input } from '../components/common/Input';
-import { MOCK_CLIENTES } from '../api/clientes';
+} from "lucide-react";
+import { MOCK_AGENDA_ITEMS } from "../api/kpis";
+import { Badge } from "../components/common/Badge";
+import { Modal } from "../components/common/Modal";
+import { Button } from "../components/common/Button";
+import { Input } from "../components/common/Input";
+import { MOCK_CLIENTES } from "../api/clientes";
+import { useVisitasAgenda } from "../hooks/useVisitasAgenda";
 
 export const AgendaPage: React.FC = () => {
   const navigate = useNavigate();
-  const [items, setItems] = useState(MOCK_AGENDA_ITEMS);
+  const [items, setItems] = useState<any[]>(MOCK_AGENDA_ITEMS);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const { agenda, isLoading } = useVisitasAgenda();
+
+  useEffect(() => {
+    if (agenda && agenda.length > 0) {
+      setItems(
+        agenda.map((a, idx) => ({
+          id: String(a.id ?? idx + 1),
+          orden: a.order ?? a.visitOrder ?? idx + 1,
+          hora: a.suggestedTime || a.time || "09:00",
+          cliente: a.clientName || `Cliente #${a.clientId}`,
+          estado:
+            a.visitStatus === "COMPLETED"
+              ? "Visitado"
+              : a.visitStatus === "RESCHEDULED"
+                ? "Reprogramado"
+                : "Pendiente",
+          contacto: a.primaryContact?.name || a.contactName || undefined,
+          objetivo: a.objective || undefined,
+          potencial: a.potential || undefined,
+          latitud: a.latitude ?? 10.98,
+          longitud: a.longitude ?? -74.79,
+          direccion: a.address || a.clientAddress || undefined,
+          isCurrent: a.isCurrent ?? a.active,
+        })),
+      );
+    }
+  }, [agenda]);
+
   // New agenda item form
-  const [newCliente, setNewCliente] = useState('Metalúrgicas S.A.S');
-  const [newHora, setNewHora] = useState('09:30 AM');
-  const [newObjetivo, setNewObjetivo] = useState('Seguimiento de propuesta comercial');
-  const [newDireccion, setNewDireccion] = useState('Cra 38 # 74-120');
+  const [newCliente, setNewCliente] = useState("Metalúrgicas S.A.S");
+  const [newHora, setNewHora] = useState("09:30 AM");
+  const [newObjetivo, setNewObjetivo] = useState(
+    "Seguimiento de propuesta comercial",
+  );
+  const [newDireccion, setNewDireccion] = useState("Cra 38 # 74-120");
 
   const handleCreateAgendaItem = (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,11 +67,11 @@ export const AgendaPage: React.FC = () => {
       orden: items.length + 1,
       hora: newHora,
       cliente: newCliente,
-      estado: 'Pendiente' as const,
+      estado: "Pendiente" as const,
       direccion: newDireccion,
       objetivo: newObjetivo,
-      contacto: 'Contacto Comercial',
-      potencial: 'Alto',
+      contacto: "Contacto Comercial",
+      potencial: "Alto",
       latitud: 10.98,
       longitud: -74.79,
     };
@@ -48,17 +79,24 @@ export const AgendaPage: React.FC = () => {
     setIsModalOpen(false);
   };
 
-  const visitadosCount = items.filter((i) => i.estado.toLowerCase() === 'visitado').length;
-  const pendientesCount = items.filter((i) => i.estado.toLowerCase() === 'pendiente').length;
+  const visitadosCount = items.filter(
+    (i) => i.estado.toLowerCase() === "visitado",
+  ).length;
+  const pendientesCount = items.filter(
+    (i) => i.estado.toLowerCase() === "pendiente",
+  ).length;
 
   return (
     <div className="space-y-5 pb-16">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200/90 shadow-xs">
         <div>
-          <h1 className="text-lg font-extrabold text-[#0F172A]">Agenda Comercial de Visitas</h1>
+          <h1 className="text-lg font-extrabold text-[#0F172A]">
+            Agenda Comercial de Visitas
+          </h1>
           <p className="text-xs text-slate-500">
-            Control de citas, horarios de atención y compromisos de seguimiento con clientes.
+            Control de citas, horarios de atención y compromisos de seguimiento
+            con clientes.
           </p>
         </div>
 
@@ -103,11 +141,15 @@ export const AgendaPage: React.FC = () => {
         <div className="flex items-center gap-3 text-xs">
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-[#16A34A]"></span>
-            <span className="text-slate-600 font-semibold">{visitadosCount} visitadas</span>
+            <span className="text-slate-600 font-semibold">
+              {visitadosCount} visitadas
+            </span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-[#EA580C]"></span>
-            <span className="text-slate-600 font-semibold">{pendientesCount} pendientes</span>
+            <span className="text-slate-600 font-semibold">
+              {pendientesCount} pendientes
+            </span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-[#DC2626]"></span>
@@ -121,18 +163,18 @@ export const AgendaPage: React.FC = () => {
         {/* Main Timeline Column */}
         <div className="lg:col-span-8 space-y-3">
           {items.map((item, idx) => {
-            const isVisitado = item.estado.toLowerCase() === 'visitado';
-            const isReprogramado = item.estado.toLowerCase() === 'reprogramado';
+            const isVisitado = item.estado.toLowerCase() === "visitado";
+            const isReprogramado = item.estado.toLowerCase() === "reprogramado";
 
             return (
               <div
                 key={item.id || idx}
                 className={`bg-white rounded-xl border p-4 shadow-xs transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
                   isVisitado
-                    ? 'border-emerald-200 bg-emerald-50/10'
+                    ? "border-emerald-200 bg-emerald-50/10"
                     : isReprogramado
-                    ? 'border-rose-200 bg-rose-50/10'
-                    : 'border-slate-200 hover:border-orange-200'
+                      ? "border-rose-200 bg-rose-50/10"
+                      : "border-slate-200 hover:border-orange-200"
                 }`}
               >
                 <div className="flex items-start gap-3.5">
@@ -140,10 +182,10 @@ export const AgendaPage: React.FC = () => {
                     <span
                       className={`flex h-8 w-8 items-center justify-center rounded-xl font-mono text-xs font-black shadow-xs ${
                         isVisitado
-                          ? 'bg-[#16A34A] text-white'
+                          ? "bg-[#16A34A] text-white"
                           : isReprogramado
-                          ? 'bg-[#DC2626] text-white'
-                          : 'bg-[#0F172A] text-white'
+                            ? "bg-[#DC2626] text-white"
+                            : "bg-[#0F172A] text-white"
                       }`}
                     >
                       {item.orden || idx + 1}
@@ -155,8 +197,17 @@ export const AgendaPage: React.FC = () => {
 
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-extrabold text-slate-900 text-sm">{item.cliente}</h3>
-                      <Badge variant={item.estado.toLowerCase()}>{item.estado}</Badge>
+                      <h3 className="font-extrabold text-slate-900 text-sm">
+                        {item.cliente}
+                      </h3>
+                      <Badge variant={item.estado.toLowerCase()}>
+                        {item.estado}
+                      </Badge>
+                      {item.isCurrent && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                          Visita actual
+                        </span>
+                      )}
                     </div>
 
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
@@ -194,8 +245,8 @@ export const AgendaPage: React.FC = () => {
                       onClick={() =>
                         navigate(
                           `/visitas/registrar?cliente=${encodeURIComponent(
-                            item.cliente
-                          )}&hora=${encodeURIComponent(item.hora)}`
+                            item.cliente,
+                          )}&hora=${encodeURIComponent(item.hora)}`,
                         )
                       }
                       className="inline-flex items-center gap-1.5 rounded-lg bg-[#EA580C] hover:bg-[#D9480F] text-white px-3.5 py-1.5 text-xs font-bold cursor-pointer shadow-xs transition-colors"
@@ -209,7 +260,7 @@ export const AgendaPage: React.FC = () => {
                     type="button"
                     onClick={() =>
                       navigate(
-                        `/visitas/registrar?cliente=${encodeURIComponent(item.cliente)}`
+                        `/visitas/registrar?cliente=${encodeURIComponent(item.cliente)}`,
                       )
                     }
                     className="text-[11px] text-slate-500 hover:text-slate-800 font-semibold underline cursor-pointer"
@@ -240,7 +291,9 @@ export const AgendaPage: React.FC = () => {
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Jornada:</span>
-                <span className="font-bold text-slate-800">08:00 AM - 05:00 PM</span>
+                <span className="font-bold text-slate-800">
+                  08:00 AM - 05:00 PM
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Km programados:</span>
@@ -249,7 +302,7 @@ export const AgendaPage: React.FC = () => {
             </div>
             <button
               type="button"
-              onClick={() => navigate('/mapa')}
+              onClick={() => navigate("/mapa")}
               className="w-full text-center py-2 text-xs font-bold text-[#EA580C] bg-orange-50 hover:bg-orange-100 rounded-lg cursor-pointer transition-colors"
             >
               Ver mapa completo de hoy
@@ -264,8 +317,12 @@ export const AgendaPage: React.FC = () => {
             <div className="space-y-2.5 text-xs">
               <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-100 space-y-1">
                 <div className="flex justify-between items-baseline">
-                  <span className="font-bold text-slate-800">ConstruInnova S.A.S</span>
-                  <span className="text-[10px] text-[#EA580C] font-bold">23/05/2024</span>
+                  <span className="font-bold text-slate-800">
+                    ConstruInnova S.A.S
+                  </span>
+                  <span className="text-[10px] text-[#EA580C] font-bold">
+                    23/05/2024
+                  </span>
                 </div>
                 <p className="text-[11px] text-slate-500">
                   Seguimiento de cotización COT-1245 ($18.5M)
@@ -273,8 +330,12 @@ export const AgendaPage: React.FC = () => {
               </div>
               <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-100 space-y-1">
                 <div className="flex justify-between items-baseline">
-                  <span className="font-bold text-slate-800">Metalúrgicas S.A.S</span>
-                  <span className="text-[10px] text-[#EA580C] font-bold">28/05/2024</span>
+                  <span className="font-bold text-slate-800">
+                    Metalúrgicas S.A.S
+                  </span>
+                  <span className="text-[10px] text-[#EA580C] font-bold">
+                    28/05/2024
+                  </span>
                 </div>
                 <p className="text-[11px] text-slate-500">
                   Entrega de muestras y firma de orden PED-568
@@ -295,10 +356,18 @@ export const AgendaPage: React.FC = () => {
           maxWidth="md"
           footer={
             <>
-              <Button variant="outline" size="sm" onClick={() => setIsModalOpen(false)}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsModalOpen(false)}
+              >
                 Cancelar
               </Button>
-              <Button variant="primary" size="sm" onClick={handleCreateAgendaItem}>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleCreateAgendaItem}
+              >
                 Agendar visita
               </Button>
             </>
@@ -306,12 +375,16 @@ export const AgendaPage: React.FC = () => {
         >
           <form onSubmit={handleCreateAgendaItem} className="space-y-3 text-xs">
             <div className="space-y-1">
-              <label className="block text-xs font-semibold text-slate-700">Cliente</label>
+              <label className="block text-xs font-semibold text-slate-700">
+                Cliente
+              </label>
               <select
                 value={newCliente}
                 onChange={(e) => {
                   setNewCliente(e.target.value);
-                  const found = MOCK_CLIENTES.find((c) => c.nombre_comercial === e.target.value);
+                  const found = MOCK_CLIENTES.find(
+                    (c) => c.nombre_comercial === e.target.value,
+                  );
                   if (found) setNewDireccion(found.direccion);
                 }}
                 className="w-full rounded-lg border border-slate-300 p-2 text-xs text-slate-800 focus:border-[#EA580C] focus:outline-none"
