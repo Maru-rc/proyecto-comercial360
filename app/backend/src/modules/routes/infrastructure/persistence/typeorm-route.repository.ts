@@ -1,0 +1,110 @@
+import { Injectable } from '@nestjs/common';
+import { DataSource, Repository } from 'typeorm';
+import {
+  RouteRecord,
+  RouteRepository,
+} from '../../application/ports/route.repository.port.js';
+import {
+  RouteReader,
+  RouteContractDto,
+  RouteStopContractDto,
+} from '../../../../domain-contracts/index.js';
+import { RouteOrmEntity } from './entities/route.orm-entity.js';
+import { RouteStopOrmEntity } from './entities/route-stop.orm-entity.js';
+
+@Injectable()
+export class TypeOrmRouteRepository implements RouteRepository, RouteReader {
+  private readonly routeRepo: Repository<RouteOrmEntity>;
+  private readonly stopRepo: Repository<RouteStopOrmEntity>;
+
+  constructor(private readonly dataSource: DataSource) {
+    this.routeRepo = this.dataSource.getRepository(RouteOrmEntity);
+    this.stopRepo = this.dataSource.getRepository(RouteStopOrmEntity);
+  }
+
+  async save(data: Partial<RouteRecord>): Promise<RouteRecord> {
+    const routeOrm = this.routeRepo.create({
+      name: data.name,
+      zoneId: data.zoneId,
+      executionDay: data.executionDay,
+      frequency: data.frequency,
+      startTime: data.startTime,
+      endTime: data.endTime,
+      description: data.description,
+      status: data.status ?? 'BORRADOR',
+      startDate: data.startDate ? new Date(data.startDate) : null,
+      endDate: data.endDate ? new Date(data.endDate) : null,
+      salesRepresentativeId: data.salesRepresentativeId,
+    });
+
+    const saved = await this.routeRepo.save(routeOrm);
+    return this.mapToRecord(saved);
+  }
+
+  async findById(id: number): Promise<RouteRecord | null> {
+    const route = await this.routeRepo.findOne({
+      where: { id },
+      relations: { zone: true },
+    });
+    return route ? this.mapToRecord(route) : null;
+  }
+
+  async existsByName(name: string): Promise<boolean> {
+    return this.routeRepo.exists({
+      where: { name: name.trim() },
+    });
+  }
+
+  // Métodos del contrato público RouteReader
+  async getRouteById(id: number): Promise<RouteContractDto | null> {
+    const route = await this.routeRepo.findOne({ where: { id } });
+    if (!route) return null;
+    return {
+      id: route.id,
+      name: route.name,
+      description: route.description,
+      territoryId: route.zoneId,
+      advisorId: route.salesRepresentativeId,
+      executionDay: route.executionDay,
+      frequency: route.frequency,
+      status: route.status,
+      startTime: route.startTime,
+      endTime: route.endTime,
+      startDate: route.startDate,
+      endDate: route.endDate,
+    };
+  }
+
+  async getStopsByRouteId(routeId: number): Promise<RouteStopContractDto[]> {
+    const stops = await this.stopRepo.find({
+      where: { routeId },
+      order: { stopOrder: 'ASC' },
+    });
+    return stops.map((s) => ({
+      id: s.id,
+      routeId: s.routeId,
+      clientId: s.customerId,
+      visitOrder: s.stopOrder,
+      order: s.stopOrder,
+      suggestedTime: s.suggestedTime,
+    }));
+  }
+
+  private mapToRecord(entity: RouteOrmEntity): RouteRecord {
+    return {
+      id: entity.id,
+      name: entity.name,
+      zoneId: entity.zoneId,
+      zoneName: entity.zone?.name ?? null,
+      executionDay: entity.executionDay,
+      frequency: entity.frequency,
+      startTime: entity.startTime,
+      endTime: entity.endTime,
+      description: entity.description,
+      status: (entity.status as RouteRecord['status']) || 'BORRADOR',
+      startDate: entity.startDate,
+      endDate: entity.endDate,
+      salesRepresentativeId: entity.salesRepresentativeId,
+    };
+  }
+}
