@@ -47,9 +47,22 @@ export interface ClientSummaryRecord {
   portafolios?: { id: number; nombre: string }[];
 }
 
+export interface ClientHistoryRecord {
+  id_historial: number;
+  id_cliente: number;
+  fecha: Date;
+  accion: string;
+  usuario: string | null;
+  descripcion: string | null;
+}
+
 export interface ClientRepository {
   findByTaxId(taxId: string): Promise<ClientSummaryRecord | null>;
   findById(id: number): Promise<ClientSummaryRecord | null>;
+  findHistoryByClientId(
+    clientId: number,
+    limit?: number,
+  ): Promise<ClientHistoryRecord[]>;
   findAll(filter?: {
     search?: string;
     tipo?: string;

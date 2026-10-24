@@ -6,6 +6,7 @@ import {
   Repository,
 } from 'typeorm';
 import {
+  ClientHistoryRecord,
   ClientRepository,
   ClientSummaryRecord,
   SaveClientTransactionData,
@@ -57,6 +58,27 @@ export class TypeOrmClientRepository implements ClientRepository, ClientReader {
       relations: CLIENT_RELATIONS,
     });
     return entity ? this.mapToSummaryRecord(entity) : null;
+  }
+
+  async findHistoryByClientId(
+    clientId: number,
+    limit = 3,
+  ): Promise<ClientHistoryRecord[]> {
+    const historyRepo = this.dataSource.getRepository(CustomerHistoryOrmEntity);
+    const entities = await historyRepo.find({
+      where: { customerId: clientId },
+      order: { date: 'DESC' },
+      take: limit,
+    });
+
+    return entities.map((item) => ({
+      id_historial: item.id,
+      id_cliente: item.customerId,
+      fecha: item.date,
+      accion: item.action,
+      usuario: item.user,
+      descripcion: item.description,
+    }));
   }
 
   async findAll(filter?: {

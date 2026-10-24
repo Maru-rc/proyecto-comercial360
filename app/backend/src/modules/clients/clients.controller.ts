@@ -26,6 +26,7 @@ import { ListClientsUseCase } from './application/use-cases/list-clients.use-cas
 import { GetClientByIdUseCase } from './application/use-cases/get-client-by-id.use-case.js';
 import { GetCatalogsUseCase } from './application/use-cases/get-catalogs.use-case.js';
 import { ImportClientsUseCase } from './application/use-cases/import-clients.use-case.js';
+import { GetClientHistoryUseCase } from './application/use-cases/get-client-history.use-case.js';
 import { CreateClientDto } from './presentation/dto/create-client.dto.js';
 import { ListClientsDto } from './presentation/dto/list-clients.dto.js';
 
@@ -59,6 +60,7 @@ export class ClientsController {
     private readonly getClientByIdUseCase: GetClientByIdUseCase,
     private readonly getCatalogsUseCase: GetCatalogsUseCase,
     private readonly importClientsUseCase: ImportClientsUseCase,
+    private readonly getClientHistoryUseCase: GetClientHistoryUseCase,
   ) {}
 
   @Post()
@@ -157,6 +159,16 @@ export class ClientsController {
   @Auth()
   async list(@Query() query: ListClientsDto) {
     return this.listClientsUseCase.execute(query);
+  }
+
+  @Get(':id/historial')
+  @Auth()
+  async getHistorial(
+    @Param('id', ParseIntPipe) id: number,
+    @Query('limit') limit?: string,
+  ) {
+    const parsedLimit = limit ? Math.max(1, parseInt(limit, 10) || 3) : 3;
+    return this.getClientHistoryUseCase.execute(id, parsedLimit);
   }
 
   @Get(':id')

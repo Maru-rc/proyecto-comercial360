@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { CreateClientUseCase } from './create-client.use-case.js';
 import {
+  ClientHistoryRecord,
   ClientRepository,
   ClientSummaryRecord,
   SaveClientTransactionData,
@@ -36,6 +37,10 @@ class InMemoryClientRepository implements ClientRepository {
 
   async findById(id: number): Promise<ClientSummaryRecord | null> {
     return this.clients.find((c) => c.id_cliente === id) ?? null;
+  }
+
+  async findHistoryByClientId(): Promise<ClientHistoryRecord[]> {
+    return [];
   }
 
   async findAll(): Promise<ClientSummaryRecord[]> {
