@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   Param,
   ParseIntPipe,
   Post,
@@ -12,13 +13,17 @@ import {
 import {
   Auth,
   CurrentUser,
+  ADVISOR_READER,
   type AuthenticatedUser,
 } from '../../domain-contracts/index.js';
+import type { AdvisorReader } from '../../domain-contracts/advisors/advisor-reader.interface.js';
 import { CreateRouteUseCase } from './application/use-cases/create-route.use-case.js';
 import { SetRouteStopsUseCase } from './application/use-cases/set-route-stops.use-case.js';
 import { GetRouteByIdUseCase } from './application/use-cases/get-route-by-id.use-case.js';
+import { AssignRouteUseCase } from './application/use-cases/assign-route.use-case.js';
 import { CreateRouteDto } from './presentation/dto/create-route.dto.js';
 import { SetRouteStopsDto } from './presentation/dto/set-route-stops.dto.js';
+import { AssignRouteDto } from './presentation/dto/assign-route.dto.js';
 
 @Controller('rutas')
 export class RoutesController {
@@ -26,6 +31,9 @@ export class RoutesController {
     private readonly createRouteUseCase: CreateRouteUseCase,
     private readonly setRouteStopsUseCase: SetRouteStopsUseCase,
     private readonly getRouteByIdUseCase: GetRouteByIdUseCase,
+    private readonly assignRouteUseCase: AssignRouteUseCase,
+    @Inject(ADVISOR_READER)
+    private readonly advisorReader: AdvisorReader,
   ) {}
 
   @Post()
@@ -44,6 +52,12 @@ export class RoutesController {
       endTime: dto.hora_fin,
       description: dto.descripcion,
     });
+  }
+
+  @Get('asesores')
+  @Auth()
+  async getAdvisors() {
+    return this.advisorReader.listActive();
   }
 
   @Get(':id')
@@ -74,5 +88,20 @@ export class RoutesController {
     @Body() dto: SetRouteStopsDto,
   ) {
     return this.setClients(id, dto);
+  }
+
+  @Post(':id/asignar')
+  @Auth('DIRECTOR')
+  @HttpCode(HttpStatus.OK)
+  async assignRoute(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: AssignRouteDto,
+  ) {
+    return this.assignRouteUseCase.execute({
+      routeId: id,
+      advisorId: dto.resolvedAdvisorId,
+      startDate: dto.resolvedStartDate,
+      endDate: dto.resolvedEndDate,
+    });
   }
 }
