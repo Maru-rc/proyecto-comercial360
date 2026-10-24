@@ -1,20 +1,62 @@
-import { ICliente } from './cliente';
+import { ICliente } from "./cliente";
 
-export type EstadoVisita = 
-  | 'VISITADO' 
-  | 'PENDIENTE' 
-  | 'SIN_VISITAR' 
-  | 'PEDIDO_CERRADO' 
-  | 'REPROGRAMADO' 
-  | 'PROGRAMADA';
+export type EstadoVisita =
+  | "VISITADO"
+  | "PENDIENTE"
+  | "SIN_VISITAR"
+  | "PEDIDO_CERRADO"
+  | "REPROGRAMADO"
+  | "PROGRAMADA";
 
-export type ResultadoVisita = 
-  | 'Interesado' 
-  | 'Pedido' 
-  | 'Programada' 
-  | 'No visitado' 
-  | 'Cotización enviada' 
-  | 'No interesado';
+export type MapPinStatus =
+  "VISITED" | "PENDING" | "NOT_VISITED" | "ORDER_CLOSED" | "RESCHEDULED";
+
+export interface IVisitAgendaItemContract {
+  id: number;
+  clientId: number;
+  clientName: string;
+  clientAddress?: string | null;
+  address?: string | null;
+  visitOrder?: number;
+  order?: number;
+  suggestedTime?: string | null;
+  time?: string;
+  visitStatus?: string;
+  status?: string;
+  potential?: string;
+  objective?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  contactName?: string | null;
+  contactPhone?: string | null;
+  primaryContact?: {
+    name: string;
+    phone: string;
+  } | null;
+  isCurrent?: boolean;
+  active?: boolean;
+}
+
+export interface IVisitMapStopContract {
+  id: number;
+  clientId: number;
+  clientName: string;
+  address?: string | null;
+  order?: number;
+  latitude: number | null;
+  longitude: number | null;
+  pinStatus: MapPinStatus;
+  color?: string;
+  colorHex?: string;
+}
+
+export type ResultadoVisita =
+  | "Interesado"
+  | "Pedido"
+  | "Programada"
+  | "No visitado"
+  | "Cotización enviada"
+  | "No interesado";
 
 export interface ISeguimiento {
   id_seguimiento?: string;
@@ -38,7 +80,14 @@ export interface ICotizacion {
   validez?: string;
   valor: number;
   moneda?: string;
-  estado?: 'BORRADOR' | 'ENVIADA' | 'APROBADA' | 'EN_NEGOCIACION' | 'RECHAZADA' | 'VENCIDA' | string;
+  estado?:
+    | "BORRADOR"
+    | "ENVIADA"
+    | "APROBADA"
+    | "EN_NEGOCIACION"
+    | "RECHAZADA"
+    | "VENCIDA"
+    | string;
   descripcion?: string;
   s3_document_key?: string;
 }
@@ -52,7 +101,13 @@ export interface IPedido {
   fecha: string;
   valor: number;
   fecha_entrega?: string;
-  estado?: 'PENDIENTE' | 'EN_PREPARACION' | 'DESPACHADO' | 'ENTREGADO' | 'CANCELADO' | string;
+  estado?:
+    | "PENDIENTE"
+    | "EN_PREPARACION"
+    | "DESPACHADO"
+    | "ENTREGADO"
+    | "CANCELADO"
+    | string;
   asesor_nombre?: string;
   items_count?: number;
   observaciones?: string;
@@ -77,7 +132,7 @@ export interface IVisita {
   resultado?: ResultadoVisita;
   objetivo_visita?: string;
   tipo_visita?: string;
-  interes_productos?: 'Alto' | 'Medio' | 'Bajo';
+  interes_productos?: "Alto" | "Medio" | "Bajo";
   modulo_interes?: string;
   competencia_mencionada?: string;
   observaciones?: string;
@@ -98,7 +153,7 @@ export interface IVisitaRegistroFormData {
   semana: number;
   dia: string;
   asesor_nombre: string;
-  
+
   // Bloque 2: Cliente
   id_cliente: string;
   cliente_nombre: string;
