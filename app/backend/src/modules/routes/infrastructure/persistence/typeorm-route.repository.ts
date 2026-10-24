@@ -3,6 +3,7 @@ import { DataSource, Repository } from 'typeorm';
 import {
   RouteRecord,
   RouteRepository,
+  RouteStopRecord,
 } from '../../application/ports/route.repository.port.js';
 import {
   RouteReader,
@@ -44,7 +45,6 @@ export class TypeOrmRouteRepository implements RouteRepository, RouteReader {
   async findById(id: number): Promise<RouteRecord | null> {
     const route = await this.routeRepo.findOne({
       where: { id },
-      relations: { zone: true },
     });
     return route ? this.mapToRecord(route) : null;
   }
@@ -53,6 +53,55 @@ export class TypeOrmRouteRepository implements RouteRepository, RouteReader {
     return this.routeRepo.exists({
       where: { name: name.trim() },
     });
+  }
+
+  async setStops(
+    routeId: number,
+    stops: Array<{
+      customerId: number;
+      visitOrder: number;
+      suggestedTime?: string | null;
+    }>,
+  ): Promise<RouteStopRecord[]> {
+    return this.dataSource.transaction(async (manager) => {
+      await manager.delete(RouteStopOrmEntity, { routeId });
+
+      if (stops.length === 0) {
+        return [];
+      }
+
+      const stopEntities = stops.map((s) =>
+        manager.create(RouteStopOrmEntity, {
+          routeId,
+          customerId: s.customerId,
+          visitOrder: s.visitOrder,
+          suggestedTime: s.suggestedTime ?? null,
+        }),
+      );
+
+      const saved = await manager.save(RouteStopOrmEntity, stopEntities);
+      return saved.map((s) => ({
+        id: s.id,
+        routeId: s.routeId,
+        customerId: s.customerId,
+        visitOrder: s.visitOrder,
+        suggestedTime: s.suggestedTime,
+      }));
+    });
+  }
+
+  async getStops(routeId: number): Promise<RouteStopRecord[]> {
+    const stops = await this.stopRepo.find({
+      where: { routeId },
+      order: { visitOrder: 'ASC' },
+    });
+    return stops.map((s) => ({
+      id: s.id,
+      routeId: s.routeId,
+      customerId: s.customerId,
+      visitOrder: s.visitOrder,
+      suggestedTime: s.suggestedTime,
+    }));
   }
 
   // Métodos del contrato público RouteReader
@@ -78,14 +127,14 @@ export class TypeOrmRouteRepository implements RouteRepository, RouteReader {
   async getStopsByRouteId(routeId: number): Promise<RouteStopContractDto[]> {
     const stops = await this.stopRepo.find({
       where: { routeId },
-      order: { stopOrder: 'ASC' },
+      order: { visitOrder: 'ASC' },
     });
     return stops.map((s) => ({
       id: s.id,
       routeId: s.routeId,
       clientId: s.customerId,
-      visitOrder: s.stopOrder,
-      order: s.stopOrder,
+      visitOrder: s.visitOrder,
+      order: s.visitOrder,
       suggestedTime: s.suggestedTime,
     }));
   }
@@ -95,7 +144,7 @@ export class TypeOrmRouteRepository implements RouteRepository, RouteReader {
       id: entity.id,
       name: entity.name,
       zoneId: entity.zoneId,
-      zoneName: entity.zone?.name ?? null,
+      zoneName: null,
       executionDay: entity.executionDay,
       frequency: entity.frequency,
       startTime: entity.startTime,

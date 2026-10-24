@@ -16,10 +16,27 @@ export interface RouteRecord {
   salesRepresentativeId?: number | null;
 }
 
+export interface RouteStopRecord {
+  id?: number;
+  routeId: number;
+  customerId: number;
+  visitOrder: number;
+  suggestedTime: string | null;
+}
+
 export interface RouteRepository {
   save(route: Partial<RouteRecord>): Promise<RouteRecord>;
   findById(id: number): Promise<RouteRecord | null>;
   existsByName(name: string): Promise<boolean>;
+  setStops(
+    routeId: number,
+    stops: Array<{
+      customerId: number;
+      visitOrder: number;
+      suggestedTime?: string | null;
+    }>,
+  ): Promise<RouteStopRecord[]>;
+  getStops(routeId: number): Promise<RouteStopRecord[]>;
 }
 
 export const ROUTE_REPOSITORY = Symbol('ROUTE_REPOSITORY');

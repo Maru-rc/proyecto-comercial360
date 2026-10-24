@@ -6,7 +6,6 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { RouteOrmEntity } from './route.orm-entity.js';
-import { CustomerOrmEntity } from '../../clients/infrastructure/persistence/entities/customer.orm-entity.js';
 
 @Entity('route_stops')
 export class RouteStopOrmEntity {
@@ -25,12 +24,8 @@ export class RouteStopOrmEntity {
   @Column({ name: 'customer_id' })
   customerId: number;
 
-  @ManyToOne(() => CustomerOrmEntity, { onDelete: 'NO ACTION' })
-  @JoinColumn({ name: 'customer_id' })
-  customer: CustomerOrmEntity;
-
-  @Column({ name: 'stop_order' })
-  stopOrder: number;
+  @Column({ name: 'visit_order' })
+  visitOrder: number;
 
   @Column({ name: 'suggested_time', type: 'time', nullable: true })
   suggestedTime: string | null;

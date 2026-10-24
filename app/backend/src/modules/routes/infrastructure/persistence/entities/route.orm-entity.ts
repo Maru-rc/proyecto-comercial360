@@ -1,12 +1,4 @@
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  OneToMany,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
-import { ZoneOrmEntity } from '../../clients/infrastructure/persistence/entities/zone.orm-entity.js';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { RouteStopOrmEntity } from './route-stop.orm-entity.js';
 
 @Entity('routes')
@@ -22,10 +14,6 @@ export class RouteOrmEntity {
 
   @Column({ name: 'zone_id', nullable: true })
   zoneId: number | null;
-
-  @ManyToOne(() => ZoneOrmEntity, { nullable: true })
-  @JoinColumn({ name: 'zone_id' })
-  zone: ZoneOrmEntity | null;
 
   @Column({ name: 'start_date', type: 'date', nullable: true })
   startDate: Date | null;
