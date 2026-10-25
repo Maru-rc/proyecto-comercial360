@@ -13,6 +13,41 @@ import { VisitOutcomeOrmEntity } from './entities/visit-outcome.orm-entity.js';
 import { VisitOrmEntity } from './entities/visit.orm-entity.js';
 import { TypeOrmVisitRepository } from './typeorm-visit.repository.js';
 
+const UNIQUE_VIOLATION = '23505';
+
+/**
+ * Inserts one row with explicit columns and returns it. Raw SQL on purpose:
+ * these tables also have ORM entities in other modules, and a query builder
+ * `.into('<table>')` would then expect those entities' property names and
+ * silently drop snake_case keys (inserting NULLs).
+ */
+async function insertReturning<T>(
+  manager: EntityManager,
+  sql: string,
+  params: unknown[],
+  conflictMessage?: string,
+): Promise<T> {
+  try {
+    const rows = (await manager.query(sql, params)) as T[];
+    const row = rows[0];
+    if (!row) {
+      throw new Error('Insert returned no row');
+    }
+    return row;
+  } catch (err: unknown) {
+    if (
+      conflictMessage &&
+      typeof err === 'object' &&
+      err !== null &&
+      'code' in err &&
+      (err as { code: string }).code === UNIQUE_VIOLATION
+    ) {
+      throw new ConflictException(conflictMessage);
+    }
+    throw err;
+  }
+}
+
 @Injectable()
 export class TypeOrmVisitUnitOfWork implements IVisitUnitOfWork {
   constructor(private readonly dataSource: DataSource) {}
@@ -32,114 +67,82 @@ export class TypeOrmVisitUnitOfWork implements IVisitUnitOfWork {
           visitRepo,
 
           saveQuotation: async (input: SaveQuotationTransactionalInput) => {
-            try {
-              const res = await manager
-                .createQueryBuilder()
-                .insert()
-                .into('quotes')
-                .values({
-                  quote_number: input.number,
-                  customer_id: input.clientId,
-                  sales_representative_id: input.advisorId ?? null,
-                  amount: input.amount,
-                  currency: input.currency ?? 'COP',
-                  status: input.status ?? 'ENVIADA',
-                  date: new Date(),
-                })
-                .returning('quote_id, quote_number')
-                .execute();
-              const raw = res.raw?.[0];
-              return {
-                id: raw?.quote_id ?? 1,
-                number: raw?.quote_number ?? input.number,
-                quotationNumber: raw?.quote_number ?? input.number,
-              };
-            } catch (err: unknown) {
-              if (
-                typeof err === 'object' &&
-                err !== null &&
-                'code' in err &&
-                (err as { code: string }).code === '23505'
-              ) {
-                throw new ConflictException(
-                  `Quotation with number ${input.number} already exists`,
-                );
-              }
-              throw err;
-            }
+            const row = await insertReturning<{
+              quote_id: number;
+              quote_number: string;
+            }>(
+              manager,
+              `INSERT INTO "quotes" ("quote_number", "customer_id", "sales_representative_id", "amount", "currency", "status", "date")
+               VALUES ($1, $2, $3, $4, $5, $6, CURRENT_DATE)
+               RETURNING "quote_id", "quote_number"`,
+              [
+                input.number,
+                input.clientId,
+                input.advisorId ?? null,
+                input.amount,
+                input.currency ?? 'COP',
+                input.status ?? 'ENVIADA',
+              ],
+              `Quotation with number ${input.number} already exists`,
+            );
+            return {
+              id: row.quote_id,
+              number: row.quote_number,
+              quotationNumber: row.quote_number,
+            };
           },
 
           saveOrder: async (input: SaveOrderTransactionalInput) => {
-            try {
-              const res = await manager
-                .createQueryBuilder()
-                .insert()
-                .into('orders')
-                .values({
-                  order_number: input.number,
-                  customer_id: input.clientId,
-                  quote_id: input.quotationId ?? null,
-                  amount: input.amount,
-                  status: input.status ?? 'CERRADO',
-                  date: new Date(),
-                  estimated_delivery_date: input.estimatedDeliveryDate ?? null,
-                })
-                .returning('order_id, order_number')
-                .execute();
-              const raw = res.raw?.[0];
-              return {
-                id: raw?.order_id ?? 1,
-                number: raw?.order_number ?? input.number,
-                orderNumber: raw?.order_number ?? input.number,
-              };
-            } catch (err: unknown) {
-              if (
-                typeof err === 'object' &&
-                err !== null &&
-                'code' in err &&
-                (err as { code: string }).code === '23505'
-              ) {
-                throw new ConflictException(
-                  `Order with number ${input.number} already exists`,
-                );
-              }
-              throw err;
-            }
+            const row = await insertReturning<{
+              order_id: number;
+              order_number: string;
+            }>(
+              manager,
+              `INSERT INTO "orders" ("order_number", "customer_id", "quote_id", "amount", "status", "date", "estimated_delivery_date")
+               VALUES ($1, $2, $3, $4, $5, CURRENT_DATE, $6)
+               RETURNING "order_id", "order_number"`,
+              [
+                input.number,
+                input.clientId,
+                input.quotationId ?? null,
+                input.amount,
+                input.status ?? 'CERRADO',
+                input.estimatedDeliveryDate ?? null,
+              ],
+              `Order with number ${input.number} already exists`,
+            );
+            return {
+              id: row.order_id,
+              number: row.order_number,
+              orderNumber: row.order_number,
+            };
           },
 
           saveFollowUp: async (input: SaveFollowUpTransactionalInput) => {
-            const res = await manager
-              .createQueryBuilder()
-              .insert()
-              .into('follow_ups')
-              .values({
-                visit_id: input.visitId ?? null,
-                responsible_sales_representative_id:
-                  input.responsibleAdvisorId ?? null,
-                next_date: input.nextContactDate,
-                activity: input.activity,
-                observation: input.observation ?? null,
-                is_completed: false,
-              })
-              .returning('follow_up_id')
-              .execute();
-            const raw = res.raw?.[0];
-            return { id: raw?.follow_up_id ?? 1 };
+            const row = await insertReturning<{ follow_up_id: number }>(
+              manager,
+              `INSERT INTO "follow_ups" ("visit_id", "responsible_sales_representative_id", "next_date", "activity", "observation", "is_completed")
+               VALUES ($1, $2, $3, $4, $5, false)
+               RETURNING "follow_up_id"`,
+              [
+                input.visitId ?? null,
+                input.responsibleAdvisorId ?? null,
+                input.nextContactDate,
+                input.activity,
+                input.observation ?? null,
+              ],
+            );
+            return { id: row.follow_up_id };
           },
 
           recordHistory: async (input: RecordHistoryTransactionalInput) => {
-            await manager
-              .createQueryBuilder()
-              .insert()
-              .into('customer_history')
-              .values({
-                customer_id: input.clientId,
-                action: input.action,
-                user: input.user,
-                description: input.description,
-                date: new Date(),
-              })
-              .execute();
+            await insertReturning<{ customer_history_id: number }>(
+              manager,
+              `INSERT INTO "customer_history" ("customer_id", "action", "user", "description", "date")
+               VALUES ($1, $2, $3, $4, now())
+               RETURNING "customer_history_id"`,
+              [input.clientId, input.action, input.user, input.description],
+            );
           },
         };
 

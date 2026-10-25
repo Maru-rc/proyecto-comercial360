@@ -9,13 +9,13 @@ export class InMemoryStorageAdapter implements IStorageService {
 
   async generateUploadUrl(params: GenerateUploadUrlParams): Promise<string> {
     this.storedObjects.add(params.s3Key);
-    return `https://mock-s3.local/upload/${encodeURIComponent(params.s3Key)}?expires=${params.expiresInSeconds ?? 900}`;
+    return `https://mock-s3.local/upload/${encodeURIComponent(params.s3Key)}?expires=${params.expiresInSeconds}&size=${params.fileSize}&type=${encodeURIComponent(params.contentType)}`;
   }
 
   async generateDownloadUrl(
     params: GenerateDownloadUrlParams,
   ): Promise<string> {
-    return `https://mock-s3.local/download/${encodeURIComponent(params.s3Key)}?expires=${params.expiresInSeconds ?? 3600}`;
+    return `https://mock-s3.local/download/${encodeURIComponent(params.s3Key)}?expires=${params.expiresInSeconds}`;
   }
 
   async deleteObject(s3Key: string): Promise<void> {

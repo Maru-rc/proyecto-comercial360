@@ -31,19 +31,34 @@ export class TypeOrmFollowUpRepository
   }
 
   async findByClient(clientId: number): Promise<FollowUp[]> {
-    const list = await this.repository.find({
-      where: { clientId },
-      order: { nextContactDate: 'ASC' },
-    });
-    return list.map((item) => FollowUpMapper.toDomain(item));
+    return this.findForClient(clientId, false);
   }
 
   async findPendingByClient(clientId: number): Promise<FollowUp[]> {
-    const list = await this.repository.find({
-      where: { clientId, isCompleted: false },
-      order: { nextContactDate: 'ASC' },
+    return this.findForClient(clientId, true);
+  }
+
+  /**
+   * follow_ups has no customer column: the client is the one of the visit the
+   * follow-up was scheduled from.
+   */
+  private async findForClient(
+    clientId: number,
+    onlyPending: boolean,
+  ): Promise<FollowUp[]> {
+    const query = this.repository
+      .createQueryBuilder('followUp')
+      .innerJoin('visits', 'visit', 'visit.visit_id = followUp.visit_id')
+      .where('visit.customer_id = :clientId', { clientId })
+      .orderBy('followUp.nextContactDate', 'ASC');
+    if (onlyPending) {
+      query.andWhere('followUp.isCompleted = false');
+    }
+    const list = await query.getMany();
+    return list.map((item) => {
+      item.clientId = clientId;
+      return FollowUpMapper.toDomain(item);
     });
-    return list.map((item) => FollowUpMapper.toDomain(item));
   }
 
   async findAll(): Promise<FollowUp[]> {

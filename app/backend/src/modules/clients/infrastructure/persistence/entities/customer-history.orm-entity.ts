@@ -6,6 +6,7 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  type Relation,
 } from 'typeorm';
 import { CustomerOrmEntity } from './customer.orm-entity.js';
 
@@ -17,7 +18,7 @@ export class CustomerHistoryOrmEntity {
 
   @ManyToOne(() => CustomerOrmEntity, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'customer_id' })
-  customer: CustomerOrmEntity;
+  customer: Relation<CustomerOrmEntity>;
 
   @Column({ name: 'customer_id' })
   customerId: number;

@@ -52,7 +52,7 @@ describe('HU-10: role-based access control (e2e, real endpoints)', () => {
     );
   };
   const api = (
-    method: 'get' | 'post' | 'put',
+    method: 'get' | 'post' | 'put' | 'patch',
     url: string,
     cookie: string[] = [],
     body?: object,
@@ -63,6 +63,9 @@ describe('HU-10: role-based access control (e2e, real endpoints)', () => {
     return body ? req.send(body) : req;
   };
   const clean = async () => {
+    await ds.query('DELETE FROM "follow_ups"');
+    await ds.query('DELETE FROM "orders"');
+    await ds.query('DELETE FROM "quotes"');
     await ds.query('DELETE FROM "visit_results"');
     await ds.query('DELETE FROM "visits"');
     await ds.query(`DELETE FROM "customers" WHERE tax_id = 'HU10-TEST'`);
@@ -152,6 +155,13 @@ describe('HU-10: role-based access control (e2e, real endpoints)', () => {
       ['post', '/storage/upload-url'],
       ['get', '/storage/download-url?s3Key=x'],
       ['get', '/me'],
+      ['get', '/clientes'],
+      ['get', '/clientes/catalogos'],
+      ['get', '/clientes/plantilla'],
+      ['get', '/catalogos'],
+      ['post', '/rutas'],
+      ['get', '/rutas/asesores'],
+      ['post', '/follow-ups'],
     ] as const)('%s %s', async (method, url) => {
       expect((await api(method, url)).status).toBe(401);
     });
@@ -324,10 +334,194 @@ describe('HU-10: role-based access control (e2e, real endpoints)', () => {
       expect(res.status).toBe(200);
       expect(res.body.data.visitId).toBe(visitA);
     });
+
+    // HU-12/13/14: one transaction writes the outcome, quotation, order,
+    // follow-up and client history, each with its real foreign keys.
+    it('a successful visit stores quotation, order, follow-up and history with their keys', async () => {
+      const visitId = await insertVisit(advisorAId);
+      const quoteNumber = `COT-E2E-${visitId}`;
+      const orderNumber = `PED-E2E-${visitId}`;
+      const res = await api('put', `/visits/${visitId}`, cookies.advisorA, {
+        outcome: 'SUCCESSFUL',
+        observations: 'HU13',
+        quotation: { quotationNumber: quoteNumber, amount: 450000 },
+        order: { orderNumber, amount: 450000 },
+        followUp: {
+          nextContactDate: '2026-11-02T10:00:00Z',
+          activity: 'Confirmar despacho',
+        },
+      });
+      expect(res.status).toBe(200);
+
+      const [quote] = await ds.query(
+        'SELECT quote_id, customer_id, sales_representative_id FROM "quotes" WHERE quote_number = $1',
+        [quoteNumber],
+      );
+      expect(quote).toMatchObject({
+        customer_id: customerId,
+        sales_representative_id: advisorAId,
+      });
+      const [order] = await ds.query(
+        'SELECT customer_id, quote_id FROM "orders" WHERE order_number = $1',
+        [orderNumber],
+      );
+      expect(order).toMatchObject({
+        customer_id: customerId,
+        quote_id: quote.quote_id,
+      });
+      const followUps = await ds.query(
+        'SELECT activity FROM "follow_ups" WHERE visit_id = $1',
+        [visitId],
+      );
+      expect(followUps).toEqual([{ activity: 'Confirmar despacho' }]);
+      const history = await ds.query(
+        'SELECT action FROM "customer_history" WHERE customer_id = $1 AND description LIKE $2',
+        [customerId, '%HU13%'],
+      );
+      expect(history.length).toBeGreaterThan(0);
+    });
+
+    it('a duplicated quotation number rolls back the whole visit → 409', async () => {
+      const visitId = await insertVisit(advisorAId);
+      const quoteNumber = `COT-DUP-${visitId}`;
+      await ds.query(
+        `INSERT INTO "quotes" (quote_number, date, amount, customer_id) VALUES ($1, CURRENT_DATE, 1, $2)`,
+        [quoteNumber, customerId],
+      );
+      const res = await api('put', `/visits/${visitId}`, cookies.advisorA, {
+        outcome: 'SUCCESSFUL',
+        observations: 'HU13-dup',
+        quotation: { quotationNumber: quoteNumber, amount: 1000 },
+      });
+      expect(res.status).toBe(409);
+      const [visit] = await ds.query(
+        'SELECT visit_status FROM "visits" WHERE visit_id = $1',
+        [visitId],
+      );
+      expect(visit.visit_status).toBe('PENDIENTE');
+      const results = await ds.query(
+        'SELECT 1 FROM "visit_results" WHERE visit_id = $1',
+        [visitId],
+      );
+      expect(results).toHaveLength(0);
+    });
     it('a visit that does not exist → 404', async () => {
       expect(
         (await api('put', '/visits/999999', cookies.advisorA, body)).status,
       ).toBe(404);
+    });
+  });
+
+  // HU-14: follow-ups are reachable and keep their lifecycle.
+  // HU-19: presigned URLs, keys built by the server and owner-only downloads.
+  describe('storage', () => {
+    const requestUpload = (cookie: string[], body: object) =>
+      api('post', '/storage/upload-url', cookie, body);
+    const evidence = {
+      purpose: 'visit-evidence',
+      contentType: 'image/jpeg',
+      fileSize: 2048,
+    };
+
+    it('returns a signed upload URL and a key the client did not choose', async () => {
+      const res = await requestUpload(cookies.advisorA, {
+        ...evidence,
+        s3Key: 'anything/i/want.jpg',
+      });
+      expect(res.status).toBe(400); // unknown property s3Key is rejected
+      const ok = await requestUpload(cookies.advisorA, evidence);
+      expect(ok.status).toBe(201);
+      expect(ok.body.data.s3Key).toMatch(
+        /^visit-evidence\/[^/]+\/\d{4}\/\d{2}\//,
+      );
+      const signed = new URL(ok.body.data.uploadUrl).searchParams.get(
+        'X-Amz-SignedHeaders',
+      );
+      expect(signed).toContain('content-length');
+      expect(signed).toContain('content-type');
+    });
+
+    it('rejects a missing or oversized fileSize → 400', async () => {
+      const { fileSize: _omit, ...withoutSize } = evidence;
+      expect((await requestUpload(cookies.advisorA, withoutSize)).status).toBe(
+        400,
+      );
+      expect(
+        (
+          await requestUpload(cookies.advisorA, {
+            ...evidence,
+            fileSize: 16 * 1024 * 1024,
+          })
+        ).status,
+      ).toBe(400);
+    });
+
+    it('client import files are for directors only', async () => {
+      const body = {
+        purpose: 'client-import',
+        contentType: 'text/csv',
+        fileSize: 10,
+      };
+      expect((await requestUpload(cookies.advisorA, body)).status).toBe(403);
+      expect((await requestUpload(cookies.director, body)).status).toBe(201);
+    });
+
+    it('only the owner or a director can download a key', async () => {
+      const { body } = await requestUpload(cookies.advisorA, evidence);
+      const key = encodeURIComponent(body.data.s3Key as string);
+      const url = `/storage/download-url?s3Key=${key}`;
+      expect((await api('get', url, cookies.advisorA)).status).toBe(200);
+      expect((await api('get', url, cookies.advisorB)).status).toBe(403);
+      expect((await api('get', url, cookies.director)).status).toBe(200);
+      expect(
+        (
+          await api(
+            'get',
+            '/storage/download-url?s3Key=..%2Fsecret.jpg',
+            cookies.director,
+          )
+        ).status,
+      ).toBe(400);
+    });
+  });
+
+  describe('follow-ups', () => {
+    it('schedules, lists as pending and completes a follow-up', async () => {
+      const visitId = await insertVisit(advisorAId);
+      const created = await api('post', '/follow-ups', cookies.advisorA, {
+        clientId: customerId,
+        visitId,
+        responsibleAdvisorId: advisorAId,
+        nextContactDate: '2026-11-03T15:00:00Z',
+        activity: 'Llamar para cierre',
+      });
+      expect(created.status).toBe(201);
+      const followUpId = created.body.data.id as number;
+
+      const pending = await api(
+        'get',
+        `/follow-ups/pending/${customerId}`,
+        cookies.advisorA,
+      );
+      expect(pending.status).toBe(200);
+      expect(
+        (pending.body.data as { id: number }[]).map((f) => f.id),
+      ).toContain(followUpId);
+
+      const done = await api(
+        'patch',
+        `/follow-ups/${followUpId}/complete`,
+        cookies.advisorA,
+      );
+      expect(done.status).toBe(200);
+      const after = await api(
+        'get',
+        `/follow-ups/pending/${customerId}`,
+        cookies.advisorA,
+      );
+      expect(
+        (after.body.data as { id: number }[]).map((f) => f.id),
+      ).not.toContain(followUpId);
     });
   });
 

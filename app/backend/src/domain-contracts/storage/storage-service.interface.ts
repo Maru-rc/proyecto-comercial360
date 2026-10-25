@@ -1,15 +1,14 @@
 export interface GenerateUploadUrlParams {
   readonly s3Key: string;
-  readonly contentType?: string;
-  readonly mimeType?: string;
-  readonly fileSize?: number;
-  readonly size?: number;
-  readonly expiresInSeconds?: number;
+  readonly contentType: string;
+  /** Exact object size in bytes; signed, so S3 rejects any other length. */
+  readonly fileSize: number;
+  readonly expiresInSeconds: number;
 }
 
 export interface GenerateDownloadUrlParams {
   readonly s3Key: string;
-  readonly expiresInSeconds?: number;
+  readonly expiresInSeconds: number;
 }
 
 export interface IStorageService {

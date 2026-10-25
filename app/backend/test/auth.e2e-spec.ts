@@ -275,7 +275,7 @@ describe('Authentication and Roles (e2e, PostgreSQL)', () => {
         .get('/api/me')
         .set('Cookie', cookie)
         .expect(200);
-      expect(res.body.advisor).not.toBeNull();
+      expect(res.body.data.advisor).not.toBeNull();
       await dataSource.query(
         `UPDATE "sales_representatives" SET email = LOWER(email)`,
       );

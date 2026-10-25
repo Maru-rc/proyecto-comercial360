@@ -1,95 +1,165 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { ForbiddenOperationException } from '../../domain-contracts/index.js';
 import { GenerateDownloadUrlUseCase } from './application/generate-download-url/generate-download-url.use-case.js';
 import { GenerateUploadUrlUseCase } from './application/generate-upload-url/generate-upload-url.use-case.js';
+import { parseStorageKey } from './domain/storage-key.js';
+import {
+  DOWNLOAD_URL_TTL_SECONDS,
+  MAX_FILE_SIZE_BYTES,
+  UPLOAD_URL_TTL_SECONDS,
+} from './domain/storage.constants.js';
 import { InMemoryStorageAdapter } from './infrastructure/storage/in-memory-storage.adapter.js';
 
-describe('Storage Module Unit Tests (HU-19)', () => {
-  let storageAdapter: InMemoryStorageAdapter;
-  let generateUploadUrlUseCase: GenerateUploadUrlUseCase;
-  let generateDownloadUrlUseCase: GenerateDownloadUrlUseCase;
+const advisor = { id: 'advisorA1', role: 'ADVISOR' };
+const otherAdvisor = { id: 'advisorB2', role: 'ADVISOR' };
+const director = { id: 'director9', role: 'DIRECTOR' };
+
+describe('Storage (HU-19)', () => {
+  let storage: InMemoryStorageAdapter;
+  let upload: GenerateUploadUrlUseCase;
+  let download: GenerateDownloadUrlUseCase;
 
   beforeEach(() => {
-    storageAdapter = new InMemoryStorageAdapter();
-    generateUploadUrlUseCase = new GenerateUploadUrlUseCase(storageAdapter);
-    generateDownloadUrlUseCase = new GenerateDownloadUrlUseCase(storageAdapter);
+    storage = new InMemoryStorageAdapter();
+    upload = new GenerateUploadUrlUseCase(storage);
+    download = new GenerateDownloadUrlUseCase(storage);
   });
 
-  it('should generate a presigned upload URL for a valid JPEG image', async () => {
-    const result = await generateUploadUrlUseCase.execute({
-      filename: 'visit_evidence.jpg',
-      contentType: 'image/jpeg',
-      fileSize: 2 * 1024 * 1024, // 2 MB
-    });
-
-    expect(result.uploadUrl).toBeDefined();
-    expect(result.uploadUrl).toContain('mock-s3.local/upload');
-    expect(result.s3Key).toMatch(
-      /^evidence\/\d+_[a-f0-9]{8}_visit_evidence\.jpg$/,
-    );
-    expect(storageAdapter.hasObject(result.s3Key)).toBe(true);
-  });
-
-  it('should generate a presigned upload URL for PDF documents and Excel sheets', async () => {
-    const pdfResult = await generateUploadUrlUseCase.execute({
-      filename: 'catalog.pdf',
-      contentType: 'application/pdf',
-      fileSize: 5 * 1024 * 1024,
-    });
-    expect(pdfResult.uploadUrl).toBeDefined();
-
-    const excelResult = await generateUploadUrlUseCase.execute({
-      filename: 'order.xlsx',
-      contentType:
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      fileSize: 1 * 1024 * 1024,
-    });
-    expect(excelResult.uploadUrl).toBeDefined();
-  });
-
-  it('should reject unauthorized MIME types (.exe, .html)', async () => {
-    await expect(
-      generateUploadUrlUseCase.execute({
-        filename: 'malware.exe',
-        contentType: 'application/x-msdownload',
-      }),
-    ).rejects.toThrow('File type not allowed');
-
-    await expect(
-      generateUploadUrlUseCase.execute({
-        filename: 'phishing.html',
-        contentType: 'text/html',
-      }),
-    ).rejects.toThrow('File type not allowed');
-  });
-
-  it('should reject files exceeding the 15MB limit', async () => {
-    const oversizedBytes = 16 * 1024 * 1024; // 16 MB > 15 MB
-    await expect(
-      generateUploadUrlUseCase.execute({
-        filename: 'huge_video.mp4',
+  describe('upload URL', () => {
+    it('builds the key on the server, under the requester and purpose', async () => {
+      const result = await upload.execute({
+        requester: advisor,
+        purpose: 'visit-evidence',
         contentType: 'image/jpeg',
-        fileSize: oversizedBytes,
-      }),
-    ).rejects.toThrow('exceeds maximum allowed size of 15MB');
-  });
+        fileSize: 1024,
+      });
 
-  it('should generate a valid download URL from an s3Key', async () => {
-    const result = await generateDownloadUrlUseCase.execute({
-      s3Key: 'evidence/123456_photo.png',
-      expiresInSeconds: 1800,
+      expect(result.s3Key).toMatch(
+        /^visit-evidence\/advisorA1\/\d{4}\/\d{2}\/[0-9a-f-]{36}\.jpg$/,
+      );
+      expect(parseStorageKey(result.s3Key)).toEqual({
+        purpose: 'visit-evidence',
+        ownerId: 'advisorA1',
+      });
+      expect(storage.hasObject(result.s3Key)).toBe(true);
     });
 
-    expect(result.downloadUrl).toContain(
-      'mock-s3.local/download/evidence%2F123456_photo.png',
+    it('signs the exact size and type, with a fixed short expiry', async () => {
+      const result = await upload.execute({
+        requester: advisor,
+        purpose: 'visit-evidence',
+        contentType: 'application/PDF',
+        fileSize: 2048,
+      });
+
+      expect(result.expiresInSeconds).toBe(UPLOAD_URL_TTL_SECONDS);
+      expect(result.headers).toEqual({ 'Content-Type': 'application/pdf' });
+      expect(result.uploadUrl).toContain(`expires=${UPLOAD_URL_TTL_SECONDS}`);
+      expect(result.uploadUrl).toContain('size=2048');
+      expect(result.s3Key.endsWith('.pdf')).toBe(true);
+    });
+
+    it('gives every upload a different key', async () => {
+      const input = {
+        requester: advisor,
+        purpose: 'visit-evidence' as const,
+        contentType: 'image/png',
+        fileSize: 10,
+      };
+      const first = await upload.execute(input);
+      const second = await upload.execute(input);
+      expect(first.s3Key).not.toBe(second.s3Key);
+    });
+
+    it.each(['application/x-msdownload', 'text/html'])(
+      'rejects %s',
+      async (contentType) => {
+        await expect(
+          upload.execute({
+            requester: advisor,
+            purpose: 'visit-evidence',
+            contentType,
+            fileSize: 10,
+          }),
+        ).rejects.toThrow('File type not allowed');
+      },
     );
-    expect(result.downloadUrl).toContain('expires=1800');
+
+    it.each([0, -1, 1.5, MAX_FILE_SIZE_BYTES + 1])(
+      'rejects a file size of %s',
+      async (fileSize) => {
+        await expect(
+          upload.execute({
+            requester: advisor,
+            purpose: 'visit-evidence',
+            contentType: 'image/png',
+            fileSize,
+          }),
+        ).rejects.toThrow(/fileSize|15MB/);
+      },
+    );
+
+    it('allows client import files for a director only', async () => {
+      const input = {
+        purpose: 'client-import' as const,
+        contentType: 'text/csv',
+        fileSize: 100,
+      };
+      await expect(
+        upload.execute({ ...input, requester: advisor }),
+      ).rejects.toBeInstanceOf(ForbiddenOperationException);
+      await expect(
+        upload.execute({ ...input, requester: director }),
+      ).resolves.toMatchObject({
+        s3Key: expect.stringMatching(/^client-import\/director9\//),
+      });
+    });
   });
 
-  it('should reject download request with empty s3Key', async () => {
-    await expect(
-      generateDownloadUrlUseCase.execute({
-        s3Key: '   ',
-      }),
-    ).rejects.toThrow('s3Key is required');
+  describe('download URL', () => {
+    const ownKey = async () =>
+      (
+        await upload.execute({
+          requester: advisor,
+          purpose: 'visit-evidence',
+          contentType: 'image/webp',
+          fileSize: 10,
+        })
+      ).s3Key;
+
+    it('lets the owner download with a fixed short expiry', async () => {
+      const s3Key = await ownKey();
+      const result = await download.execute({ requester: advisor, s3Key });
+      expect(result.expiresInSeconds).toBe(DOWNLOAD_URL_TTL_SECONDS);
+      expect(result.downloadUrl).toContain(encodeURIComponent(s3Key));
+    });
+
+    it('forbids another advisor (403)', async () => {
+      const s3Key = await ownKey();
+      await expect(
+        download.execute({ requester: otherAdvisor, s3Key }),
+      ).rejects.toBeInstanceOf(ForbiddenOperationException);
+    });
+
+    it('lets a director download any file', async () => {
+      const s3Key = await ownKey();
+      await expect(
+        download.execute({ requester: director, s3Key }),
+      ).resolves.toHaveProperty('downloadUrl');
+    });
+
+    it.each([
+      '',
+      'evidence/123_file.jpg',
+      'visit-evidence/advisorA1/../other/2026/10/x.jpg',
+      'visit-evidence/advisorA1/2026/10/not-a-uuid.jpg',
+    ])(
+      'rejects a key that was not built by the server: "%s"',
+      async (s3Key) => {
+        await expect(
+          download.execute({ requester: director, s3Key }),
+        ).rejects.toThrow('not a valid storage key');
+      },
+    );
   });
 });

@@ -4,6 +4,7 @@ import {
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
+  type Relation,
 } from 'typeorm';
 import { RouteOrmEntity } from './route.orm-entity.js';
 
@@ -19,7 +20,7 @@ export class RouteStopOrmEntity {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'route_id' })
-  route: RouteOrmEntity;
+  route: Relation<RouteOrmEntity>;
 
   @Column({ name: 'customer_id' })
   customerId: number;

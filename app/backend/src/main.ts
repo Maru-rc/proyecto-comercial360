@@ -1,31 +1,49 @@
+// Must stay first: ESM evaluates imports in order, and modules below read process.env.
+import './load-env.js';
+import { Logger, type INestApplication } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { AppModule, ObserveInstrument } from './app.module.js';
+import {
+  AppModule,
+  ObserveInstrument,
+  isObserveEnabled,
+} from './app.module.js';
 import { configureApp } from './app.setup.js';
 import { AppConfigService } from './core/infrastructure/config/app-config.service.js';
 
-// Environment variables are loaded before initializing the app.
-try {
-  process.loadEnvFile();
-} catch (error: unknown) {
-  if (!(
-    error instanceof Error &&
-    'code' in error &&
-    (error as NodeJS.ErrnoException).code === 'ENOENT'
-  )) {
-    throw error;
-  }
-}
-
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
-    instrument: ObserveInstrument,
-  });
+  const app = await NestFactory.create(
+    AppModule,
+    isObserveEnabled ? { instrument: ObserveInstrument } : {},
+  );
 
   // Helmet, /api prefix, CORS, Better Auth and validation (see app.setup.ts)
   configureApp(app);
 
-  // Swagger setup at /api/docs
+  // Behind a reverse proxy (TLS ends there): trust X-Forwarded-* headers
+  app.getHttpAdapter().getInstance().set('trust proxy', 1);
+
+  const swaggerEnabled = isSwaggerEnabled(process.env);
+  if (swaggerEnabled) {
+    setupSwagger(app);
+  }
+
+  const appConfig = app.get(AppConfigService);
+  const port = appConfig.port;
+  await app.listen(port);
+  const logger = new Logger('Bootstrap');
+  logger.log(`Server listening on port ${port} (/api)`);
+  if (swaggerEnabled) {
+    logger.log('Swagger documentation available at /api/docs');
+  }
+}
+
+/** Swagger is public documentation: on in development, opt-in in production. */
+function isSwaggerEnabled(env: NodeJS.ProcessEnv): boolean {
+  return env.NODE_ENV !== 'production' || env.SWAGGER_ENABLED === 'true';
+}
+
+function setupSwagger(app: INestApplication): void {
   const config = new DocumentBuilder()
     .setTitle('Comercial 360 API')
     .setDescription('Commercial Management Platform — Clean Architecture')
@@ -140,11 +158,5 @@ async function bootstrap() {
   });
 
   SwaggerModule.setup('api/docs', app, document);
-
-  const appConfig = app.get(AppConfigService);
-  const port = appConfig.port;
-  await app.listen(port);
-  console.log(`🚀 Server running on: http://localhost:${port}/api`);
-  console.log(`📄 Swagger documentation: http://localhost:${port}/api/docs`);
 }
 await bootstrap();

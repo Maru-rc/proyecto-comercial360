@@ -1,4 +1,10 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  type Relation,
+} from 'typeorm';
 import { RouteStopOrmEntity } from './route-stop.orm-entity.js';
 
 @Entity('routes')
@@ -45,5 +51,5 @@ export class RouteOrmEntity {
   description: string | null;
 
   @OneToMany(() => RouteStopOrmEntity, (routeStop) => routeStop.route)
-  stops: RouteStopOrmEntity[];
+  stops: Relation<RouteStopOrmEntity[]>;
 }
