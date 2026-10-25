@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { AssignRouteUseCase } from './assign-route.use-case.js';
-import type { RouteRepository } from '../ports/route.repository.port.js';
+import type {
+  RouteRecord,
+  RouteRepository,
+} from '../ports/route.repository.port.js';
 import type { RouteVisitGeneratorPort } from '../ports/route-visit-generator.port.js';
 import type { AdvisorReader } from '../../../../domain-contracts/advisors/advisor-reader.interface.js';
 import {
@@ -70,7 +73,9 @@ describe('AssignRouteUseCase (TDD - HU-09)', () => {
     ]);
 
     vi.mocked(mockAdvisorReader.existsById!).mockResolvedValue(true);
-    vi.mocked(mockRouteRepo.save!).mockImplementation(async (r) => r as any);
+    vi.mocked(mockRouteRepo.save!).mockImplementation(
+      async (r) => r as RouteRecord,
+    );
     vi.mocked(mockVisitGenerator.generateVisits!).mockResolvedValue(4);
 
     const result = await useCase.execute({

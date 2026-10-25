@@ -174,10 +174,15 @@ export class TypeOrmClientRepository implements ClientRepository, ClientReader {
           data.primaryContact,
         );
 
-        await this.saveHistoryRecord(manager, existing.id, {
-          ...data.history,
-          action: 'Cliente actualizado',
-        });
+        await this.saveHistoryRecord(
+          manager,
+          existing.id,
+          ClientHistory.create({
+            action: 'Cliente actualizado',
+            user: data.history.user,
+            description: data.history.description,
+          }),
+        );
 
         return 'updated';
       }

@@ -6,6 +6,7 @@ import {
 import type {
   RouteRepository,
   RouteRecord,
+  RouteStopRecord,
 } from '../ports/route.repository.port.js';
 import { InvalidOperationException } from '../../../../domain-contracts/index.js';
 
@@ -37,17 +38,21 @@ class InMemoryRouteRepository implements RouteRepository {
     return this.routes.find((r) => r.id === id) ?? null;
   }
 
+  async findAll(): Promise<RouteRecord[]> {
+    return this.routes;
+  }
+
   async existsByName(name: string): Promise<boolean> {
     return this.routes.some(
       (r) => r.name.toLowerCase() === name.trim().toLowerCase(),
     );
   }
 
-  async setStops(): Promise<any[]> {
+  async setStops(): Promise<RouteStopRecord[]> {
     return [];
   }
 
-  async getStops(): Promise<any[]> {
+  async getStops(): Promise<RouteStopRecord[]> {
     return [];
   }
 }
