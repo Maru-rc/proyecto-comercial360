@@ -167,6 +167,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Unit Tests Frontend (Vitest)
+        run: pnpm --filter frontend run test
+
       # El script build ejecuta `tsc -b` antes de `vite build`
       - name: Typecheck & Build Frontend
         run: pnpm --filter frontend run build
@@ -182,7 +185,7 @@ jobs:
 
       - name: Validate Docker Compose Configuration
         run: |
-          docker compose -f docker-compose.yml config > /dev/null
+          BETTER_AUTH_SECRET=ci-placeholder docker compose -f docker-compose.yml config > /dev/null
           ENV_FILE=.env.production.example docker compose -f docker-compose.prod.yml config > /dev/null
           docker compose -f docker-compose.dev.yml config > /dev/null
 

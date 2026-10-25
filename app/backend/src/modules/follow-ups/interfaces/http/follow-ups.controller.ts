@@ -10,7 +10,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { Auth } from '../../../auth/public-api.js';
+import { Auth } from '../../../../domain-contracts/index.js';
 import { CompleteFollowUpUseCase } from '../../application/complete-follow-up/complete-follow-up.use-case.js';
 import { CreateFollowUpUseCase } from '../../application/create-follow-up/create-follow-up.use-case.js';
 import { ListPendingFollowUpsUseCase } from '../../application/list-pending-follow-ups/list-pending-follow-ups.use-case.js';

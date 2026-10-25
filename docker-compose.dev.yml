@@ -75,67 +75,89 @@ services:
       - dev-network
 
   # ==========================================================
-  # 3. BACKEND NESTJS (MODO DESARROLLO CON HOT-RELOAD)
+  # 3. DEPENDENCIAS DEL WORKSPACE (UNA SOLA VEZ, ANTES DE LOS DEV SERVERS)
+  # ==========================================================
+  # Instala el workspace pnpm completo en volúmenes propios, para que backend y
+  # frontend no compitan escribiendo node_modules ni usen los del host.
+  deps:
+    image: node:22-alpine
+    container_name: comercial360-dev-deps
+    working_dir: /workspace
+    command: sh -c "corepack enable && pnpm install --frozen-lockfile"
+    volumes: &workspace_volumes
+      - ./:/workspace
+      - root_node_modules:/workspace/node_modules
+      - backend_node_modules:/workspace/app/backend/node_modules
+      - frontend_node_modules:/workspace/app/frontend/node_modules
+    networks:
+      - dev-network
+
+  # ==========================================================
+  # 4. BACKEND NESTJS (nest start --watch)
   # ==========================================================
   backend:
-    build:
-      context: .
-      dockerfile: app/backend/Dockerfile
+    image: node:22-alpine
     container_name: comercial360-dev-backend
     restart: unless-stopped
+    working_dir: /workspace/app/backend
+    command: sh -c "corepack enable && pnpm run migration:run && pnpm run start:dev"
     depends_on:
+      deps:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       minio-init:
         condition: service_completed_successfully
     environment:
-      APP_ENV: development
       NODE_ENV: development
       PORT: 3000
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: ${DB_NAME:-comercial360_db}
-      DB_USER: ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-postgres}
-      DB_SSL: "false"
-      RUN_MIGRATIONS: ${RUN_MIGRATIONS:-true}
-      RUN_SEED: ${RUN_SEED:-false}
-      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-dev-secret-change-me-please-32chars}
-      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:5173}
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_NAME: ${DB_NAME:-comercial360_db}
+      DATABASE_USER: ${DB_USER:-postgres}
+      DATABASE_PASSWORD: ${DB_PASSWORD:-postgres}
+      DATABASE_SSL: "false"
+      # Solo para desarrollo; producción exige su propio secreto
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-dev-only-secret-not-for-production-0000}
+      # El navegador entra por Vite (5173), que reenvía /api al backend
+      BETTER_AUTH_URL: http://localhost:5173
+      FRONTEND_URL: http://localhost:5173
+      SWAGGER_ENABLED: "true"
       AWS_REGION: ${AWS_REGION:-us-east-1}
-      S3_BUCKET: ${S3_BUCKET:-comercial360-files}
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY:-minioadmin}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY:-minioadmin}
+      AWS_S3_BUCKET_NAME: ${S3_BUCKET:-comercial360-files}
+      AWS_S3_BUCKET: ${S3_BUCKET:-comercial360-files}
       S3_ENDPOINT: http://minio:9000
       S3_FORCE_PATH_STYLE: "true"
-      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-minioadmin}
-      S3_SECRET_KEY: ${S3_SECRET_KEY:-minioadmin}
       NOMINATIM_USER_AGENT: ${NOMINATIM_USER_AGENT:-comercial360-dev}
+      CHOKIDAR_USEPOLLING: "true"
     ports:
       - "3000:3000"
-    volumes:
-      - ./app/backend:/usr/src/app
-      - backend_node_modules:/usr/src/app/node_modules
+    volumes: *workspace_volumes
     networks:
       - dev-network
 
   # ==========================================================
-  # 4. FRONTEND REACT + VITE (SERVIDOR DE DESARROLLO EN VIVO)
+  # 5. FRONTEND REACT + VITE (HMR)
   # ==========================================================
   frontend:
-    build:
-      context: .
-      dockerfile: app/frontend/Dockerfile
+    image: node:22-alpine
     container_name: comercial360-dev-frontend
     restart: unless-stopped
+    working_dir: /workspace/app/frontend
+    command: sh -c "corepack enable && pnpm exec vite --host 0.0.0.0 --port 5173"
     depends_on:
-      - backend
+      deps:
+        condition: service_completed_successfully
+      backend:
+        condition: service_started
     environment:
       VITE_PROXY_TARGET: http://backend:3000
       CHOKIDAR_USEPOLLING: "true"
     ports:
       - "5173:5173"
-    volumes:
-      - ./app/frontend:/app
-      - frontend_node_modules:/app/node_modules
+    volumes: *workspace_volumes
     networks:
       - dev-network
 
@@ -145,6 +167,7 @@ services:
 volumes:
   pgdata_dev:
   miniodata_dev:
+  root_node_modules:
   backend_node_modules:
   frontend_node_modules:
 

@@ -6,6 +6,7 @@ import { GetQuotationUseCase } from './application/get-quotation/get-quotation.u
 import { InMemoryOrderRepository } from './infrastructure/persistence/in-memory-order.repository.js';
 import { InMemoryQuotationRepository } from './infrastructure/persistence/in-memory-quotation.repository.js';
 import { ListOrdersUseCase } from './application/list-orders/list-orders.use-case.js';
+import type { ClientReader } from '../../domain-contracts/index.js';
 import { ListQuotationsUseCase } from './application/list-quotations/list-quotations.use-case.js';
 import type {
   AdvisorScopeResolver,
@@ -270,6 +271,73 @@ describe('Commercial Module Unit Tests', () => {
         limit: 10,
       });
       expect(orders.meta.total).toBe(0);
+    });
+
+    it('orders: a director sees all, filtered by advisor, with client names', async () => {
+      const clientReader = {
+        existsById: async () => true,
+        getSummaryById: async (id: number) =>
+          id === 1
+            ? {
+                id: 1,
+                legalName: 'Legal S.A.S',
+                commercialName: 'Comercial Uno',
+              }
+            : id === 2
+              ? { id: 2, legalName: 'Solo Legal', commercialName: null }
+              : null,
+        getCoordinatesById: async () => null,
+      } as unknown as ClientReader;
+      const named = new ListOrdersUseCase(orderRepo, scope, clientReader);
+
+      for (const [n, who, clientId] of [
+        ['PED-1', advisor1, 1],
+        ['PED-2', advisor2, 2],
+        ['PED-3', advisor2, 3],
+      ] as const) {
+        await scopedCreateOrder.execute({
+          number: n,
+          clientId,
+          amount: 10,
+          requester: who,
+        });
+      }
+
+      const all = await named.execute({
+        requester: director,
+        page: 1,
+        limit: 10,
+      });
+      expect(all.meta.total).toBe(3);
+      expect(
+        Object.fromEntries(
+          all.data.map((item) => [item.order.number, item.clientName]),
+        ),
+      ).toEqual({
+        'PED-1': 'Comercial Uno',
+        'PED-2': 'Solo Legal',
+        'PED-3': null,
+      });
+
+      const ofAdvisor2 = await named.execute({
+        requester: director,
+        advisorId: 2,
+        page: 1,
+        limit: 10,
+      });
+      expect(ofAdvisor2.data.map((item) => item.order.number).sort()).toEqual([
+        'PED-2',
+        'PED-3',
+      ]);
+
+      await expect(
+        named.execute({
+          requester: advisor1,
+          advisorId: 2,
+          page: 1,
+          limit: 10,
+        }),
+      ).rejects.toBeInstanceOf(ForbiddenOperationException);
     });
   });
 });

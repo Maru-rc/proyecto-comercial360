@@ -132,7 +132,9 @@ for FILE in $FILES; do
         case "$TARGET_PATH" in
           "modules/$CURRENT_MOD/"* | domain-contracts/*) continue ;;
         esac
-        if [[ "$TARGET_PATH" =~ (^|/)(domain|application|infrastructure|interfaces)/ ]]; then
+        # Capas internas y fachadas propias de otro módulo (presentation/, public-api).
+        # Importar su *.module.ts sigue permitido: Nest lo necesita para inyectar.
+        if [[ "$TARGET_PATH" =~ (^|/)(domain|application|infrastructure|interfaces|presentation)/ || "$TARGET_PATH" =~ ^modules/[^/]+/public-api(\.js|\.ts)?$ ]]; then
           TARGET_MOD=$(echo "$TARGET_PATH" | sed -E 's#^modules/##; s#/.*##')
           echo -e "${RED}[ERROR CLEAN ARCHITECTURE / ISP - BARRIL CENTRAL VIOLADO]${NC}"
           echo -e "  Archivo: ${YELLOW}$FILE${NC}"

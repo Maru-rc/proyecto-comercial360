@@ -7,9 +7,11 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
-import { AuthGuard } from '../auth/presentation/auth.guard.js';
-import type { RequestWithUser } from '../auth/presentation/auth.guard.js';
-import { RolesGuard } from '../auth/presentation/roles.guard.js';
+import {
+  AuthGuard,
+  RolesGuard,
+  type RequestWithUser,
+} from '../../domain-contracts/index.js';
 import { GetWeeklyKpisUseCase } from './application/use-cases/get-weekly-kpis.use-case.js';
 import { WeeklyKpisQueryDto } from './application/dtos/weekly-kpis-query.dto.js';
 import { WeeklyKpisResponseDto } from './application/dtos/weekly-kpis-response.dto.js';

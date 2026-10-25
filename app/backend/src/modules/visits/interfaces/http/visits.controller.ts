@@ -13,7 +13,11 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { Auth, CurrentUser, type User } from '../../../auth/public-api.js';
+import {
+  Auth,
+  CurrentUser,
+  type User,
+} from '../../../../domain-contracts/index.js';
 import { AuthorizeVisitAccessUseCase } from '../../application/authorize-visit-access/authorize-visit-access.use-case.js';
 import { ADVISOR_SCOPE_RESOLVER } from '../../application/ports/advisor-scope-resolver.port.js';
 import type { AdvisorScopeResolver } from '../../application/ports/advisor-scope-resolver.port.js';

@@ -34,10 +34,10 @@ export default defineConfig({
       // Set just below the current baseline (stmts 88%, branches 78%,
       // funcs 91%, lines 88%): coverage can grow, never drop.
       thresholds: {
-        statements: 85,
-        branches: 75,
-        functions: 88,
-        lines: 85,
+        statements: 87,
+        branches: 77,
+        functions: 90,
+        lines: 87,
       },
     },
   },

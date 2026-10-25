@@ -19,8 +19,16 @@ export function isRole(value: unknown): value is Role {
   return isUserRole(value);
 }
 
-export type { AuthenticatedUser } from '../../modules/auth/domain/authenticated-user.js';
+export type {
+  AuthenticatedUser,
+  AuthenticatedUser as User,
+} from '../../modules/auth/domain/authenticated-user.js';
 export {
   Auth,
   CurrentUser,
 } from '../../modules/auth/presentation/auth.decorator.js';
+export {
+  AuthGuard,
+  type RequestWithUser,
+} from '../../modules/auth/presentation/auth.guard.js';
+export { RolesGuard } from '../../modules/auth/presentation/roles.guard.js';
