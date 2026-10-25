@@ -9,6 +9,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Auth } from '../../../auth/public-api.js';
 import { CreateOrderUseCase } from '../../application/create-order/create-order.use-case.js';
 import { CreateQuotationUseCase } from '../../application/create-quotation/create-quotation.use-case.js';
 import { GetOrderUseCase } from '../../application/get-order/get-order.use-case.js';
@@ -16,6 +17,8 @@ import { GetQuotationUseCase } from '../../application/get-quotation/get-quotati
 import { CreateOrderDto } from './dto/create-order.dto.js';
 import { CreateQuotationDto } from './dto/create-quotation.dto.js';
 
+// HU-10: requires a valid session (401 without a session)
+@Auth()
 @ApiTags('Commercial')
 @Controller('commercial')
 export class CommercialController {

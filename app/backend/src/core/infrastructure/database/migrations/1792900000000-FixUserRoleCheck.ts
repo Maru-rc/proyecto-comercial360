@@ -1,5 +1,17 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
+/**
+ * Corrective migration for databases created with the earlier HU-09 branch.
+ *
+ * That branch created "user" with CHECK ("role" IN ('ASESOR', 'DIRECTOR')) and
+ * recorded migration 1792500000001 as executed. The current definition of that
+ * migration uses ('ADVISOR', 'DIRECTOR'), but it never runs again on those
+ * databases, so seeding an ADVISOR fails with a CHK_user_role violation.
+ *
+ * This migration is safe to run on any database:
+ * - It does not delete tables or users.
+ * - On a fresh database it leaves the constraint exactly as it already is.
+ */
 export class FixUserRoleCheck1792900000000 implements MigrationInterface {
   name = 'FixUserRoleCheck1792900000000';
 

@@ -1,8 +1,13 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+import { Auth } from '../../../auth/public-api.js';
 import { GenerateDownloadUrlUseCase } from '../../application/generate-download-url/generate-download-url.use-case.js';
 import { GenerateUploadUrlUseCase } from '../../application/generate-upload-url/generate-upload-url.use-case.js';
 import { GenerateUploadUrlDto } from './dto/generate-upload-url.dto.js';
 
+// HU-10: requires a valid session (401 without a session)
+@ApiTags('Storage')
+@Auth()
 @Controller('storage')
 export class StorageController {
   constructor(

@@ -12,6 +12,8 @@ import { RoutesController } from './routes/routes.controller.js';
 import { StorageController } from './storage/interfaces/http/storage.controller.js';
 import { VisitsController } from './visits/interfaces/http/visits.controller.js';
 
+// HU-10: every controller must be protected by default. These tests read the
+// real class metadata, so they fail if someone removes @Auth() or @UseGuards.
 const rolesOf = (controller: object) =>
   Reflect.getMetadata(ROLES_KEY, controller) as string[] | undefined;
 const guardsOf = (controller: object) =>
