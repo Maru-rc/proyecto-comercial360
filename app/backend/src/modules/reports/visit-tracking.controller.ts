@@ -1,6 +1,8 @@
 import { Controller, Get, Query, Req, UseGuards } from '@nestjs/common';
 import {
   ApiCookieAuth,
+  ApiForbiddenResponse,
+  ApiUnauthorizedResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
@@ -14,6 +16,10 @@ import { VisitTrackingResponseDto } from './application/dtos/visit-tracking-resp
 
 @ApiTags('visitas')
 @ApiCookieAuth()
+@ApiUnauthorizedResponse({ description: 'No valid session found' })
+@ApiForbiddenResponse({
+  description: 'Advisor requesting another advisor, or advisor without record',
+})
 @UseGuards(AuthGuard, RolesGuard)
 @Controller('visitas')
 export class VisitTrackingController {

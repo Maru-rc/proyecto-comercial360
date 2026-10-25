@@ -10,6 +10,7 @@ import {
   type VisitTrackingRow,
 } from '../ports/visit-tracking.port.js';
 import { resolveVisitTrackingPeriod } from './visit-tracking-period.util.js';
+import { TRACKING_SCOPE_RESOLVER } from '../ports/tracking-scope-resolver.port.js';
 
 export interface TrackingRequestUser {
   id: string;
@@ -23,9 +24,6 @@ export interface TrackingScopeResolver {
     requestedId?: number,
   ): Promise<number | null>;
 }
-
-export const TRACKING_SCOPE_RESOLVER = Symbol('TRACKING_SCOPE_RESOLVER');
-
 @Injectable()
 export class GetVisitTrackingUseCase {
   constructor(

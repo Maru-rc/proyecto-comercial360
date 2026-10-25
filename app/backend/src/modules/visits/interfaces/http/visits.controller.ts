@@ -1,8 +1,9 @@
 import {
+  BadRequestException,
   Body,
   Controller,
-  ForbiddenException,
   Get,
+  Inject,
   HttpCode,
   HttpStatus,
   Param,
@@ -12,12 +13,14 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { CurrentUser, UserRole, type User } from '../../../auth/public-api.js';
+import { Auth, CurrentUser, type User } from '../../../auth/public-api.js';
+import { AuthorizeVisitAccessUseCase } from '../../application/authorize-visit-access/authorize-visit-access.use-case.js';
+import { ADVISOR_SCOPE_RESOLVER } from '../../application/ports/advisor-scope-resolver.port.js';
+import type { AdvisorScopeResolver } from '../../application/ports/advisor-scope-resolver.port.js';
 import { ListAgendaUseCase } from '../../application/list-agenda/list-agenda.use-case.js';
 import { GetMapUseCase } from '../../application/get-map/get-map.use-case.js';
 import { RecordVisitUseCase } from '../../application/record-visit/record-visit.use-case.js';
 import { ScheduleVisitUseCase } from '../../application/schedule-visit/schedule-visit.use-case.js';
-import { GetVisitUseCase } from '../../application/get-visit/get-visit.use-case.js';
 import {
   ListAgendaQueryDto,
   GetMapQueryDto,
@@ -25,7 +28,12 @@ import {
 import { RecordVisitOutcomeDto } from './dto/record-visit-outcome.dto.js';
 import { CreateVisitDto } from './dto/create-visit.dto.js';
 
+// HU-10: every route requires a session (401). An advisor only sees and
+// records their own visits; a director can see everything. The advisor id is
+// NEVER taken from the client: it is resolved from the session
+// (user.email = advisor.email).
 @ApiTags('Visits')
+@Auth()
 @Controller('visits')
 export class VisitsController {
   constructor(
@@ -33,7 +41,9 @@ export class VisitsController {
     private readonly getMapUseCase: GetMapUseCase,
     private readonly recordVisitUseCase: RecordVisitUseCase,
     private readonly scheduleVisitUseCase: ScheduleVisitUseCase,
-    private readonly getVisitUseCase: GetVisitUseCase,
+    private readonly authorizeVisitAccess: AuthorizeVisitAccessUseCase,
+    @Inject(ADVISOR_SCOPE_RESOLVER)
+    private readonly advisorScope: AdvisorScopeResolver,
   ) {}
 
   @Get('agenda')
@@ -49,25 +59,18 @@ export class VisitsController {
   })
   async getAgenda(
     @Query() query: ListAgendaQueryDto,
-    @CurrentUser() user?: User,
+    @CurrentUser() user: User,
   ) {
-    let targetAdvisorId = query.targetAdvisorId;
-
-    if (user && user.role === UserRole.ADVISOR) {
-      const numericUserId = Number(user.id);
-      if (!Number.isNaN(numericUserId) && numericUserId > 0) {
-        if (targetAdvisorId && targetAdvisorId !== numericUserId) {
-          throw new ForbiddenException(
-            'Advisors are only authorized to view their own agenda',
-          );
-        }
-        targetAdvisorId = numericUserId;
-      }
-    }
+    // Advisor: always their own agenda (another id => 403). Director: the one
+    // requested, or all of them.
+    const advisorId = await this.advisorScope.execute(
+      user,
+      query.targetAdvisorId,
+    );
 
     return this.listAgendaUseCase.execute({
       date: query.targetDate,
-      advisorId: targetAdvisorId,
+      advisorId: advisorId ?? undefined,
     });
   }
 
@@ -84,24 +87,15 @@ export class VisitsController {
     status: 403,
     description: 'Advisor attempting to view another advisor map',
   })
-  async getMap(@Query() query: GetMapQueryDto, @CurrentUser() user?: User) {
-    let targetAdvisorId = query.targetAdvisorId;
-
-    if (user && user.role === UserRole.ADVISOR) {
-      const numericUserId = Number(user.id);
-      if (!Number.isNaN(numericUserId) && numericUserId > 0) {
-        if (targetAdvisorId && targetAdvisorId !== numericUserId) {
-          throw new ForbiddenException(
-            'Advisors are only authorized to view their own route map',
-          );
-        }
-        targetAdvisorId = numericUserId;
-      }
-    }
+  async getMap(@Query() query: GetMapQueryDto, @CurrentUser() user: User) {
+    const advisorId = await this.advisorScope.execute(
+      user,
+      query.targetAdvisorId,
+    );
 
     return this.getMapUseCase.execute({
       date: query.targetDate,
-      advisorId: targetAdvisorId,
+      advisorId: advisorId ?? undefined,
     });
   }
 
@@ -110,14 +104,23 @@ export class VisitsController {
   @ApiOperation({ summary: 'Create an unscheduled/unplanned visit' })
   @ApiResponse({ status: 201, description: 'Visit successfully created' })
   @ApiResponse({ status: 400, description: 'Invalid payload' })
+  @ApiResponse({
+    status: 403,
+    description: 'Advisor attempting to create a visit for another advisor',
+  })
   async createUnscheduledVisit(
     @Body() dto: CreateVisitDto,
-    @CurrentUser() user?: User,
+    @CurrentUser() user: User,
   ) {
-    const userNumericId = user ? Number(user.id) : NaN;
-    const advisorId =
-      dto.resolvedAdvisorId ??
-      (!Number.isNaN(userNumericId) && userNumericId > 0 ? userNumericId : 1);
+    // Advisor: the visit is created under their name. Director: must say which
+    // advisor the visit belongs to.
+    const advisorId = await this.advisorScope.execute(
+      user,
+      dto.resolvedAdvisorId,
+    );
+    if (advisorId === null) {
+      throw new BadRequestException('advisorId is required for directors');
+    }
 
     const visit = await this.scheduleVisitUseCase.execute({
       clientId: dto.resolvedClientId,
@@ -156,6 +159,7 @@ export class VisitsController {
       'Visit outcome and embedded quotes/orders/follow-ups registered',
   })
   @ApiResponse({ status: 400, description: 'Validation error' })
+  @ApiResponse({ status: 403, description: 'Visit belongs to another advisor' })
   @ApiResponse({ status: 404, description: 'Visit or client not found' })
   @ApiResponse({
     status: 409,
@@ -164,8 +168,11 @@ export class VisitsController {
   async recordVisitOutcome(
     @Param('id', ParseIntPipe) visitId: number,
     @Body() dto: RecordVisitOutcomeDto,
-    @CurrentUser() user?: User,
+    @CurrentUser() user: User,
   ) {
+    // 404 if it does not exist; 403 if it belongs to another advisor
+    await this.authorizeVisitAccess.execute(user, visitId);
+
     const quotation = dto.resolvedQuotation;
     const order = dto.resolvedOrder;
     const followUp = dto.resolvedFollowUp;
@@ -199,8 +206,8 @@ export class VisitsController {
             observation: followUp.resolvedObservation,
           }
         : undefined,
-      user:
-        dto.resolvedUser ?? (user ? `${user.role}:${user.email}` : 'ADVISOR'),
+      // The recording user comes from the session, not from the request body
+      user: `${user.role}:${user.email}`,
     });
 
     return {
@@ -216,9 +223,13 @@ export class VisitsController {
   @Get(':id')
   @ApiOperation({ summary: 'Get visit details by ID' })
   @ApiResponse({ status: 200, description: 'Visit found' })
+  @ApiResponse({ status: 403, description: 'Visit belongs to another advisor' })
   @ApiResponse({ status: 404, description: 'Visit not found' })
-  async getVisit(@Param('id', ParseIntPipe) id: number) {
-    const visit = await this.getVisitUseCase.execute(id);
+  async getVisit(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: User,
+  ) {
+    const visit = await this.authorizeVisitAccess.execute(user, id);
     return {
       id: visit.id,
       clientId: visit.clientId,

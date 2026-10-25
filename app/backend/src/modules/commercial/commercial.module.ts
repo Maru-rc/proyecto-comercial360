@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { AuthModule } from '../auth/auth.module.js';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import {
   ORDER_READER,
@@ -17,7 +18,10 @@ import { TypeOrmOrderRepository } from './infrastructure/persistence/typeorm-ord
 import { TypeOrmQuotationRepository } from './infrastructure/persistence/typeorm-quotation.repository.js';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([QuotationOrmEntity, OrderOrmEntity])],
+  imports: [
+    AuthModule,
+    TypeOrmModule.forFeature([QuotationOrmEntity, OrderOrmEntity]),
+  ],
   controllers: [CommercialController],
   providers: [
     TypeOrmQuotationRepository,

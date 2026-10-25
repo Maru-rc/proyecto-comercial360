@@ -1,6 +1,8 @@
 import { Controller, Get, Query, Req, Res, UseGuards } from '@nestjs/common';
 import {
   ApiCookieAuth,
+  ApiForbiddenResponse,
+  ApiUnauthorizedResponse,
   ApiOperation,
   ApiProduces,
   ApiTags,
@@ -14,6 +16,10 @@ import { VisitTrackingCsvExporter } from './infrastructure/visit-tracking-csv.ex
 
 @ApiTags('reports')
 @ApiCookieAuth()
+@ApiUnauthorizedResponse({ description: 'No valid session found' })
+@ApiForbiddenResponse({
+  description: 'Advisor requesting another advisor, or advisor without record',
+})
 @UseGuards(AuthGuard, RolesGuard)
 @Controller('reportes')
 export class VisitTrackingCsvController {

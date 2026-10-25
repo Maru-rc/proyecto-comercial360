@@ -1,6 +1,8 @@
 import { Controller, Get, Query, Req, UseGuards } from '@nestjs/common';
 import {
   ApiCookieAuth,
+  ApiForbiddenResponse,
+  ApiUnauthorizedResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
@@ -14,6 +16,10 @@ import { WeeklyKpisResponseDto } from './application/dtos/weekly-kpis-response.d
 
 @ApiTags('dashboard')
 @ApiCookieAuth()
+@ApiUnauthorizedResponse({ description: 'No valid session found' })
+@ApiForbiddenResponse({
+  description: 'Advisor requesting another advisor, or advisor without record',
+})
 @UseGuards(AuthGuard, RolesGuard)
 @Controller('dashboard')
 export class DashboardController {

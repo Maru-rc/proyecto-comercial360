@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { AuthModule } from '../auth/auth.module.js';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { FOLLOW_UP_READER } from '../../domain-contracts/index.js';
 import { CompleteFollowUpUseCase } from './application/complete-follow-up/complete-follow-up.use-case.js';
@@ -10,7 +11,7 @@ import { TypeOrmFollowUpRepository } from './infrastructure/persistence/typeorm-
 import { FollowUpsController } from './interfaces/http/follow-ups.controller.js';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([FollowUpOrmEntity])],
+  imports: [AuthModule, TypeOrmModule.forFeature([FollowUpOrmEntity])],
   controllers: [FollowUpsController],
   providers: [
     TypeOrmFollowUpRepository,

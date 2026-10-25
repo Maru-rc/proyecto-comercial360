@@ -240,14 +240,14 @@ describe('Authentication and Roles (e2e, PostgreSQL)', () => {
         .get('/api/me')
         .set('Cookie', cookie)
         .expect(200);
-      expect(res.body).toMatchObject({
+      expect(res.body.data).toMatchObject({
         name: 'Advisor Test',
         email: ADVISOR.email,
         role: 'ADVISOR',
         advisor: { phone: '3000000000', status: 'ACTIVE' },
       });
-      expect(typeof res.body.id).toBe('string');
-      expect(typeof res.body.advisor.idAdvisor).toBe('number');
+      expect(typeof res.body.data.id).toBe('string');
+      expect(typeof res.body.data.advisor.idAdvisor).toBe('number');
       // No internal secrets are exposed
       expect(JSON.stringify(res.body)).not.toMatch(/password|token/i);
     });
@@ -258,7 +258,7 @@ describe('Authentication and Roles (e2e, PostgreSQL)', () => {
         .get('/api/me')
         .set('Cookie', cookie)
         .expect(200);
-      expect(res.body).toMatchObject({
+      expect(res.body.data).toMatchObject({
         email: DIRECTOR.email,
         role: 'DIRECTOR',
         advisor: null,
@@ -345,7 +345,7 @@ describe('Authentication and Roles (e2e, PostgreSQL)', () => {
         .get('/api/me')
         .set('Cookie', cookie)
         .expect(200);
-      expect(me.body.role).toBe('ADVISOR');
+      expect(me.body.data.role).toBe('ADVISOR');
     });
 
     it('database rejects roles other than ADVISOR or DIRECTOR', async () => {
