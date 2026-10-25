@@ -29,7 +29,8 @@ export interface ICliente {
   id_zona?: string;
   zona_nombre?: string;
   id_tipo_cliente?: string;
-  tipo_cliente_nombre: 'Industrial' | 'Distribuidor' | 'Retail' | 'Constructor' | string;
+  tipo_cliente_nombre:
+    'Industrial' | 'Distribuidor' | 'Retail' | 'Constructor' | string;
   id_potencial?: string;
   potencial_nombre: 'Alto' | 'Medio' | 'Bajo';
   id_estado_cliente?: string;

@@ -14,7 +14,9 @@ export const DailyAgenda: React.FC<DailyAgendaProps> = ({
 }) => {
   const navigate = useNavigate();
   // By default, open item #3 (ConstruInnova) to match mockup diseno_02.png
-  const [selectedId, setSelectedId] = useState<string>(items[2]?.id || items[0]?.id || '');
+  const [selectedId, setSelectedId] = useState<string>(
+    items[2]?.id || items[0]?.id || '',
+  );
 
   return (
     <div className="flex flex-col h-full bg-white rounded-xl border border-slate-200/90 shadow-xs p-4">
@@ -91,20 +93,28 @@ export const DailyAgenda: React.FC<DailyAgendaProps> = ({
                   <div className="space-y-1 text-xs">
                     {item.contacto && (
                       <div className="flex items-baseline gap-1.5 text-slate-600">
-                        <span className="font-semibold text-slate-800">Contacto:</span>
+                        <span className="font-semibold text-slate-800">
+                          Contacto:
+                        </span>
                         <span>{item.contacto}</span>
                       </div>
                     )}
                     {item.objetivo && (
                       <div className="flex items-baseline gap-1.5 text-slate-600">
-                        <span className="font-semibold text-slate-800">Objetivo:</span>
+                        <span className="font-semibold text-slate-800">
+                          Objetivo:
+                        </span>
                         <span>{item.objetivo}</span>
                       </div>
                     )}
                     {item.potencial && (
                       <div className="flex items-baseline gap-1.5 text-slate-600">
-                        <span className="font-semibold text-slate-800">Potencial:</span>
-                        <span className="text-[#EA580C] font-bold">{item.potencial}</span>
+                        <span className="font-semibold text-slate-800">
+                          Potencial:
+                        </span>
+                        <span className="text-[#EA580C] font-bold">
+                          {item.potencial}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -116,8 +126,8 @@ export const DailyAgenda: React.FC<DailyAgendaProps> = ({
                       e.stopPropagation();
                       navigate(
                         `/visitas/registrar?cliente=${encodeURIComponent(
-                          item.cliente
-                        )}&hora=${encodeURIComponent(item.hora)}`
+                          item.cliente,
+                        )}&hora=${encodeURIComponent(item.hora)}`,
                       );
                     }}
                     className="w-full flex items-center justify-center gap-2 rounded-lg bg-[#EA580C] hover:bg-[#D9480F] text-white py-2 px-4 text-xs font-bold shadow-xs cursor-pointer transition-colors"

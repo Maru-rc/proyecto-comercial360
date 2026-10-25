@@ -50,7 +50,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   // If isDesktopOpen is passed (legacy), collapsed is !isDesktopOpen
   const collapsed = isDesktopOpen !== undefined ? !isDesktopOpen : isCollapsed;
   const handleMobileClose = onMobileClose ?? onClose ?? (() => {});
-  const handleToggleCollapse = onToggleCollapse ?? onToggleDesktop ?? (() => {});
+  const handleToggleCollapse =
+    onToggleCollapse ?? onToggleDesktop ?? (() => {});
 
   const isRutasRoute = location.pathname.startsWith('/rutas');
   const showRutasSubmenu = rutasExpanded || isRutasRoute;
@@ -95,7 +96,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <aside
         className={`fixed top-0 bottom-0 left-0 z-50 flex flex-col justify-between bg-[#0B1527] text-slate-300 transition-[width,transform] duration-300 ease-in-out md:static md:z-auto md:translate-x-0 ${
           // Mobile open / close
-          mobileOpen ? 'translate-x-0 w-72 max-w-[85vw] shadow-2xl' : '-translate-x-full w-72 max-w-[85vw]'
+          mobileOpen
+            ? 'translate-x-0 w-72 max-w-[85vw] shadow-2xl'
+            : '-translate-x-full w-72 max-w-[85vw]'
         } ${
           // Desktop width: w-20 (collapsed) vs w-64 (expanded)
           collapsed ? 'md:w-20' : 'md:w-64'
@@ -165,7 +168,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
             const Icon = item.icon;
             const isActive =
               item.path === '/'
-                ? location.pathname === '/' || location.pathname === '/dashboard'
+                ? location.pathname === '/' ||
+                  location.pathname === '/dashboard'
                 : location.pathname.startsWith(item.path);
 
             if (collapsed) {
@@ -205,12 +209,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <Icon className={`h-4 w-4 ${isActive ? 'text-[#EA580C]' : 'text-slate-400'}`} />
+                      <Icon
+                        className={`h-4 w-4 ${isActive ? 'text-[#EA580C]' : 'text-slate-400'}`}
+                      />
                       <span className="whitespace-nowrap">{item.name}</span>
                     </div>
                     <ChevronDown
                       className={`h-3.5 w-3.5 transition-transform ${
-                        showRutasSubmenu ? 'rotate-180 text-white' : 'text-slate-400'
+                        showRutasSubmenu
+                          ? 'rotate-180 text-white'
+                          : 'text-slate-400'
                       }`}
                     />
                   </button>
@@ -255,7 +263,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     : 'text-slate-300 hover:bg-slate-800/50 hover:text-white'
                 }`}
               >
-                <Icon className={`h-4 w-4 ${isActive ? 'text-[#EA580C]' : 'text-slate-400'}`} />
+                <Icon
+                  className={`h-4 w-4 ${isActive ? 'text-[#EA580C]' : 'text-slate-400'}`}
+                />
                 <span className="whitespace-nowrap">{item.name}</span>
               </NavLink>
             );
@@ -278,13 +288,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
               }
             >
               <Target className="h-5 w-5 text-orange-400" />
-              <span className="text-[10px] font-extrabold text-white mt-1">78%</span>
+              <span className="text-[10px] font-extrabold text-white mt-1">
+                78%
+              </span>
             </div>
           ) : isDirector ? (
             <div className="rounded-xl bg-slate-800/60 p-3.5 border border-slate-700/50">
               <div className="flex items-center gap-2 mb-2 text-orange-400">
                 <Target className="h-4 w-4" />
-                <span className="text-xs font-bold text-white">Resumen regional</span>
+                <span className="text-xs font-bold text-white">
+                  Resumen regional
+                </span>
               </div>
               <div className="space-y-1.5">
                 <div className="flex justify-between text-xs">
@@ -305,11 +319,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="rounded-xl bg-slate-800/60 p-3.5 border border-slate-700/50">
               <div className="flex items-center gap-2 mb-1.5 text-orange-400">
                 <Target className="h-4 w-4" />
-                <span className="text-xs font-bold text-white">Objetivo semanal</span>
+                <span className="text-xs font-bold text-white">
+                  Objetivo semanal
+                </span>
               </div>
               <div className="flex items-baseline gap-1.5 my-1">
                 <span className="text-xl font-extrabold text-white">78%</span>
-                <span className="text-[11px] text-slate-400">de cumplimiento</span>
+                <span className="text-[11px] text-slate-400">
+                  de cumplimiento
+                </span>
               </div>
               {/* Progress Bar */}
               <div className="w-full bg-slate-700 h-2 rounded-full overflow-hidden my-2">

@@ -13,7 +13,11 @@ import { IS3UploadResponse } from '../../api/storage';
 
 interface QuickActionsProps {
   onQuoteCreated?: (numero: string, valor: number) => void;
-  onOrderCreated?: (numero: string, valor: number, fechaEntrega: string) => void;
+  onOrderCreated?: (
+    numero: string,
+    valor: number,
+    fechaEntrega: string,
+  ) => void;
   onPhotoUploaded?: (upload: IS3UploadResponse) => void;
   clienteNombre?: string;
 }

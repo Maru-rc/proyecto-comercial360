@@ -90,7 +90,9 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ data }) => {
               <p className="text-base font-extrabold text-[#0F172A] truncate tracking-tight">
                 {card.value}
               </p>
-              <p className="text-[10px] text-slate-400 truncate">{card.subtext}</p>
+              <p className="text-[10px] text-slate-400 truncate">
+                {card.subtext}
+              </p>
             </div>
           </div>
         );

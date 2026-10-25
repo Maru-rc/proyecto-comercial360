@@ -6,14 +6,18 @@ interface VisitFollowupFormProps {
   register: UseFormRegister<IVisitaRegistroFormData>;
 }
 
-export const VisitFollowupForm: React.FC<VisitFollowupFormProps> = ({ register }) => {
+export const VisitFollowupForm: React.FC<VisitFollowupFormProps> = ({
+  register,
+}) => {
   return (
     <div className="bg-white rounded-xl border border-slate-200/90 p-5 shadow-xs space-y-4">
       <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
         <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[#0F172A] text-white text-xs font-bold">
           5
         </div>
-        <h3 className="text-sm font-bold text-[#0F172A]">Próximo seguimiento</h3>
+        <h3 className="text-sm font-bold text-[#0F172A]">
+          Próximo seguimiento
+        </h3>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

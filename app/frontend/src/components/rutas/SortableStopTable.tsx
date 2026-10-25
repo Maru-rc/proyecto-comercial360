@@ -80,7 +80,7 @@ const SortableRow: React.FC<SortableRowProps> = ({ parada, onDelete }) => {
       <td className="py-2.5 px-2 text-center w-10">
         <span
           className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white ${getBadgeColor(
-            parada.orden
+            parada.orden,
           )}`}
         >
           {parada.orden}
@@ -147,7 +147,7 @@ export const SortableStopTable: React.FC = () => {
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -198,7 +198,8 @@ export const SortableStopTable: React.FC = () => {
             {paradas.length === 0 && (
               <tr>
                 <td colSpan={8} className="py-8 text-center text-slate-400">
-                  No hay paradas en esta ruta. Usa el buscador lateral para agregar clientes.
+                  No hay paradas en esta ruta. Usa el buscador lateral para
+                  agregar clientes.
                 </td>
               </tr>
             )}

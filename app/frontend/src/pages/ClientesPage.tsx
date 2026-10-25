@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Search,
   Plus,
@@ -13,43 +13,43 @@ import {
   Upload,
   Download,
   AlertCircle,
-} from "lucide-react";
-import { ICliente } from "../types/cliente";
+} from 'lucide-react';
+import { ICliente } from '../types/cliente';
 import {
   getClientes,
   crearCliente,
   importarClientes,
   descargarPlantilla,
   type ImportSummary,
-} from "../api/clientes";
-import { Badge } from "../components/common/Badge";
-import { Modal } from "../components/common/Modal";
-import { Button } from "../components/common/Button";
-import { Input } from "../components/common/Input";
-import { Pagination } from "../components/common/Pagination";
+} from '../api/clientes';
+import { Badge } from '../components/common/Badge';
+import { Modal } from '../components/common/Modal';
+import { Button } from '../components/common/Button';
+import { Input } from '../components/common/Input';
+import { Pagination } from '../components/common/Pagination';
 
 export const ClientesPage: React.FC = () => {
   const navigate = useNavigate();
   const [clientes, setClientes] = useState<ICliente[]>([]);
-  const [search, setSearch] = useState("");
-  const [tipo, setTipo] = useState("Todos");
+  const [search, setSearch] = useState('');
+  const [tipo, setTipo] = useState('Todos');
   const [selectedCliente, setSelectedCliente] = useState<ICliente | null>(null);
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
-  const [toastMessage, setToastMessage] = useState("");
+  const [toastMessage, setToastMessage] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
   // New Client form state
-  const [newNombre, setNewNombre] = useState("");
-  const [newNit, setNewNit] = useState("");
-  const [newDireccion, setNewDireccion] = useState("");
-  const [newMunicipio, setNewMunicipio] = useState("Barranquilla");
-  const [newTipo, setNewTipo] = useState("Industrial");
-  const [newPotencial, setNewPotencial] = useState("Alto");
-  const [newTelefono, setNewTelefono] = useState("");
-  const [newEmail, setNewEmail] = useState("");
-  const [newContacto, setNewContacto] = useState("");
-  const [newCargo, setNewCargo] = useState("Jefe de Compras");
+  const [newNombre, setNewNombre] = useState('');
+  const [newNit, setNewNit] = useState('');
+  const [newDireccion, setNewDireccion] = useState('');
+  const [newMunicipio, setNewMunicipio] = useState('Barranquilla');
+  const [newTipo, setNewTipo] = useState('Industrial');
+  const [newPotencial, setNewPotencial] = useState('Alto');
+  const [newTelefono, setNewTelefono] = useState('');
+  const [newEmail, setNewEmail] = useState('');
+  const [newContacto, setNewContacto] = useState('');
+  const [newCargo, setNewCargo] = useState('Jefe de Compras');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
@@ -66,7 +66,7 @@ export const ClientesPage: React.FC = () => {
 
   const triggerBlobDownload = (blob: Blob, filename: string) => {
     const url = window.URL.createObjectURL(blob);
-    const link = document.createElement("a");
+    const link = document.createElement('a');
     link.href = url;
     link.download = filename;
     document.body.appendChild(link);
@@ -78,13 +78,13 @@ export const ClientesPage: React.FC = () => {
   const handleDownloadTemplate = async () => {
     try {
       const blob = await descargarPlantilla();
-      triggerBlobDownload(blob, "plantilla_clientes.csv");
+      triggerBlobDownload(blob, 'plantilla_clientes.csv');
     } catch {
       const csv =
-        "nit,razon_social,nombre_comercial,direccion,departamento,municipio,barrio,telefono,email,zona,tipo_cliente,potencial,estado_cliente,frecuencia_visita_dias,latitud,longitud,contacto_nombre,contacto_cargo,contacto_telefono,contacto_celular,contacto_email\n900.123.456-1,Metalúrgicas S.A.S,Metalúrgicas,Cra 38 # 74-120,Atlántico,Barranquilla,Betania,3001234567,contacto@metalurgicas.com,NORTE,Industrial,Alto,Activo,7,,,Carlos Julio Mendoza,Jefe de Compras,3001234567,3001234567,cmendoza@metalurgicas.com\n";
+        'nit,razon_social,nombre_comercial,direccion,departamento,municipio,barrio,telefono,email,zona,tipo_cliente,potencial,estado_cliente,frecuencia_visita_dias,latitud,longitud,contacto_nombre,contacto_cargo,contacto_telefono,contacto_celular,contacto_email\n900.123.456-1,Metalúrgicas S.A.S,Metalúrgicas,Cra 38 # 74-120,Atlántico,Barranquilla,Betania,3001234567,contacto@metalurgicas.com,NORTE,Industrial,Alto,Activo,7,,,Carlos Julio Mendoza,Jefe de Compras,3001234567,3001234567,cmendoza@metalurgicas.com\n';
       triggerBlobDownload(
-        new Blob([csv], { type: "text/csv;charset=utf-8;" }),
-        "plantilla_clientes.csv",
+        new Blob([csv], { type: 'text/csv;charset=utf-8;' }),
+        'plantilla_clientes.csv',
       );
     }
   };
@@ -99,13 +99,13 @@ export const ClientesPage: React.FC = () => {
       setToastMessage(
         `Importación completada: ${res.creados} creados, ${res.actualizados} actualizados.`,
       );
-      setTimeout(() => setToastMessage(""), 4000);
+      setTimeout(() => setToastMessage(''), 4000);
       fetchClientes();
     } catch (err: any) {
       setToastMessage(
-        "Error al importar: " + (err.response?.data?.message || err.message),
+        'Error al importar: ' + (err.response?.data?.message || err.message),
       );
-      setTimeout(() => setToastMessage(""), 4000);
+      setTimeout(() => setToastMessage(''), 4000);
     } finally {
       setIsImporting(false);
     }
@@ -122,19 +122,19 @@ export const ClientesPage: React.FC = () => {
         nit:
           newNit ||
           `900.${Math.floor(100 + Math.random() * 900)}.${Math.floor(100 + Math.random() * 900)}-1`,
-        direccion: newDireccion || "Calle 45 # 30-10",
+        direccion: newDireccion || 'Calle 45 # 30-10',
         municipio: newMunicipio,
         tipo_cliente_nombre: newTipo,
-        potencial_nombre: newPotencial as "Alto" | "Medio" | "Bajo",
-        telefono: newTelefono || "300 123 4567",
-        email: newEmail || "compras@cliente.com",
+        potencial_nombre: newPotencial as 'Alto' | 'Medio' | 'Bajo',
+        telefono: newTelefono || '300 123 4567',
+        email: newEmail || 'compras@cliente.com',
         contactos: [
           {
             id_contacto: `con-${Date.now()}`,
-            nombre: newContacto || "Contacto Comercial",
+            nombre: newContacto || 'Contacto Comercial',
             cargo: newCargo,
-            telefono: newTelefono || "300 123 4567",
-            email: newEmail || "compras@cliente.com",
+            telefono: newTelefono || '300 123 4567',
+            email: newEmail || 'compras@cliente.com',
             principal: true,
           },
         ],
@@ -143,14 +143,14 @@ export const ClientesPage: React.FC = () => {
       setToastMessage(
         `Cliente ${created.nombre_comercial} registrado con éxito.`,
       );
-      setTimeout(() => setToastMessage(""), 3000);
+      setTimeout(() => setToastMessage(''), 3000);
       // Reset form
-      setNewNombre("");
-      setNewNit("");
-      setNewDireccion("");
-      setNewTelefono("");
-      setNewEmail("");
-      setNewContacto("");
+      setNewNombre('');
+      setNewNit('');
+      setNewDireccion('');
+      setNewTelefono('');
+      setNewEmail('');
+      setNewContacto('');
       fetchClientes();
     } finally {
       setIsSubmitting(false);
@@ -377,7 +377,7 @@ export const ClientesPage: React.FC = () => {
               <div className="flex items-center gap-2 text-slate-600">
                 <MapPin className="h-4 w-4 text-[#EA580C]" />
                 <span>
-                  {selectedCliente.direccion}, {selectedCliente.municipio},{" "}
+                  {selectedCliente.direccion}, {selectedCliente.municipio},{' '}
                   {selectedCliente.departamento}
                 </span>
               </div>
@@ -622,8 +622,8 @@ export const ClientesPage: React.FC = () => {
                   disabled={!importFile || isImporting}
                 >
                   {isImporting
-                    ? "Procesando archivo..."
-                    : "Comenzar importación"}
+                    ? 'Procesando archivo...'
+                    : 'Comenzar importación'}
                 </Button>
               </div>
             </form>

@@ -89,7 +89,8 @@ export const LoginPage: React.FC = () => {
               Plataforma de Gestión Comercial
             </h1>
             <p className="mt-3 text-sm text-slate-300 max-w-md leading-relaxed">
-              Administra tus rutas, visitas y clientes de manera eficiente y en tiempo real.
+              Administra tus rutas, visitas y clientes de manera eficiente y en
+              tiempo real.
             </p>
           </div>
 
@@ -172,7 +173,9 @@ export const LoginPage: React.FC = () => {
               <div className="flex h-10 w-10 items-center justify-center rounded-full border border-orange-500/40 bg-orange-500/10 text-[#EA580C]">
                 <BarChart3 className="h-5 w-5" />
               </div>
-              <span className="text-xs font-semibold text-white">Resultados</span>
+              <span className="text-xs font-semibold text-white">
+                Resultados
+              </span>
               <span className="text-[10px] text-slate-400">en tiempo real</span>
             </div>
 
@@ -180,7 +183,9 @@ export const LoginPage: React.FC = () => {
               <div className="flex h-10 w-10 items-center justify-center rounded-full border border-orange-500/40 bg-orange-500/10 text-[#EA580C]">
                 <ShieldCheck className="h-5 w-5" />
               </div>
-              <span className="text-xs font-semibold text-white">Información</span>
+              <span className="text-xs font-semibold text-white">
+                Información
+              </span>
               <span className="text-[10px] text-slate-400">segura</span>
             </div>
           </div>
@@ -330,7 +335,10 @@ export const LoginPage: React.FC = () => {
               <p className="text-xs text-slate-500 inline-flex items-center gap-1.5">
                 <Headphones className="h-3.5 w-3.5 text-slate-400" />
                 ¿Necesitas ayuda?{' '}
-                <a href="#contacto" className="font-bold text-[#EA580C] hover:underline">
+                <a
+                  href="#contacto"
+                  className="font-bold text-[#EA580C] hover:underline"
+                >
                   Contáctanos
                 </a>
               </p>
@@ -360,19 +368,35 @@ export const LoginPage: React.FC = () => {
           description="Siga las directrices de seguridad corporativa para restablecer credenciales."
           maxWidth="sm"
           footer={
-            <Button variant="primary" size="sm" onClick={() => setForgotModalOpen(false)}>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => setForgotModalOpen(false)}
+            >
               Entendido
             </Button>
           }
         >
           <div className="space-y-3 text-xs text-slate-600">
             <p>
-              Por motivos de seguridad y autenticación única (SSO / Azure AD), el restablecimiento de contraseñas de Comercial 360 se gestiona a través del departamento de TI o mesa de ayuda.
+              Por motivos de seguridad y autenticación única (SSO / Azure AD),
+              el restablecimiento de contraseñas de Comercial 360 se gestiona a
+              través del departamento de TI o mesa de ayuda.
             </p>
             <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-1">
-              <span className="font-bold text-slate-800">Canales de Soporte TI:</span>
-              <p>• Correo: <span className="font-mono text-slate-700">soporte@comercial360.com</span></p>
-              <p>• Extensión interna: <span className="font-mono text-slate-700">4450</span></p>
+              <span className="font-bold text-slate-800">
+                Canales de Soporte TI:
+              </span>
+              <p>
+                • Correo:{' '}
+                <span className="font-mono text-slate-700">
+                  soporte@comercial360.com
+                </span>
+              </p>
+              <p>
+                • Extensión interna:{' '}
+                <span className="font-mono text-slate-700">4450</span>
+              </p>
             </div>
           </div>
         </Modal>

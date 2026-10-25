@@ -1,29 +1,29 @@
-import React, { useEffect } from "react";
+import React, { useEffect } from 'react';
 import {
   BrowserRouter,
   Routes,
   Route,
   Navigate,
   useLocation,
-} from "react-router-dom";
-import { useAuthStore } from "./store/useAuthStore";
-import { AppLayout } from "./components/layout/AppLayout";
-import { LoginPage } from "./pages/LoginPage";
-import { DashboardPage } from "./pages/DashboardPage";
-import { RutasPage } from "./pages/RutasPage";
-import { RutasAsignadasPage } from "./pages/RutasAsignadasPage";
-import { AdvisorAgendaPage } from "./pages/AdvisorAgendaPage";
-import { AgendaPage } from "./pages/AgendaPage";
-import { MapaPage } from "./pages/MapaPage";
-import { VisitasListPage } from "./pages/VisitasListPage";
-import { VisitasPage } from "./pages/VisitasPage";
-import { ClientesPage } from "./pages/ClientesPage";
-import { CotizacionesPage } from "./pages/CotizacionesPage";
-import { PedidosPage } from "./pages/PedidosPage";
-import { IndicadoresPage } from "./pages/IndicadoresPage";
-import { ReportesPage } from "./pages/ReportesPage";
-import { ConfiguracionPage } from "./pages/ConfiguracionPage";
-import { ErrorBoundary } from "./components/common/ErrorBoundary";
+} from 'react-router-dom';
+import { useAuthStore } from './store/useAuthStore';
+import { AppLayout } from './components/layout/AppLayout';
+import { LoginPage } from './pages/LoginPage';
+import { DashboardPage } from './pages/DashboardPage';
+import { RutasPage } from './pages/RutasPage';
+import { RutasAsignadasPage } from './pages/RutasAsignadasPage';
+import { AdvisorAgendaPage } from './pages/AdvisorAgendaPage';
+import { AgendaPage } from './pages/AgendaPage';
+import { MapaPage } from './pages/MapaPage';
+import { VisitasListPage } from './pages/VisitasListPage';
+import { VisitasPage } from './pages/VisitasPage';
+import { ClientesPage } from './pages/ClientesPage';
+import { CotizacionesPage } from './pages/CotizacionesPage';
+import { PedidosPage } from './pages/PedidosPage';
+import { IndicadoresPage } from './pages/IndicadoresPage';
+import { ReportesPage } from './pages/ReportesPage';
+import { ConfiguracionPage } from './pages/ConfiguracionPage';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
   children,

@@ -20,7 +20,8 @@ export const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadedResult, setUploadedResult] = useState<IS3UploadResponse | null>(null);
+  const [uploadedResult, setUploadedResult] =
+    useState<IS3UploadResponse | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isPhoto = mode === 'photo';
@@ -41,11 +42,7 @@ export const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({
     if (!selectedFile) return;
     setIsUploading(true);
     try {
-      const res = await uploadFileToS3(
-        selectedFile,
-        'visitas',
-        'vis-001'
-      );
+      const res = await uploadFileToS3(selectedFile, 'visitas', 'vis-001');
       setUploadedResult(res);
       onUploadSuccess(res);
       setTimeout(() => {
@@ -110,7 +107,9 @@ export const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({
                 alt="Vista previa"
                 className="mx-auto h-40 max-w-full rounded-lg object-cover shadow-sm"
               />
-              <p className="text-xs font-bold text-slate-700">{selectedFile?.name}</p>
+              <p className="text-xs font-bold text-slate-700">
+                {selectedFile?.name}
+              </p>
               <p className="text-[10px] text-slate-500">
                 Clic para cambiar de fotografía
               </p>
@@ -118,7 +117,9 @@ export const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({
           ) : selectedFile ? (
             <div className="space-y-2 py-4">
               <FileText className="mx-auto h-12 w-12 text-[#EA580C]" />
-              <p className="text-xs font-bold text-slate-800">{selectedFile.name}</p>
+              <p className="text-xs font-bold text-slate-800">
+                {selectedFile.name}
+              </p>
               <p className="text-[10px] text-slate-500">
                 {(selectedFile.size / 1024).toFixed(1)} KB
               </p>
@@ -136,7 +137,9 @@ export const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({
                   : 'Haz clic para seleccionar documento'}
               </p>
               <p className="text-[10px] text-slate-400">
-                {isPhoto ? 'PNG, JPG, WEBP hasta 10MB' : 'PDF, DOCX, XLSX hasta 25MB'}
+                {isPhoto
+                  ? 'PNG, JPG, WEBP hasta 10MB'
+                  : 'PDF, DOCX, XLSX hasta 25MB'}
               </p>
             </div>
           )}

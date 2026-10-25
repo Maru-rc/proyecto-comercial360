@@ -10,7 +10,7 @@ export interface IS3UploadResponse {
 export const uploadFileToS3 = async (
   file: File,
   folder: 'visitas' | 'cotizaciones' = 'visitas',
-  entityId: string = '123'
+  entityId: string = '123',
 ): Promise<IS3UploadResponse> => {
   const formData = new FormData();
   formData.append('file', file);
@@ -18,11 +18,15 @@ export const uploadFileToS3 = async (
   formData.append('entityId', entityId);
 
   try {
-    const { data } = await apiClient.post<IS3UploadResponse>('/storage/upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
+    const { data } = await apiClient.post<IS3UploadResponse>(
+      '/storage/upload',
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       },
-    });
+    );
     return data;
   } catch {
     // Simulated S3 response matching specification:
@@ -43,7 +47,9 @@ export const uploadFileToS3 = async (
 
 export const getSignedS3Url = async (s3_key: string): Promise<string> => {
   try {
-    const { data } = await apiClient.get<{ signedUrl: string }>(`/storage/url/${encodeURIComponent(s3_key)}`);
+    const { data } = await apiClient.get<{ signedUrl: string }>(
+      `/storage/url/${encodeURIComponent(s3_key)}`,
+    );
     return data.signedUrl;
   } catch {
     return `https://s3.us-east-1.amazonaws.com/comercial360-bucket/${s3_key}`;

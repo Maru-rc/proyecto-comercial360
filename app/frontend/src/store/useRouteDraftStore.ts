@@ -8,7 +8,7 @@ interface RouteDraftState {
   paradas: IParadaRuta[];
   distanciaTotalKm: number;
   tiempoTotalMin: number;
-  
+
   setStep: (step: number) => void;
   updateFormData: (data: Partial<IRutaFormData>) => void;
   agregarCliente: (cliente: ICliente) => void;
@@ -26,7 +26,8 @@ const INITIAL_FORM: IRutaFormData = {
   frecuencia: 'Semanal',
   hora_inicio: '08:00 AM',
   hora_fin: '05:00 PM',
-  descripcion: 'Ruta para atención de clientes industriales en el Atlántico Este.',
+  descripcion:
+    'Ruta para atención de clientes industriales en el Atlántico Este.',
   id_asesor: 'ase-001',
 };
 
@@ -279,7 +280,9 @@ export const useRouteDraftStore = create<RouteDraftState>((set, get) => ({
     const { paradas } = get();
     if (paradas.length <= 1) return;
     // Sort geographically by latitude descending for demo optimization
-    const sorted = [...paradas].sort((a, b) => b.cliente.latitud - a.cliente.latitud);
+    const sorted = [...paradas].sort(
+      (a, b) => b.cliente.latitud - a.cliente.latitud,
+    );
     const updated = sorted.map((p, index) => ({
       ...p,
       orden: index + 1,

@@ -105,7 +105,7 @@ export const getPedidos = async (params?: {
       result = result.filter(
         (p) =>
           p.numero.toLowerCase().includes(q) ||
-          (p.cliente_nombre && p.cliente_nombre.toLowerCase().includes(q))
+          (p.cliente_nombre && p.cliente_nombre.toLowerCase().includes(q)),
       );
     }
     if (params?.estado && params.estado !== 'Todos') {
@@ -115,7 +115,9 @@ export const getPedidos = async (params?: {
   }
 };
 
-export const crearPedidoApi = async (data: Partial<IPedido>): Promise<IPedido> => {
+export const crearPedidoApi = async (
+  data: Partial<IPedido>,
+): Promise<IPedido> => {
   const newPed: IPedido = {
     id_pedido: `ped-${Date.now()}`,
     numero: data.numero || `PED-${Math.floor(100 + Math.random() * 900)}`,
@@ -123,12 +125,15 @@ export const crearPedidoApi = async (data: Partial<IPedido>): Promise<IPedido> =
     cliente_nombre: data.cliente_nombre || 'Cliente Comercial',
     id_cotizacion: data.id_cotizacion,
     fecha: data.fecha || new Date().toISOString().split('T')[0],
-    fecha_entrega: data.fecha_entrega || new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
+    fecha_entrega:
+      data.fecha_entrega ||
+      new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
     valor: Number(data.valor || 10000000),
     estado: (data.estado as any) || 'PENDIENTE',
     asesor_nombre: data.asesor_nombre || 'Juan Pérez',
     items_count: data.items_count || 1,
-    observaciones: data.observaciones || 'Pedido creado desde el sistema comercial',
+    observaciones:
+      data.observaciones || 'Pedido creado desde el sistema comercial',
   };
 
   try {

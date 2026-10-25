@@ -17,9 +17,13 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
   onSuccess,
   clienteNombre = 'Metalúrgicas S.A.S.',
 }) => {
-  const [numero, setNumero] = useState(() => `COT-${Math.floor(1000 + Math.random() * 9000)}`);
+  const [numero, setNumero] = useState(
+    () => `COT-${Math.floor(1000 + Math.random() * 9000)}`,
+  );
   const [valor, setValor] = useState('24800000');
-  const [producto, setProducto] = useState('Equipos de soldadura industrial y consumibles');
+  const [producto, setProducto] = useState(
+    'Equipos de soldadura industrial y consumibles',
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {

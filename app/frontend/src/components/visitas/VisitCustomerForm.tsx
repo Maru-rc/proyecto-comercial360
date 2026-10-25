@@ -9,7 +9,9 @@ interface VisitCustomerFormProps {
   setValue?: UseFormSetValue<IVisitaRegistroFormData>;
 }
 
-export const VisitCustomerForm: React.FC<VisitCustomerFormProps> = ({ register }) => {
+export const VisitCustomerForm: React.FC<VisitCustomerFormProps> = ({
+  register,
+}) => {
   return (
     <div className="bg-white rounded-xl border border-slate-200/90 p-5 shadow-xs space-y-4">
       <div className="flex items-center gap-2 border-b border-slate-100 pb-3">

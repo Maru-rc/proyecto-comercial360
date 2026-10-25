@@ -3,8 +3,13 @@ import { Info, User } from 'lucide-react';
 import { useRouteDraftStore } from '../../store/useRouteDraftStore';
 
 export const RouteSummary: React.FC = () => {
-  const { paradas, distanciaTotalKm, tiempoTotalMin, formData, updateFormData } =
-    useRouteDraftStore();
+  const {
+    paradas,
+    distanciaTotalKm,
+    tiempoTotalMin,
+    formData,
+    updateFormData,
+  } = useRouteDraftStore();
 
   const hours = Math.floor(tiempoTotalMin / 60);
   const minutes = tiempoTotalMin % 60;
@@ -44,18 +49,26 @@ export const RouteSummary: React.FC = () => {
 
         <div className="grid grid-cols-3 gap-2 text-center py-2 border-y border-slate-100">
           <div>
-            <p className="text-xl font-extrabold text-[#0F172A]">{paradas.length}</p>
+            <p className="text-xl font-extrabold text-[#0F172A]">
+              {paradas.length}
+            </p>
             <p className="text-[10px] text-slate-500 font-medium">Paradas</p>
           </div>
           <div>
             <p className="text-xl font-extrabold text-[#0F172A]">
               {distanciaTotalKm.toLocaleString('es-CO')} km
             </p>
-            <p className="text-[10px] text-slate-500 font-medium">Distancia aprox.</p>
+            <p className="text-[10px] text-slate-500 font-medium">
+              Distancia aprox.
+            </p>
           </div>
           <div>
-            <p className="text-xl font-extrabold text-[#0F172A]">{timeFormatted}</p>
-            <p className="text-[10px] text-slate-500 font-medium">Tiempo estimado</p>
+            <p className="text-xl font-extrabold text-[#0F172A]">
+              {timeFormatted}
+            </p>
+            <p className="text-[10px] text-slate-500 font-medium">
+              Tiempo estimado
+            </p>
           </div>
         </div>
 
@@ -63,7 +76,8 @@ export const RouteSummary: React.FC = () => {
         <div className="flex items-start gap-2.5 rounded-lg bg-blue-50/80 p-3 text-blue-900 border border-blue-100">
           <Info className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
           <p className="text-[11px] leading-relaxed text-blue-800">
-            La ruta será asignada al asesor seleccionado para el día y frecuencia configurados.
+            La ruta será asignada al asesor seleccionado para el día y
+            frecuencia configurados.
           </p>
         </div>
       </div>

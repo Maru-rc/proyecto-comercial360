@@ -2,7 +2,10 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { KpiCards } from '../components/dashboard/KpiCards';
-import { OpenStreetMapViewer, IMapMarkerItem } from '../components/maps/OpenStreetMapViewer';
+import {
+  OpenStreetMapViewer,
+  IMapMarkerItem,
+} from '../components/maps/OpenStreetMapViewer';
 import { DailyAgenda } from '../components/dashboard/DailyAgenda';
 import { VisitsTable } from '../components/dashboard/VisitsTable';
 import { useDashboardKpis } from '../hooks/useDashboardKpis';
@@ -10,7 +13,8 @@ import { useRouteDraftStore } from '../store/useRouteDraftStore';
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
-  const { kpis, filasSeguimiento, agendaItems, isLoadingKpis } = useDashboardKpis();
+  const { kpis, filasSeguimiento, agendaItems, isLoadingKpis } =
+    useDashboardKpis();
   const { paradas } = useRouteDraftStore();
 
   // Convert paradas to map markers
@@ -30,7 +34,9 @@ export const DashboardPage: React.FC = () => {
       <div className="flex h-64 items-center justify-center">
         <div className="text-center space-y-2">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#EA580C] mx-auto"></div>
-          <p className="text-xs text-slate-500 font-medium">Cargando métricas y agenda...</p>
+          <p className="text-xs text-slate-500 font-medium">
+            Cargando métricas y agenda...
+          </p>
         </div>
       </div>
     );
@@ -64,7 +70,7 @@ export const DashboardPage: React.FC = () => {
               legendTitle="Estado de visita"
               onMarkerClick={(item) => {
                 navigate(
-                  `/visitas/registrar?cliente=${encodeURIComponent(item.title)}`
+                  `/visitas/registrar?cliente=${encodeURIComponent(item.title)}`,
                 );
               }}
             />
@@ -90,7 +96,9 @@ export const DashboardPage: React.FC = () => {
         >
           <Plus className="h-6 w-6 stroke-[3]" />
           <span className="text-[10px] font-extrabold leading-tight text-center px-1">
-            Registrar<br />visita
+            Registrar
+            <br />
+            visita
           </span>
         </button>
       </div>
@@ -99,9 +107,15 @@ export const DashboardPage: React.FC = () => {
       <footer className="pt-6 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 gap-2 border-t border-slate-200">
         <p>© 2024 Comercial 360. Todos los derechos reservados.</p>
         <div className="flex items-center gap-4">
-          <a href="#ayuda" className="hover:underline">Ayuda</a>
-          <a href="#terminos" className="hover:underline">Términos y condiciones</a>
-          <a href="#privacidad" className="hover:underline">Política de privacidad</a>
+          <a href="#ayuda" className="hover:underline">
+            Ayuda
+          </a>
+          <a href="#terminos" className="hover:underline">
+            Términos y condiciones
+          </a>
+          <a href="#privacidad" className="hover:underline">
+            Política de privacidad
+          </a>
           <span className="text-slate-400 font-mono">Versión 1.0.0</span>
         </div>
       </footer>

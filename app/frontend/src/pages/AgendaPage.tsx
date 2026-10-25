@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Calendar as CalendarIcon,
   MapPin,
@@ -10,14 +10,14 @@ import {
   ChevronRight,
   CheckCircle2,
   CalendarCheck,
-} from "lucide-react";
-import { MOCK_AGENDA_ITEMS } from "../api/kpis";
-import { Badge } from "../components/common/Badge";
-import { Modal } from "../components/common/Modal";
-import { Button } from "../components/common/Button";
-import { Input } from "../components/common/Input";
-import { MOCK_CLIENTES } from "../api/clientes";
-import { useVisitasAgenda } from "../hooks/useVisitasAgenda";
+} from 'lucide-react';
+import { MOCK_AGENDA_ITEMS } from '../api/kpis';
+import { Badge } from '../components/common/Badge';
+import { Modal } from '../components/common/Modal';
+import { Button } from '../components/common/Button';
+import { Input } from '../components/common/Input';
+import { MOCK_CLIENTES } from '../api/clientes';
+import { useVisitasAgenda } from '../hooks/useVisitasAgenda';
 
 export const AgendaPage: React.FC = () => {
   const navigate = useNavigate();
@@ -32,14 +32,14 @@ export const AgendaPage: React.FC = () => {
         agenda.map((a, idx) => ({
           id: String(a.id ?? idx + 1),
           orden: a.order ?? a.visitOrder ?? idx + 1,
-          hora: a.suggestedTime || a.time || "09:00",
+          hora: a.suggestedTime || a.time || '09:00',
           cliente: a.clientName || `Cliente #${a.clientId}`,
           estado:
-            a.visitStatus === "COMPLETED"
-              ? "Visitado"
-              : a.visitStatus === "RESCHEDULED"
-                ? "Reprogramado"
-                : "Pendiente",
+            a.visitStatus === 'COMPLETED'
+              ? 'Visitado'
+              : a.visitStatus === 'RESCHEDULED'
+                ? 'Reprogramado'
+                : 'Pendiente',
           contacto: a.primaryContact?.name || a.contactName || undefined,
           objetivo: a.objective || undefined,
           potencial: a.potential || undefined,
@@ -53,12 +53,12 @@ export const AgendaPage: React.FC = () => {
   }, [agenda]);
 
   // New agenda item form
-  const [newCliente, setNewCliente] = useState("Metalúrgicas S.A.S");
-  const [newHora, setNewHora] = useState("09:30 AM");
+  const [newCliente, setNewCliente] = useState('Metalúrgicas S.A.S');
+  const [newHora, setNewHora] = useState('09:30 AM');
   const [newObjetivo, setNewObjetivo] = useState(
-    "Seguimiento de propuesta comercial",
+    'Seguimiento de propuesta comercial',
   );
-  const [newDireccion, setNewDireccion] = useState("Cra 38 # 74-120");
+  const [newDireccion, setNewDireccion] = useState('Cra 38 # 74-120');
 
   const handleCreateAgendaItem = (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,11 +67,11 @@ export const AgendaPage: React.FC = () => {
       orden: items.length + 1,
       hora: newHora,
       cliente: newCliente,
-      estado: "Pendiente" as const,
+      estado: 'Pendiente' as const,
       direccion: newDireccion,
       objetivo: newObjetivo,
-      contacto: "Contacto Comercial",
-      potencial: "Alto",
+      contacto: 'Contacto Comercial',
+      potencial: 'Alto',
       latitud: 10.98,
       longitud: -74.79,
     };
@@ -80,10 +80,10 @@ export const AgendaPage: React.FC = () => {
   };
 
   const visitadosCount = items.filter(
-    (i) => i.estado.toLowerCase() === "visitado",
+    (i) => i.estado.toLowerCase() === 'visitado',
   ).length;
   const pendientesCount = items.filter(
-    (i) => i.estado.toLowerCase() === "pendiente",
+    (i) => i.estado.toLowerCase() === 'pendiente',
   ).length;
 
   return (
@@ -163,18 +163,18 @@ export const AgendaPage: React.FC = () => {
         {/* Main Timeline Column */}
         <div className="lg:col-span-8 space-y-3">
           {items.map((item, idx) => {
-            const isVisitado = item.estado.toLowerCase() === "visitado";
-            const isReprogramado = item.estado.toLowerCase() === "reprogramado";
+            const isVisitado = item.estado.toLowerCase() === 'visitado';
+            const isReprogramado = item.estado.toLowerCase() === 'reprogramado';
 
             return (
               <div
                 key={item.id || idx}
                 className={`bg-white rounded-xl border p-4 shadow-xs transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
                   isVisitado
-                    ? "border-emerald-200 bg-emerald-50/10"
+                    ? 'border-emerald-200 bg-emerald-50/10'
                     : isReprogramado
-                      ? "border-rose-200 bg-rose-50/10"
-                      : "border-slate-200 hover:border-orange-200"
+                      ? 'border-rose-200 bg-rose-50/10'
+                      : 'border-slate-200 hover:border-orange-200'
                 }`}
               >
                 <div className="flex items-start gap-3.5">
@@ -182,10 +182,10 @@ export const AgendaPage: React.FC = () => {
                     <span
                       className={`flex h-8 w-8 items-center justify-center rounded-xl font-mono text-xs font-black shadow-xs ${
                         isVisitado
-                          ? "bg-[#16A34A] text-white"
+                          ? 'bg-[#16A34A] text-white'
                           : isReprogramado
-                            ? "bg-[#DC2626] text-white"
-                            : "bg-[#0F172A] text-white"
+                            ? 'bg-[#DC2626] text-white'
+                            : 'bg-[#0F172A] text-white'
                       }`}
                     >
                       {item.orden || idx + 1}
@@ -302,7 +302,7 @@ export const AgendaPage: React.FC = () => {
             </div>
             <button
               type="button"
-              onClick={() => navigate("/mapa")}
+              onClick={() => navigate('/mapa')}
               className="w-full text-center py-2 text-xs font-bold text-[#EA580C] bg-orange-50 hover:bg-orange-100 rounded-lg cursor-pointer transition-colors"
             >
               Ver mapa completo de hoy

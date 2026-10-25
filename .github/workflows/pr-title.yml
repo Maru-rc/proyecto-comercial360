@@ -1,0 +1,36 @@
+name: PR Title Convention
+
+# El título del PR es el mensaje que queda en develop/main con squash merge,
+# así que debe cumplir la misma convención que commitlint.config.mjs.
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  semantic-title:
+    name: Validate Conventional Commit title
+    runs-on: ubuntu-latest
+    steps:
+      - uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Mismos tipos que commitlint.config.mjs
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            test
+            perf
+            build
+            ci
+            chore
+            revert
+          requireScope: false
+          # commitlint desactiva subject-case; aquí tampoco se exige
+          subjectPattern: ^.+$

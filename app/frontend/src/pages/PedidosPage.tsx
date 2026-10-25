@@ -30,11 +30,15 @@ export const PedidosPage: React.FC = () => {
   const [clienteNombre, setClienteNombre] = useState('Metalúrgicas S.A.S');
   const [valor, setValor] = useState('18500000');
   const [fechaEntrega, setFechaEntrega] = useState('2024-05-30');
-  const [observaciones, setObservaciones] = useState('Despacho prioritario en planta industrial');
+  const [observaciones, setObservaciones] = useState(
+    'Despacho prioritario en planta industrial',
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchPedidos = useCallback(() => {
-    getPedidos({ search, estado: estadoFilter }).then((data) => setPedidos(data));
+    getPedidos({ search, estado: estadoFilter }).then((data) =>
+      setPedidos(data),
+    );
   }, [search, estadoFilter]);
 
   useEffect(() => {
@@ -69,9 +73,12 @@ export const PedidosPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200/90 shadow-xs">
         <div>
-          <h1 className="text-lg font-extrabold text-[#0F172A]">Gestión de Pedidos Comerciales</h1>
+          <h1 className="text-lg font-extrabold text-[#0F172A]">
+            Gestión de Pedidos Comerciales
+          </h1>
           <p className="text-xs text-slate-500">
-            Seguimiento a órdenes de venta, compromisos de entrega y estado logístico de despacho.
+            Seguimiento a órdenes de venta, compromisos de entrega y estado
+            logístico de despacho.
           </p>
         </div>
 
@@ -88,23 +95,40 @@ export const PedidosPage: React.FC = () => {
       {/* KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
-          <p className="text-[11px] font-semibold text-slate-500">Facturación Total</p>
+          <p className="text-[11px] font-semibold text-slate-500">
+            Facturación Total
+          </p>
           <p className="text-lg font-extrabold text-slate-800 mt-1">
             $ {totalFacturado.toLocaleString('es-CO')}
           </p>
-          <span className="text-[10px] text-emerald-600 font-semibold">Valor consolidado</span>
+          <span className="text-[10px] text-emerald-600 font-semibold">
+            Valor consolidado
+          </span>
         </div>
         <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
-          <p className="text-[11px] font-semibold text-slate-500">Pedidos Entregados</p>
-          <p className="text-xl font-extrabold text-emerald-600 mt-1">{entregados}</p>
+          <p className="text-[11px] font-semibold text-slate-500">
+            Pedidos Entregados
+          </p>
+          <p className="text-xl font-extrabold text-emerald-600 mt-1">
+            {entregados}
+          </p>
           <span className="text-[10px] text-slate-400">Cumplimiento total</span>
         </div>
         <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
-          <p className="text-[11px] font-semibold text-slate-500">En Despacho / Ruta</p>
-          <p className="text-xl font-extrabold text-blue-600 mt-1">
-            {pedidos.filter((p) => p.estado === 'DESPACHADO' || p.estado === 'EN_PREPARACION').length}
+          <p className="text-[11px] font-semibold text-slate-500">
+            En Despacho / Ruta
           </p>
-          <span className="text-[10px] text-slate-400">En proceso logístico</span>
+          <p className="text-xl font-extrabold text-blue-600 mt-1">
+            {
+              pedidos.filter(
+                (p) =>
+                  p.estado === 'DESPACHADO' || p.estado === 'EN_PREPARACION',
+              ).length
+            }
+          </p>
+          <span className="text-[10px] text-slate-400">
+            En proceso logístico
+          </span>
         </div>
         <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
           <p className="text-[11px] font-semibold text-slate-500">Pendientes</p>
@@ -160,47 +184,58 @@ export const PedidosPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
-              {pedidos.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((ped) => (
-                <tr key={ped.id_pedido || ped.numero} className="hover:bg-slate-50/70 transition-colors">
-                  <td className="py-2.5 px-3 font-mono font-bold text-blue-600">
-                    {ped.numero}
-                  </td>
-                  <td className="py-2.5 px-3 font-bold text-slate-900">
-                    {ped.cliente_nombre || 'Cliente'}
-                  </td>
-                  <td className="py-2.5 px-3 font-mono text-slate-600">{ped.fecha}</td>
-                  <td className="py-2.5 px-3 font-mono text-slate-600">{ped.fecha_entrega}</td>
-                  <td className="py-2.5 px-3">{ped.asesor_nombre || 'Juan Pérez'}</td>
-                  <td className="py-2.5 px-3 font-mono font-bold text-slate-900">
-                    $ {ped.valor.toLocaleString('es-CO')}
-                  </td>
-                  <td className="py-2.5 px-3">
-                    <span
-                      className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
-                        ped.estado === 'ENTREGADO'
-                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                          : ped.estado === 'DESPACHADO'
-                          ? 'bg-blue-50 text-blue-700 border-blue-200'
-                          : ped.estado === 'EN_PREPARACION'
-                          ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
-                          : 'bg-amber-50 text-amber-700 border-amber-200'
-                      }`}
-                    >
-                      {ped.estado}
-                    </span>
-                  </td>
-                  <td className="py-2.5 px-3 text-center">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedPedido(ped)}
-                      className="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-md cursor-pointer transition-colors"
-                      title="Ver seguimiento logístico"
-                    >
-                      <Eye className="h-4 w-4" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {pedidos
+                .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+                .map((ped) => (
+                  <tr
+                    key={ped.id_pedido || ped.numero}
+                    className="hover:bg-slate-50/70 transition-colors"
+                  >
+                    <td className="py-2.5 px-3 font-mono font-bold text-blue-600">
+                      {ped.numero}
+                    </td>
+                    <td className="py-2.5 px-3 font-bold text-slate-900">
+                      {ped.cliente_nombre || 'Cliente'}
+                    </td>
+                    <td className="py-2.5 px-3 font-mono text-slate-600">
+                      {ped.fecha}
+                    </td>
+                    <td className="py-2.5 px-3 font-mono text-slate-600">
+                      {ped.fecha_entrega}
+                    </td>
+                    <td className="py-2.5 px-3">
+                      {ped.asesor_nombre || 'Juan Pérez'}
+                    </td>
+                    <td className="py-2.5 px-3 font-mono font-bold text-slate-900">
+                      $ {ped.valor.toLocaleString('es-CO')}
+                    </td>
+                    <td className="py-2.5 px-3">
+                      <span
+                        className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
+                          ped.estado === 'ENTREGADO'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : ped.estado === 'DESPACHADO'
+                              ? 'bg-blue-50 text-blue-700 border-blue-200'
+                              : ped.estado === 'EN_PREPARACION'
+                                ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                                : 'bg-amber-50 text-amber-700 border-amber-200'
+                        }`}
+                      >
+                        {ped.estado}
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-3 text-center">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedPedido(ped)}
+                        className="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-md cursor-pointer transition-colors"
+                        title="Ver seguimiento logístico"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         </div>
@@ -223,7 +258,11 @@ export const PedidosPage: React.FC = () => {
           description={`Cliente: ${selectedPedido.cliente_nombre} | Valor: $ ${selectedPedido.valor.toLocaleString('es-CO')}`}
           maxWidth="md"
           footer={
-            <Button variant="outline" size="sm" onClick={() => setSelectedPedido(null)}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedPedido(null)}
+            >
               Cerrar
             </Button>
           }
@@ -238,7 +277,9 @@ export const PedidosPage: React.FC = () => {
               <div className="space-y-2">
                 <div className="flex items-center gap-2.5 text-emerald-700 font-semibold">
                   <CheckCircle2 className="h-4 w-4" />
-                  <span>1. Pedido Confirmado en Sistema ({selectedPedido.fecha})</span>
+                  <span>
+                    1. Pedido Confirmado en Sistema ({selectedPedido.fecha})
+                  </span>
                 </div>
                 <div
                   className={`flex items-center gap-2.5 font-semibold ${
@@ -252,7 +293,8 @@ export const PedidosPage: React.FC = () => {
                 </div>
                 <div
                   className={`flex items-center gap-2.5 font-semibold ${
-                    selectedPedido.estado === 'DESPACHADO' || selectedPedido.estado === 'ENTREGADO'
+                    selectedPedido.estado === 'DESPACHADO' ||
+                    selectedPedido.estado === 'ENTREGADO'
                       ? 'text-emerald-700'
                       : 'text-slate-400'
                   }`}
@@ -268,7 +310,10 @@ export const PedidosPage: React.FC = () => {
                   }`}
                 >
                   <Package className="h-4 w-4" />
-                  <span>4. Entrega Exitosa y Firma de Remisión ({selectedPedido.fecha_entrega})</span>
+                  <span>
+                    4. Entrega Exitosa y Firma de Remisión (
+                    {selectedPedido.fecha_entrega})
+                  </span>
                 </div>
               </div>
             </div>
@@ -276,16 +321,26 @@ export const PedidosPage: React.FC = () => {
             <div className="p-3 bg-white rounded-lg border border-slate-200 space-y-1.5">
               <div className="flex justify-between">
                 <span className="text-slate-500">Asesor responsable:</span>
-                <span className="font-bold text-slate-800">{selectedPedido.asesor_nombre}</span>
+                <span className="font-bold text-slate-800">
+                  {selectedPedido.asesor_nombre}
+                </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Fecha prometida de entrega:</span>
-                <span className="font-mono font-bold text-slate-800">{selectedPedido.fecha_entrega}</span>
+                <span className="text-slate-500">
+                  Fecha prometida de entrega:
+                </span>
+                <span className="font-mono font-bold text-slate-800">
+                  {selectedPedido.fecha_entrega}
+                </span>
               </div>
               {selectedPedido.observaciones && (
                 <div className="pt-2 border-t border-slate-100">
-                  <span className="text-slate-500 block">Notas de despacho:</span>
-                  <p className="text-slate-700 font-medium">{selectedPedido.observaciones}</p>
+                  <span className="text-slate-500 block">
+                    Notas de despacho:
+                  </span>
+                  <p className="text-slate-700 font-medium">
+                    {selectedPedido.observaciones}
+                  </p>
                 </div>
               )}
             </div>
@@ -303,7 +358,11 @@ export const PedidosPage: React.FC = () => {
           maxWidth="md"
           footer={
             <>
-              <Button variant="outline" size="sm" onClick={() => setIsNewModalOpen(false)}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsNewModalOpen(false)}
+              >
                 Cancelar
               </Button>
               <Button
@@ -319,7 +378,9 @@ export const PedidosPage: React.FC = () => {
         >
           <form onSubmit={handleCreatePedido} className="space-y-3 text-xs">
             <div className="space-y-1">
-              <label className="block text-xs font-semibold text-slate-700">Cliente</label>
+              <label className="block text-xs font-semibold text-slate-700">
+                Cliente
+              </label>
               <select
                 value={clienteNombre}
                 onChange={(e) => setClienteNombre(e.target.value)}

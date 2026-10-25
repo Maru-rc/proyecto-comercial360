@@ -1,4 +1,4 @@
-import { apiClient } from "./client";
+import { apiClient } from './client';
 import {
   IVisita,
   IVisitaRegistroFormData,
@@ -6,33 +6,33 @@ import {
   IPedido,
   IVisitAgendaItemContract,
   IVisitMapStopContract,
-} from "../types/visita";
-import { IHistorialCliente } from "../types/cliente";
+} from '../types/visita';
+import { IHistorialCliente } from '../types/cliente';
 
 export const MOCK_HISTORIAL: IHistorialCliente[] = [
   {
-    id_historial: "hist-1",
-    id_cliente: "cli-001",
-    fecha: "14/05/2024",
-    accion: "Visita realizada",
-    usuario: "Juan Pérez",
-    descripcion: "Resultado: Interesado. Presentación inicial del catálogo.",
+    id_historial: 'hist-1',
+    id_cliente: 'cli-001',
+    fecha: '14/05/2024',
+    accion: 'Visita realizada',
+    usuario: 'Juan Pérez',
+    descripcion: 'Resultado: Interesado. Presentación inicial del catálogo.',
   },
   {
-    id_historial: "hist-2",
-    id_cliente: "cli-001",
-    fecha: "07/05/2024",
-    accion: "Cotización enviada",
-    usuario: "Juan Pérez",
-    descripcion: "COT-1241 | $ 12,600,000 en equipos industriales.",
+    id_historial: 'hist-2',
+    id_cliente: 'cli-001',
+    fecha: '07/05/2024',
+    accion: 'Cotización enviada',
+    usuario: 'Juan Pérez',
+    descripcion: 'COT-1241 | $ 12,600,000 en equipos industriales.',
   },
   {
-    id_historial: "hist-3",
-    id_cliente: "cli-001",
-    fecha: "30/04/2024",
-    accion: "Seguimiento telefónico",
-    usuario: "Juan Pérez",
-    descripcion: "Pendiente de respuesta de la junta directiva.",
+    id_historial: 'hist-3',
+    id_cliente: 'cli-001',
+    fecha: '30/04/2024',
+    accion: 'Seguimiento telefónico',
+    usuario: 'Juan Pérez',
+    descripcion: 'Pendiente de respuesta de la junta directiva.',
   },
 ];
 
@@ -49,7 +49,7 @@ export const registrarVisita = async (
 
   try {
     const { data } = await apiClient.post<IVisita>(
-      "/visitas/registrar",
+      '/visitas/registrar',
       payload,
     );
     return data;
@@ -57,7 +57,7 @@ export const registrarVisita = async (
     return {
       id_visita: `vis-${Date.now()}`,
       id_cliente: formData.id_cliente,
-      id_asesor: "ase-001",
+      id_asesor: 'ase-001',
       asesor_nombre: formData.asesor_nombre,
       id_ruta: formData.id_ruta,
       territorio: formData.territorio,
@@ -77,27 +77,27 @@ export const registrarVisita = async (
       observaciones: formData.observaciones,
       cotizacion: formData.genero_cotizacion
         ? {
-            numero: formData.numero_cotizacion || "COT-1242",
+            numero: formData.numero_cotizacion || 'COT-1242',
             id_cliente: formData.id_cliente,
             fecha: formData.fecha_visita,
             valor: Number(formData.valor_cotizacion || 24800000),
-            moneda: formData.moneda || "COP",
+            moneda: formData.moneda || 'COP',
           }
         : undefined,
       pedido: formData.genero_pedido
         ? {
-            numero: formData.numero_pedido || "PED-568",
+            numero: formData.numero_pedido || 'PED-568',
             id_cliente: formData.id_cliente,
             fecha: formData.fecha_visita,
             valor: Number(formData.valor_pedido || 18500000),
-            fecha_entrega: formData.fecha_estimada_entrega || "30/05/2024",
+            fecha_entrega: formData.fecha_estimada_entrega || '30/05/2024',
           }
         : undefined,
       seguimiento: {
         fecha_proxima: formData.fecha_proxima_visita,
         hora_proxima: formData.hora_proxima_visita,
         actividad:
-          formData.objetivo_proximo_seguimiento || "Seguimiento comercial",
+          formData.objetivo_proximo_seguimiento || 'Seguimiento comercial',
         responsable: formData.responsable_seguimiento,
       },
       fotos_s3_keys,
@@ -111,7 +111,7 @@ export const crearCotizacion = async (
 ): Promise<ICotizacion> => {
   try {
     const { data } = await apiClient.post<ICotizacion>(
-      "/cotizaciones",
+      '/cotizaciones',
       cotizacionData,
     );
     return data;
@@ -121,11 +121,11 @@ export const crearCotizacion = async (
       numero:
         cotizacionData.numero ||
         `COT-${Math.floor(1000 + Math.random() * 9000)}`,
-      id_cliente: cotizacionData.id_cliente || "cli-001",
-      fecha: new Date().toISOString().split("T")[0],
+      id_cliente: cotizacionData.id_cliente || 'cli-001',
+      fecha: new Date().toISOString().split('T')[0],
       valor: cotizacionData.valor || 24800000,
-      moneda: "COP",
-      estado: "GENERADA",
+      moneda: 'COP',
+      estado: 'GENERADA',
     };
   }
 };
@@ -134,18 +134,18 @@ export const crearPedido = async (
   pedidoData: Partial<IPedido>,
 ): Promise<IPedido> => {
   try {
-    const { data } = await apiClient.post<IPedido>("/pedidos", pedidoData);
+    const { data } = await apiClient.post<IPedido>('/pedidos', pedidoData);
     return data;
   } catch {
     return {
       id_pedido: `ped-${Date.now()}`,
       numero:
         pedidoData.numero || `PED-${Math.floor(100 + Math.random() * 900)}`,
-      id_cliente: pedidoData.id_cliente || "cli-001",
-      fecha: new Date().toISOString().split("T")[0],
+      id_cliente: pedidoData.id_cliente || 'cli-001',
+      fecha: new Date().toISOString().split('T')[0],
       valor: pedidoData.valor || 18500000,
-      fecha_entrega: pedidoData.fecha_entrega || "2024-05-30",
-      estado: "CONFIRMADO",
+      fecha_entrega: pedidoData.fecha_entrega || '2024-05-30',
+      estado: 'CONFIRMADO',
     };
   }
 };
@@ -170,74 +170,74 @@ export const MOCK_MAP_STOPS: IVisitMapStopContract[] = [
   {
     id: 1,
     clientId: 1,
-    clientName: "Distribuidora Ferretera del Norte",
-    address: "Calle 84 # 42-15, Barranquilla",
+    clientName: 'Distribuidora Ferretera del Norte',
+    address: 'Calle 84 # 42-15, Barranquilla',
     order: 1,
     latitude: 11.0045,
     longitude: -74.8192,
-    pinStatus: "VISITED",
-    color: "green",
-    colorHex: "#22c55e",
+    pinStatus: 'VISITED',
+    color: 'green',
+    colorHex: '#22c55e',
   },
   {
     id: 2,
     clientId: 2,
-    clientName: "Metalúrgicas S.A.S",
-    address: "Cra 38 # 74-120, Barranquilla",
+    clientName: 'Metalúrgicas S.A.S',
+    address: 'Cra 38 # 74-120, Barranquilla',
     order: 2,
     latitude: 10.9878,
     longitude: -74.7889,
-    pinStatus: "VISITED",
-    color: "green",
-    colorHex: "#22c55e",
+    pinStatus: 'VISITED',
+    color: 'green',
+    colorHex: '#22c55e',
   },
   {
     id: 3,
     clientId: 3,
-    clientName: "ConstruInnova S.A.S",
-    address: "Calle 30 # 12-50, Soledad",
+    clientName: 'ConstruInnova S.A.S',
+    address: 'Calle 30 # 12-50, Soledad',
     order: 3,
     latitude: 10.9234,
     longitude: -74.7556,
-    pinStatus: "PENDING",
-    color: "orange",
-    colorHex: "#f97316",
+    pinStatus: 'PENDING',
+    color: 'orange',
+    colorHex: '#f97316',
   },
   {
     id: 4,
     clientId: 4,
-    clientName: "Soluciones Industriales de la Costa",
-    address: "Cra 21 # 30-45, Barranquilla",
+    clientName: 'Soluciones Industriales de la Costa',
+    address: 'Cra 21 # 30-45, Barranquilla',
     order: 4,
     latitude: 10.9182,
     longitude: -74.7645,
-    pinStatus: "ORDER_CLOSED",
-    color: "blue",
-    colorHex: "#3b82f6",
+    pinStatus: 'ORDER_CLOSED',
+    color: 'blue',
+    colorHex: '#3b82f6',
   },
   {
     id: 5,
     clientId: 5,
-    clientName: "ACEROS DEL CARIBE LTDA",
-    address: "Vía 40 # 65-200, Barranquilla",
+    clientName: 'ACEROS DEL CARIBE LTDA',
+    address: 'Vía 40 # 65-200, Barranquilla',
     order: 5,
     latitude: 10.9754,
     longitude: -74.7721,
-    pinStatus: "PENDING",
-    color: "orange",
-    colorHex: "#f97316",
+    pinStatus: 'PENDING',
+    color: 'orange',
+    colorHex: '#f97316',
   },
   {
     id: 6,
     clientId: 6,
-    clientName: "Distribuciones JM y Cía",
-    address: "Cra 5 # 18-60, Malambo",
+    clientName: 'Distribuciones JM y Cía',
+    address: 'Cra 5 # 18-60, Malambo',
     order: 6,
     latitude: 10.8621,
     longitude: -74.7733,
-    pinStatus: "RESCHEDULED",
-    color: "red",
-    colorHex: "#ef4444",
+    pinStatus: 'RESCHEDULED',
+    color: 'red',
+    colorHex: '#ef4444',
   },
 ];
 
@@ -251,7 +251,7 @@ export const getVisitsAgenda = async (
 
   try {
     const res = await apiClient.get<IVisitAgendaItemContract[]>(
-      "/visits/agenda",
+      '/visits/agenda',
       { params },
     );
     if (Array.isArray(res.data)) {
@@ -272,7 +272,7 @@ export const getVisitsMap = async (
   if (advisorId) params.advisorId = advisorId;
 
   try {
-    const res = await apiClient.get<IVisitMapStopContract[]>("/visits/map", {
+    const res = await apiClient.get<IVisitMapStopContract[]>('/visits/map', {
       params,
     });
     if (Array.isArray(res.data) && res.data.length > 0) {

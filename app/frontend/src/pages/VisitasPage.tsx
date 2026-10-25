@@ -1,71 +1,71 @@
-import React, { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Check, ClipboardCheck } from "lucide-react";
-import { VisitGeneralForm } from "../components/visitas/VisitGeneralForm";
-import { VisitCustomerForm } from "../components/visitas/VisitCustomerForm";
-import { VisitDetailForm } from "../components/visitas/VisitDetailForm";
-import { VisitCommercialForm } from "../components/visitas/VisitCommercialForm";
-import { VisitFollowupForm } from "../components/visitas/VisitFollowupForm";
-import { CustomerSummaryCard } from "../components/visitas/CustomerSummaryCard";
-import { CustomerInteractionsTimeline } from "../components/visitas/CustomerInteractionsTimeline";
-import { QuickActions } from "../components/visitas/QuickActions";
-import { IVisitaRegistroFormData } from "../types/visita";
-import { useVisitas } from "../hooks/useVisitas";
-import { getClientes } from "../api/clientes";
-import { ICliente } from "../types/cliente";
-import { IS3UploadResponse } from "../api/storage";
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Check, ClipboardCheck } from 'lucide-react';
+import { VisitGeneralForm } from '../components/visitas/VisitGeneralForm';
+import { VisitCustomerForm } from '../components/visitas/VisitCustomerForm';
+import { VisitDetailForm } from '../components/visitas/VisitDetailForm';
+import { VisitCommercialForm } from '../components/visitas/VisitCommercialForm';
+import { VisitFollowupForm } from '../components/visitas/VisitFollowupForm';
+import { CustomerSummaryCard } from '../components/visitas/CustomerSummaryCard';
+import { CustomerInteractionsTimeline } from '../components/visitas/CustomerInteractionsTimeline';
+import { QuickActions } from '../components/visitas/QuickActions';
+import { IVisitaRegistroFormData } from '../types/visita';
+import { useVisitas } from '../hooks/useVisitas';
+import { getClientes } from '../api/clientes';
+import { ICliente } from '../types/cliente';
+import { IS3UploadResponse } from '../api/storage';
 
 const visitaSchema = z.object({
-  fecha_visita: z.string().min(1, "La fecha es obligatoria"),
-  hora_inicio: z.string().min(1, "Hora de inicio requerida"),
-  hora_fin: z.string().min(1, "Hora de fin requerida"),
-  id_ruta: z.string().min(1, "Ruta requerida"),
-  territorio: z.string().min(1, "Territorio requerido"),
+  fecha_visita: z.string().min(1, 'La fecha es obligatoria'),
+  hora_inicio: z.string().min(1, 'Hora de inicio requerida'),
+  hora_fin: z.string().min(1, 'Hora de fin requerida'),
+  id_ruta: z.string().min(1, 'Ruta requerida'),
+  territorio: z.string().min(1, 'Territorio requerido'),
   semana: z.number().min(1),
   dia: z.string().min(1),
   asesor_nombre: z.string().min(1),
 
-  id_cliente: z.string().default("cli-001"),
-  cliente_nombre: z.string().min(1, "Cliente requerido"),
-  codigo_cliente: z.string().default("CJI-001245"),
-  tipo_cliente: z.string().default("Industrial"),
-  municipio: z.string().min(1, "Municipio requerido"),
-  contacto: z.string().default("Carlos Julio Mendoza"),
-  telefono: z.string().default("300 123 4567"),
-  cargo: z.string().default("Jefe de Compras"),
-  canal_contacto: z.string().default("Presencial"),
+  id_cliente: z.string().default('cli-001'),
+  cliente_nombre: z.string().min(1, 'Cliente requerido'),
+  codigo_cliente: z.string().default('CJI-001245'),
+  tipo_cliente: z.string().default('Industrial'),
+  municipio: z.string().min(1, 'Municipio requerido'),
+  contacto: z.string().default('Carlos Julio Mendoza'),
+  telefono: z.string().default('300 123 4567'),
+  cargo: z.string().default('Jefe de Compras'),
+  canal_contacto: z.string().default('Presencial'),
 
-  objetivo_visita: z.string().default("Presentación de nueva línea"),
-  tipo_visita: z.string().default("Desarrollo de cliente"),
-  potencial_cliente: z.string().default("Alto"),
+  objetivo_visita: z.string().default('Presentación de nueva línea'),
+  tipo_visita: z.string().default('Desarrollo de cliente'),
+  potencial_cliente: z.string().default('Alto'),
   estado_visita: z.enum([
-    "VISITADO",
-    "PENDIENTE",
-    "SIN_VISITAR",
-    "PEDIDO_CERRADO",
-    "REPROGRAMADO",
-    "PROGRAMADA",
+    'VISITADO',
+    'PENDIENTE',
+    'SIN_VISITAR',
+    'PEDIDO_CERRADO',
+    'REPROGRAMADO',
+    'PROGRAMADA',
   ]),
   resultado_visita: z.enum([
-    "Interesado",
-    "Pedido",
-    "Programada",
-    "No visitado",
-    "Cotización enviada",
-    "No interesado",
+    'Interesado',
+    'Pedido',
+    'Programada',
+    'No visitado',
+    'Cotización enviada',
+    'No interesado',
   ]),
-  interes_productos: z.string().default("Alto"),
-  modulo_interes: z.string().default("Calidad y precio"),
-  competencia_mencionada: z.string().default("Inducacor"),
+  interes_productos: z.string().default('Alto'),
+  modulo_interes: z.string().default('Calidad y precio'),
+  competencia_mencionada: z.string().default('Inducacor'),
   observaciones: z.string().max(500),
 
   genero_cotizacion: z.boolean().default(true),
   numero_cotizacion: z.string().optional(),
   valor_cotizacion: z.number().optional(),
-  moneda: z.string().default("COP"),
+  moneda: z.string().default('COP'),
 
   genero_pedido: z.boolean().default(true),
   numero_pedido: z.string().optional(),
@@ -74,7 +74,7 @@ const visitaSchema = z.object({
 
   fecha_proxima_visita: z
     .string()
-    .min(1, "Fecha de próximo seguimiento requerida"),
+    .min(1, 'Fecha de próximo seguimiento requerida'),
   hora_proxima_visita: z.string().optional(),
   objetivo_proximo_seguimiento: z.string().optional(),
   responsable_seguimiento: z.string().optional(),
@@ -91,8 +91,8 @@ export const VisitasPage: React.FC = () => {
 
   // Read query params if arriving from "Iniciar visita"
   const searchParams = new URLSearchParams(location.search);
-  const clienteParam = searchParams.get("cliente") || "Metalúrgicas S.A.S.";
-  const horaParam = searchParams.get("hora") || "10:15 AM";
+  const clienteParam = searchParams.get('cliente') || 'Metalúrgicas S.A.S.';
+  const horaParam = searchParams.get('hora') || '10:15 AM';
 
   const {
     register,
@@ -103,51 +103,51 @@ export const VisitasPage: React.FC = () => {
   } = useForm<IVisitaRegistroFormData>({
     resolver: zodResolver(visitaSchema) as any,
     defaultValues: {
-      fecha_visita: "2024-05-21",
+      fecha_visita: '2024-05-21',
       hora_inicio: horaParam,
-      hora_fin: "11:30 AM",
-      id_ruta: "RUT-002",
-      territorio: "NORTE",
+      hora_fin: '11:30 AM',
+      id_ruta: 'RUT-002',
+      territorio: 'NORTE',
       semana: 21,
-      dia: "Martes",
-      asesor_nombre: "Juan Pérez",
+      dia: 'Martes',
+      asesor_nombre: 'Juan Pérez',
 
-      id_cliente: "cli-001",
+      id_cliente: 'cli-001',
       cliente_nombre: clienteParam,
-      codigo_cliente: "CJI-001245",
-      tipo_cliente: "Industrial",
-      municipio: "Barranquilla",
-      contacto: "Carlos Julio Mendoza",
-      telefono: "300 123 4567",
-      cargo: "Jefe de Compras",
-      canal_contacto: "Presencial",
+      codigo_cliente: 'CJI-001245',
+      tipo_cliente: 'Industrial',
+      municipio: 'Barranquilla',
+      contacto: 'Carlos Julio Mendoza',
+      telefono: '300 123 4567',
+      cargo: 'Jefe de Compras',
+      canal_contacto: 'Presencial',
 
-      objetivo_visita: "Presentación de nueva línea",
-      tipo_visita: "Desarrollo de cliente",
-      potencial_cliente: "Alto",
-      estado_visita: "VISITADO",
-      resultado_visita: "Interesado",
-      interes_productos: "Alto",
-      modulo_interes: "Calidad y precio",
-      competencia_mencionada: "Inducacor",
+      objetivo_visita: 'Presentación de nueva línea',
+      tipo_visita: 'Desarrollo de cliente',
+      potencial_cliente: 'Alto',
+      estado_visita: 'VISITADO',
+      resultado_visita: 'Interesado',
+      interes_productos: 'Alto',
+      modulo_interes: 'Calidad y precio',
+      competencia_mencionada: 'Inducacor',
       observaciones:
-        "Cliente interesado en la nueva línea de equipos de soldadura. Solicita cotización formal y muestras de productos.",
+        'Cliente interesado en la nueva línea de equipos de soldadura. Solicita cotización formal y muestras de productos.',
 
       genero_cotizacion: true,
-      numero_cotizacion: "COT-1242",
+      numero_cotizacion: 'COT-1242',
       valor_cotizacion: 24800000,
-      moneda: "COP",
+      moneda: 'COP',
 
       genero_pedido: true,
-      numero_pedido: "PED-568",
+      numero_pedido: 'PED-568',
       valor_pedido: 18500000,
-      fecha_estimada_entrega: "2024-05-30",
+      fecha_estimada_entrega: '2024-05-30',
 
-      fecha_proxima_visita: "2024-05-28",
-      hora_proxima_visita: "09:00 AM",
+      fecha_proxima_visita: '2024-05-28',
+      hora_proxima_visita: '09:00 AM',
       objetivo_proximo_seguimiento:
-        "Presentar propuesta técnica y cierre comercial",
-      responsable_seguimiento: "Juan Pérez",
+        'Presentar propuesta técnica y cierre comercial',
+      responsable_seguimiento: 'Juan Pérez',
     },
   });
 
@@ -158,14 +158,14 @@ export const VisitasPage: React.FC = () => {
       );
       if (match) {
         setActiveCliente(match);
-        setValue("cliente_nombre", match.nombre_comercial);
-        setValue("codigo_cliente", match.codigo);
-        setValue("municipio", match.municipio);
-        setValue("tipo_cliente", match.tipo_cliente_nombre);
+        setValue('cliente_nombre', match.nombre_comercial);
+        setValue('codigo_cliente', match.codigo);
+        setValue('municipio', match.municipio);
+        setValue('tipo_cliente', match.tipo_cliente_nombre);
         if (match.contactos && match.contactos[0]) {
-          setValue("contacto", match.contactos[0].nombre);
-          setValue("cargo", match.contactos[0].cargo);
-          setValue("telefono", match.contactos[0].telefono);
+          setValue('contacto', match.contactos[0].nombre);
+          setValue('cargo', match.contactos[0].cargo);
+          setValue('telefono', match.contactos[0].telefono);
         }
       }
     });
@@ -181,19 +181,19 @@ export const VisitasPage: React.FC = () => {
       setSuccessToast(true);
       setTimeout(() => {
         setSuccessToast(false);
-        navigate("/");
+        navigate('/');
       }, 1500);
     } catch {
       setSuccessToast(true);
       setTimeout(() => {
         setSuccessToast(false);
-        navigate("/");
+        navigate('/');
       }, 1500);
     }
   };
 
   const handleUploadSuccess = (upload: IS3UploadResponse) => {
-    if (upload.s3_key.includes("/fotos/")) {
+    if (upload.s3_key.includes('/fotos/')) {
       setS3Fotos((prev) => [...prev, upload.s3_key]);
     } else {
       setS3Docs((prev) => [...prev, upload.s3_key]);
@@ -207,7 +207,7 @@ export const VisitasPage: React.FC = () => {
         <div>
           <div className="flex items-center gap-2 text-xs text-slate-500 mb-0.5">
             <span
-              onClick={() => navigate("/")}
+              onClick={() => navigate('/')}
               className="hover:text-[#EA580C] cursor-pointer"
             >
               Visitas
@@ -226,7 +226,7 @@ export const VisitasPage: React.FC = () => {
         <div className="flex items-center gap-2.5">
           <button
             type="button"
-            onClick={() => navigate("/")}
+            onClick={() => navigate('/')}
             className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 cursor-pointer shadow-2xs transition-colors"
           >
             Cancelar
@@ -237,7 +237,7 @@ export const VisitasPage: React.FC = () => {
             className="inline-flex items-center gap-1.5 rounded-lg bg-[#EA580C] hover:bg-[#D9480F] text-white px-5 py-2 text-xs font-bold cursor-pointer shadow-sm transition-colors disabled:opacity-50"
           >
             <Check className="h-4 w-4" />
-            {isSubmitting ? "Guardando..." : "Guardar visita"}
+            {isSubmitting ? 'Guardando...' : 'Guardar visita'}
           </button>
         </div>
       </div>
@@ -268,15 +268,15 @@ export const VisitasPage: React.FC = () => {
           <QuickActions
             clienteNombre={activeCliente?.nombre_comercial}
             onQuoteCreated={(num, val) => {
-              setValue("genero_cotizacion", true);
-              setValue("numero_cotizacion", num);
-              setValue("valor_cotizacion", val);
+              setValue('genero_cotizacion', true);
+              setValue('numero_cotizacion', num);
+              setValue('valor_cotizacion', val);
             }}
             onOrderCreated={(num, val, entrega) => {
-              setValue("genero_pedido", true);
-              setValue("numero_pedido", num);
-              setValue("valor_pedido", val);
-              setValue("fecha_estimada_entrega", entrega);
+              setValue('genero_pedido', true);
+              setValue('numero_pedido', num);
+              setValue('valor_pedido', val);
+              setValue('fecha_estimada_entrega', entrega);
             }}
             onPhotoUploaded={handleUploadSuccess}
           />

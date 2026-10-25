@@ -1,17 +1,17 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Search, Play } from "lucide-react";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Search, Play } from 'lucide-react';
 import {
   OpenStreetMapViewer,
   IMapMarkerItem,
-} from "../components/maps/OpenStreetMapViewer";
-import { Badge } from "../components/common/Badge";
-import { useVisitasMap } from "../hooks/useVisitasMap";
+} from '../components/maps/OpenStreetMapViewer';
+import { Badge } from '../components/common/Badge';
+import { useVisitasMap } from '../hooks/useVisitasMap';
 
 export const MapaPage: React.FC = () => {
   const navigate = useNavigate();
-  const [search, setSearch] = useState("");
-  const [estadoFilter, setEstadoFilter] = useState("Todos");
+  const [search, setSearch] = useState('');
+  const [estadoFilter, setEstadoFilter] = useState('Todos');
   const [selectedItem, setSelectedItem] = useState<IMapMarkerItem | null>(null);
 
   const { mapStops, isLoading } = useVisitasMap();
@@ -25,7 +25,7 @@ export const MapaPage: React.FC = () => {
     orden: stop.order ?? idx + 1,
     estado: stop.pinStatus,
     colorHex: stop.colorHex,
-    direccion: stop.address || "",
+    direccion: stop.address || '',
   }));
 
   const filteredMarkers = allMarkers.filter((m) => {
@@ -33,29 +33,29 @@ export const MapaPage: React.FC = () => {
       m.title.toLowerCase().includes(search.toLowerCase()) ||
       (m.direccion && m.direccion.toLowerCase().includes(search.toLowerCase()));
 
-    const estadoUpper = m.estado?.toUpperCase() || "";
+    const estadoUpper = m.estado?.toUpperCase() || '';
     const filterUpper = estadoFilter.toUpperCase();
 
     const matchesEstado =
-      estadoFilter === "Todos" ||
+      estadoFilter === 'Todos' ||
       estadoUpper === filterUpper ||
-      (filterUpper === "VISITADO" && estadoUpper === "VISITED") ||
-      (filterUpper === "PENDIENTE" && estadoUpper === "PENDING") ||
-      (filterUpper === "PEDIDO_CERRADO" && estadoUpper === "ORDER_CLOSED") ||
-      (filterUpper === "SIN_VISITAR" && estadoUpper === "NOT_VISITED") ||
-      (filterUpper === "REPROGRAMADO" && estadoUpper === "RESCHEDULED");
+      (filterUpper === 'VISITADO' && estadoUpper === 'VISITED') ||
+      (filterUpper === 'PENDIENTE' && estadoUpper === 'PENDING') ||
+      (filterUpper === 'PEDIDO_CERRADO' && estadoUpper === 'ORDER_CLOSED') ||
+      (filterUpper === 'SIN_VISITAR' && estadoUpper === 'NOT_VISITED') ||
+      (filterUpper === 'REPROGRAMADO' && estadoUpper === 'RESCHEDULED');
 
     return matchesSearch && matchesEstado;
   });
 
   const visitados = allMarkers.filter(
-    (m) => m.estado === "VISITED" || m.estado === "VISITADO",
+    (m) => m.estado === 'VISITED' || m.estado === 'VISITADO',
   ).length;
   const pendientes = allMarkers.filter(
-    (m) => m.estado === "PENDING" || m.estado === "PENDIENTE",
+    (m) => m.estado === 'PENDING' || m.estado === 'PENDIENTE',
   ).length;
   const pedidos = allMarkers.filter(
-    (m) => m.estado === "ORDER_CLOSED" || m.estado === "PEDIDO_CERRADO",
+    (m) => m.estado === 'ORDER_CLOSED' || m.estado === 'PEDIDO_CERRADO',
   ).length;
 
   return (
@@ -143,15 +143,15 @@ export const MapaPage: React.FC = () => {
                   onClick={() => setSelectedItem(marker)}
                   className={`p-2.5 rounded-lg cursor-pointer transition-colors ${
                     isSelected
-                      ? "bg-orange-50 border border-orange-200"
-                      : "hover:bg-slate-50"
+                      ? 'bg-orange-50 border border-orange-200'
+                      : 'hover:bg-slate-50'
                   }`}
                 >
                   <div className="flex items-center justify-between gap-1.5 mb-1">
                     <span className="font-bold text-slate-900 text-xs truncate">
                       #{marker.orden} {marker.title}
                     </span>
-                    <Badge variant={marker.estado?.toLowerCase() || "default"}>
+                    <Badge variant={marker.estado?.toLowerCase() || 'default'}>
                       {marker.estado}
                     </Badge>
                   </div>

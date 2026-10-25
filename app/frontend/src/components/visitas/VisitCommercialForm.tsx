@@ -1,5 +1,9 @@
 import React from 'react';
-import { UseFormRegister, UseFormWatch, UseFormSetValue } from 'react-hook-form';
+import {
+  UseFormRegister,
+  UseFormWatch,
+  UseFormSetValue,
+} from 'react-hook-form';
 import { IVisitaRegistroFormData } from '../../types/visita';
 
 interface VisitCommercialFormProps {

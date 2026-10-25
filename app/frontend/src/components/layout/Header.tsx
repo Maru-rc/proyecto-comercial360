@@ -111,7 +111,9 @@ export const Header: React.FC<HeaderProps> = ({
                         {b.label}
                       </button>
                     ) : (
-                      <span className="font-semibold text-slate-800">{b.label}</span>
+                      <span className="font-semibold text-slate-800">
+                        {b.label}
+                      </span>
                     )}
                     {i < breadcrumbs.length - 1 && <span>&gt;</span>}
                   </React.Fragment>
@@ -122,7 +124,10 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </div>
         ) : (
-          <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => navigate('/')}>
+          <div
+            className="flex items-center gap-2.5 cursor-pointer"
+            onClick={() => navigate('/')}
+          >
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0F172A] text-[#EA580C] shadow-xs">
               {/* Custom 360 target icon */}
               <div className="flex items-center gap-0.5">
@@ -138,7 +143,10 @@ export const Header: React.FC<HeaderProps> = ({
         )}
 
         {/* Global Search */}
-        <form onSubmit={handleSearchSubmit} className="hidden lg:flex items-center relative ml-4 w-72 xl:w-96">
+        <form
+          onSubmit={handleSearchSubmit}
+          className="hidden lg:flex items-center relative ml-4 w-72 xl:w-96"
+        >
           <Search className="absolute left-3 h-4 w-4 text-slate-400" />
           <input
             type="text"
@@ -155,7 +163,9 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Territory or Regional selector */}
         {isDirector ? (
           <div className="hidden md:flex flex-col items-start bg-slate-50 px-3 py-1 rounded-lg border border-slate-200">
-            <span className="text-[10px] uppercase font-semibold text-slate-400">Regional</span>
+            <span className="text-[10px] uppercase font-semibold text-slate-400">
+              Regional
+            </span>
             <div className="flex items-center gap-1">
               <select
                 value={regional}
@@ -171,7 +181,9 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         ) : (
           <div className="hidden md:flex flex-col items-start bg-slate-50 px-3 py-1 rounded-lg border border-slate-200">
-            <span className="text-[10px] uppercase font-semibold text-slate-400">Territorio</span>
+            <span className="text-[10px] uppercase font-semibold text-slate-400">
+              Territorio
+            </span>
             <div className="flex items-center gap-1">
               <select
                 value={territorio}
@@ -190,7 +202,9 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Semana selector */}
         <div className="hidden sm:flex flex-col items-start bg-slate-50 px-3 py-1 rounded-lg border border-slate-200">
-          <span className="text-[10px] uppercase font-semibold text-slate-400">Semana</span>
+          <span className="text-[10px] uppercase font-semibold text-slate-400">
+            Semana
+          </span>
           <div className="flex items-center gap-1.5">
             <Calendar className="h-3.5 w-3.5 text-slate-400" />
             <select
@@ -252,11 +266,17 @@ export const Header: React.FC<HeaderProps> = ({
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
                         <span className={`w-2 h-2 rounded-full ${n.color}`} />
-                        <span className="font-bold text-slate-800 text-xs">{n.titulo}</span>
+                        <span className="font-bold text-slate-800 text-xs">
+                          {n.titulo}
+                        </span>
                       </div>
-                      <span className="text-[10px] text-slate-400">{n.tiempo}</span>
+                      <span className="text-[10px] text-slate-400">
+                        {n.tiempo}
+                      </span>
                     </div>
-                    <p className="text-[11px] text-slate-600 pl-3.5">{n.detalle}</p>
+                    <p className="text-[11px] text-slate-600 pl-3.5">
+                      {n.detalle}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -272,7 +292,10 @@ export const Header: React.FC<HeaderProps> = ({
             className="flex items-center gap-2.5 rounded-lg p-1 hover:bg-slate-100 transition-colors cursor-pointer text-left"
           >
             <img
-              src={user?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'}
+              src={
+                user?.avatarUrl ||
+                'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'
+              }
               alt={user?.nombre || 'Usuario'}
               className="h-8 w-8 rounded-full object-cover ring-2 ring-slate-100"
             />
@@ -281,7 +304,8 @@ export const Header: React.FC<HeaderProps> = ({
                 {user?.nombre || 'Juan Pérez'}
               </p>
               <p className="text-[11px] text-slate-500 leading-tight">
-                {user?.cargo || (isDirector ? 'Director Regional' : 'Asesor Comercial')}
+                {user?.cargo ||
+                  (isDirector ? 'Director Regional' : 'Asesor Comercial')}
               </p>
             </div>
             <ChevronDown className="h-4 w-4 text-slate-400" />
@@ -290,7 +314,9 @@ export const Header: React.FC<HeaderProps> = ({
           {userMenuOpen && (
             <div className="absolute right-0 mt-2 w-56 rounded-xl bg-white p-2 shadow-xl border border-slate-100 z-50 animate-in fade-in slide-in-from-top-2">
               <div className="px-3 py-2 border-b border-slate-100 mb-1">
-                <p className="text-xs font-bold text-[#0F172A]">{user?.nombre}</p>
+                <p className="text-xs font-bold text-[#0F172A]">
+                  {user?.nombre}
+                </p>
                 <p className="text-[11px] text-slate-500">{user?.email}</p>
                 <span className="inline-block mt-1 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-orange-100 text-[#EA580C]">
                   {user?.rol}

@@ -17,7 +17,9 @@ export const OrderModal: React.FC<OrderModalProps> = ({
   onSuccess,
   clienteNombre = 'Metalúrgicas S.A.S.',
 }) => {
-  const [numero, setNumero] = useState(() => `PED-${Math.floor(100 + Math.random() * 900)}`);
+  const [numero, setNumero] = useState(
+    () => `PED-${Math.floor(100 + Math.random() * 900)}`,
+  );
   const [valor, setValor] = useState('18500000');
   const [fechaEntrega, setFechaEntrega] = useState('2024-05-30');
   const [isSubmitting, setIsSubmitting] = useState(false);

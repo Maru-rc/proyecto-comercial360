@@ -1,5 +1,10 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from 'lucide-react';
 
 export interface PaginationProps {
   currentPage: number;
@@ -57,9 +62,11 @@ export const Pagination: React.FC<PaginationProps> = ({
     >
       <div className="flex items-center gap-3">
         <span>
-          Mostrando <strong className="font-bold text-slate-800">{startItem}</strong> a{' '}
+          Mostrando{' '}
+          <strong className="font-bold text-slate-800">{startItem}</strong> a{' '}
           <strong className="font-bold text-slate-800">{endItem}</strong> de{' '}
-          <strong className="font-bold text-slate-800">{totalItems}</strong> registros
+          <strong className="font-bold text-slate-800">{totalItems}</strong>{' '}
+          registros
         </span>
 
         {onPageSizeChange && (
@@ -109,7 +116,10 @@ export const Pagination: React.FC<PaginationProps> = ({
           {getPageNumbers().map((p, idx) => {
             if (p === '...') {
               return (
-                <span key={`dots-${idx}`} className="px-1 text-slate-400 select-none">
+                <span
+                  key={`dots-${idx}`}
+                  className="px-1 text-slate-400 select-none"
+                >
                   ...
                 </span>
               );

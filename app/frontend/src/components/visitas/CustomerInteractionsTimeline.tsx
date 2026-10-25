@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 import {
   CheckCircle2,
   FileText,
@@ -6,11 +6,11 @@ import {
   ShoppingCart,
   UserPlus,
   type LucideIcon,
-} from "lucide-react";
+} from 'lucide-react';
 import {
   getClienteHistorial,
   type ClienteHistorialItem,
-} from "../../api/clientes";
+} from '../../api/clientes';
 
 interface CustomerInteractionsTimelineProps {
   clienteId?: string | number;
@@ -20,43 +20,43 @@ const resolveInteractionStyle = (
   accion: string,
 ): { icon: LucideIcon; color: string } => {
   const lower = accion.toLowerCase();
-  if (lower.includes("cotizaci")) {
+  if (lower.includes('cotizaci')) {
     return {
       icon: FileText,
-      color: "text-[#2563EB] bg-blue-50 border-blue-200",
+      color: 'text-[#2563EB] bg-blue-50 border-blue-200',
     };
   }
-  if (lower.includes("pedido")) {
+  if (lower.includes('pedido')) {
     return {
       icon: ShoppingCart,
-      color: "text-[#7C3AED] bg-purple-50 border-purple-200",
+      color: 'text-[#7C3AED] bg-purple-50 border-purple-200',
     };
   }
-  if (lower.includes("seguimiento") || lower.includes("reprogram")) {
+  if (lower.includes('seguimiento') || lower.includes('reprogram')) {
     return {
       icon: Clock,
-      color: "text-[#EA580C] bg-orange-50 border-orange-200",
+      color: 'text-[#EA580C] bg-orange-50 border-orange-200',
     };
   }
-  if (lower.includes("cliente")) {
+  if (lower.includes('cliente')) {
     return {
       icon: UserPlus,
-      color: "text-slate-700 bg-slate-100 border-slate-300",
+      color: 'text-slate-700 bg-slate-100 border-slate-300',
     };
   }
   return {
     icon: CheckCircle2,
-    color: "text-[#16A34A] bg-emerald-50 border-emerald-200",
+    color: 'text-[#16A34A] bg-emerald-50 border-emerald-200',
   };
 };
 
 const formatHistoryDate = (raw: string): string => {
   const parsed = new Date(raw);
   if (Number.isNaN(parsed.getTime())) return raw;
-  return parsed.toLocaleDateString("es-CO", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
+  return parsed.toLocaleDateString('es-CO', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
   });
 };
 

@@ -1,9 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Download,
-  FileSpreadsheet,
-  CheckCircle,
-} from 'lucide-react';
+import { Download, FileSpreadsheet, CheckCircle } from 'lucide-react';
 import { MOCK_SEGUIMIENTO_VISITAS, downloadCsvReport } from '../api/kpis';
 import { MOCK_COTIZACIONES } from '../api/cotizaciones';
 import { MOCK_PEDIDOS } from '../api/pedidos';
@@ -12,7 +8,9 @@ import { Badge } from '../components/common/Badge';
 import { Pagination } from '../components/common/Pagination';
 
 export const ReportesPage: React.FC = () => {
-  const [tipoReporte, setTipoReporte] = useState<'visitas' | 'cotizaciones' | 'pedidos' | 'clientes'>('visitas');
+  const [tipoReporte, setTipoReporte] = useState<
+    'visitas' | 'cotizaciones' | 'pedidos' | 'clientes'
+  >('visitas');
   const [fechaDesde, setFechaDesde] = useState('2024-05-01');
   const [fechaHasta, setFechaHasta] = useState('2024-05-31');
   const [territorio, setTerritorio] = useState('Todos');
@@ -24,16 +22,24 @@ export const ReportesPage: React.FC = () => {
     tipoReporte === 'visitas'
       ? MOCK_SEGUIMIENTO_VISITAS.length
       : tipoReporte === 'cotizaciones'
-      ? MOCK_COTIZACIONES.length
-      : tipoReporte === 'pedidos'
-      ? MOCK_PEDIDOS.length
-      : MOCK_CLIENTES.length;
+        ? MOCK_COTIZACIONES.length
+        : tipoReporte === 'pedidos'
+          ? MOCK_PEDIDOS.length
+          : MOCK_CLIENTES.length;
 
   const handleDownloadReport = (format: 'csv' | 'excel') => {
     if (tipoReporte === 'visitas') {
       downloadCsvReport(territorio, '21');
     } else if (tipoReporte === 'cotizaciones') {
-      const headers = ['Numero', 'Cliente', 'Fecha', 'Validez', 'Asesor', 'Valor', 'Estado'];
+      const headers = [
+        'Numero',
+        'Cliente',
+        'Fecha',
+        'Validez',
+        'Asesor',
+        'Valor',
+        'Estado',
+      ];
       const rows = MOCK_COTIZACIONES.map((c) => [
         c.numero,
         c.cliente_nombre,
@@ -45,7 +51,10 @@ export const ReportesPage: React.FC = () => {
       ]);
       const csvContent =
         '\uFEFF' +
-        [headers.join(','), ...rows.map((r) => r.map((val) => `"${val}"`).join(','))].join('\n');
+        [
+          headers.join(','),
+          ...rows.map((r) => r.map((val) => `"${val}"`).join(',')),
+        ].join('\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -53,7 +62,15 @@ export const ReportesPage: React.FC = () => {
       link.download = `Reporte_Cotizaciones_Comercial360.${format === 'excel' ? 'csv' : 'csv'}`;
       link.click();
     } else if (tipoReporte === 'pedidos') {
-      const headers = ['Numero', 'Cliente', 'Fecha', 'Fecha_Entrega', 'Asesor', 'Valor', 'Estado'];
+      const headers = [
+        'Numero',
+        'Cliente',
+        'Fecha',
+        'Fecha_Entrega',
+        'Asesor',
+        'Valor',
+        'Estado',
+      ];
       const rows = MOCK_PEDIDOS.map((p) => [
         p.numero,
         p.cliente_nombre,
@@ -65,7 +82,10 @@ export const ReportesPage: React.FC = () => {
       ]);
       const csvContent =
         '\uFEFF' +
-        [headers.join(','), ...rows.map((r) => r.map((val) => `"${val}"`).join(','))].join('\n');
+        [
+          headers.join(','),
+          ...rows.map((r) => r.map((val) => `"${val}"`).join(',')),
+        ].join('\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -73,7 +93,15 @@ export const ReportesPage: React.FC = () => {
       link.download = `Reporte_Pedidos_Comercial360.${format === 'excel' ? 'csv' : 'csv'}`;
       link.click();
     } else {
-      const headers = ['Codigo', 'Cliente', 'NIT', 'Municipio', 'Direccion', 'Tipo', 'Potencial'];
+      const headers = [
+        'Codigo',
+        'Cliente',
+        'NIT',
+        'Municipio',
+        'Direccion',
+        'Tipo',
+        'Potencial',
+      ];
       const rows = MOCK_CLIENTES.map((c) => [
         c.codigo,
         c.nombre_comercial,
@@ -85,7 +113,10 @@ export const ReportesPage: React.FC = () => {
       ]);
       const csvContent =
         '\uFEFF' +
-        [headers.join(','), ...rows.map((r) => r.map((val) => `"${val}"`).join(','))].join('\n');
+        [
+          headers.join(','),
+          ...rows.map((r) => r.map((val) => `"${val}"`).join(',')),
+        ].join('\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -103,9 +134,12 @@ export const ReportesPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200/90 shadow-xs">
         <div>
-          <h1 className="text-lg font-extrabold text-[#0F172A]">Centro de Reportes y Exportación</h1>
+          <h1 className="text-lg font-extrabold text-[#0F172A]">
+            Centro de Reportes y Exportación
+          </h1>
           <p className="text-xs text-slate-500">
-            Descargue bitácoras de campo, consolidados de ventas y carteras en formato CSV y Excel.
+            Descargue bitácoras de campo, consolidados de ventas y carteras en
+            formato CSV y Excel.
           </p>
         </div>
 
@@ -250,7 +284,10 @@ export const ReportesPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-700">
-                {MOCK_SEGUIMIENTO_VISITAS.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((f) => (
+                {MOCK_SEGUIMIENTO_VISITAS.slice(
+                  (currentPage - 1) * pageSize,
+                  currentPage * pageSize,
+                ).map((f) => (
                   <tr key={f.id} className="hover:bg-slate-50">
                     <td className="py-2 px-3 font-mono">{f.fecha}</td>
                     <td className="py-2 px-3 font-bold">{f.cliente}</td>
@@ -280,13 +317,20 @@ export const ReportesPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-700">
-                {MOCK_COTIZACIONES.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((c) => (
+                {MOCK_COTIZACIONES.slice(
+                  (currentPage - 1) * pageSize,
+                  currentPage * pageSize,
+                ).map((c) => (
                   <tr key={c.numero} className="hover:bg-slate-50">
-                    <td className="py-2 px-3 font-mono font-bold text-[#EA580C]">{c.numero}</td>
+                    <td className="py-2 px-3 font-mono font-bold text-[#EA580C]">
+                      {c.numero}
+                    </td>
                     <td className="py-2 px-3 font-bold">{c.cliente_nombre}</td>
                     <td className="py-2 px-3 font-mono">{c.fecha}</td>
                     <td className="py-2 px-3 font-mono">{c.validez}</td>
-                    <td className="py-2 px-3 font-mono font-bold">$ {c.valor.toLocaleString('es-CO')}</td>
+                    <td className="py-2 px-3 font-mono font-bold">
+                      $ {c.valor.toLocaleString('es-CO')}
+                    </td>
                     <td className="py-2 px-3">
                       <span className="font-bold text-[10px]">{c.estado}</span>
                     </td>
@@ -309,13 +353,20 @@ export const ReportesPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-700">
-                {MOCK_PEDIDOS.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((p) => (
+                {MOCK_PEDIDOS.slice(
+                  (currentPage - 1) * pageSize,
+                  currentPage * pageSize,
+                ).map((p) => (
                   <tr key={p.numero} className="hover:bg-slate-50">
-                    <td className="py-2 px-3 font-mono font-bold text-blue-600">{p.numero}</td>
+                    <td className="py-2 px-3 font-mono font-bold text-blue-600">
+                      {p.numero}
+                    </td>
                     <td className="py-2 px-3 font-bold">{p.cliente_nombre}</td>
                     <td className="py-2 px-3 font-mono">{p.fecha}</td>
                     <td className="py-2 px-3 font-mono">{p.fecha_entrega}</td>
-                    <td className="py-2 px-3 font-mono font-bold">$ {p.valor.toLocaleString('es-CO')}</td>
+                    <td className="py-2 px-3 font-mono font-bold">
+                      $ {p.valor.toLocaleString('es-CO')}
+                    </td>
                     <td className="py-2 px-3">
                       <span className="font-bold text-[10px]">{p.estado}</span>
                     </td>
@@ -338,15 +389,24 @@ export const ReportesPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-700">
-                {MOCK_CLIENTES.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((cl) => (
+                {MOCK_CLIENTES.slice(
+                  (currentPage - 1) * pageSize,
+                  currentPage * pageSize,
+                ).map((cl) => (
                   <tr key={cl.codigo} className="hover:bg-slate-50">
-                    <td className="py-2 px-3 font-mono font-bold">{cl.codigo}</td>
-                    <td className="py-2 px-3 font-bold">{cl.nombre_comercial}</td>
+                    <td className="py-2 px-3 font-mono font-bold">
+                      {cl.codigo}
+                    </td>
+                    <td className="py-2 px-3 font-bold">
+                      {cl.nombre_comercial}
+                    </td>
                     <td className="py-2 px-3 font-mono">{cl.nit}</td>
                     <td className="py-2 px-3">{cl.municipio}</td>
                     <td className="py-2 px-3">{cl.tipo_cliente_nombre}</td>
                     <td className="py-2 px-3">
-                      <Badge variant={cl.potencial_nombre}>{cl.potencial_nombre}</Badge>
+                      <Badge variant={cl.potencial_nombre}>
+                        {cl.potencial_nombre}
+                      </Badge>
                     </td>
                   </tr>
                 ))}
@@ -368,7 +428,9 @@ export const ReportesPage: React.FC = () => {
       {downloadSuccess && (
         <div className="fixed bottom-8 right-8 z-50 flex items-center gap-3 bg-emerald-600 text-white px-5 py-3.5 rounded-xl shadow-2xl animate-in fade-in slide-in-from-bottom-5">
           <CheckCircle className="h-5 w-5" />
-          <span className="text-xs font-bold">¡Reporte generado y descargado exitosamente!</span>
+          <span className="text-xs font-bold">
+            ¡Reporte generado y descargado exitosamente!
+          </span>
         </div>
       )}
     </div>

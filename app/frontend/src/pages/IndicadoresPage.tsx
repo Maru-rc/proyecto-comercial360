@@ -57,9 +57,12 @@ export const IndicadoresPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200/90 shadow-xs">
         <div>
-          <h1 className="text-lg font-extrabold text-[#0F172A]">Tablero de Indicadores y Analítica</h1>
+          <h1 className="text-lg font-extrabold text-[#0F172A]">
+            Tablero de Indicadores y Analítica
+          </h1>
           <p className="text-xs text-slate-500">
-            Inteligencia comercial, conversión de visitas, cumplimiento de ventas y ranking del equipo.
+            Inteligencia comercial, conversión de visitas, cumplimiento de
+            ventas y ranking del equipo.
           </p>
         </div>
 
@@ -71,7 +74,9 @@ export const IndicadoresPage: React.FC = () => {
               onChange={(e) => setPeriodo(e.target.value)}
               className="bg-transparent font-semibold text-slate-800 focus:outline-none cursor-pointer"
             >
-              <option value="Mayo 2024 (Mes en curso)">Mayo 2024 (Mes en curso)</option>
+              <option value="Mayo 2024 (Mes en curso)">
+                Mayo 2024 (Mes en curso)
+              </option>
               <option value="Abril 2024">Abril 2024</option>
               <option value="Q1 2024">Primer Trimestre 2024</option>
             </select>
@@ -84,7 +89,9 @@ export const IndicadoresPage: React.FC = () => {
               onChange={(e) => setTerritorio(e.target.value)}
               className="bg-transparent font-semibold text-slate-800 focus:outline-none cursor-pointer"
             >
-              <option value="Todos los territorios">Todos los territorios</option>
+              <option value="Todos los territorios">
+                Todos los territorios
+              </option>
               <option value="Atlántico Norte">Atlántico Norte</option>
               <option value="Atlántico Sur">Atlántico Sur</option>
               <option value="Atlántico Centro">Atlántico Centro</option>
@@ -104,13 +111,17 @@ export const IndicadoresPage: React.FC = () => {
             </span>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-slate-900">79.2%</span>
+            <span className="text-2xl font-extrabold text-slate-900">
+              79.2%
+            </span>
             <span className="text-xs text-emerald-600 font-bold">+4.2%</span>
           </div>
           <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
             <div className="bg-emerald-500 h-full rounded-full w-[79%]"></div>
           </div>
-          <p className="text-[10px] text-slate-400">19 visitas efectivas de 24 programadas</p>
+          <p className="text-[10px] text-slate-400">
+            19 visitas efectivas de 24 programadas
+          </p>
         </div>
 
         {/* KPI 2 */}
@@ -122,13 +133,17 @@ export const IndicadoresPage: React.FC = () => {
             </span>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-slate-900">85.8%</span>
+            <span className="text-2xl font-extrabold text-slate-900">
+              85.8%
+            </span>
             <span className="text-xs text-[#EA580C] font-bold">$128.7M</span>
           </div>
           <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
             <div className="bg-[#EA580C] h-full rounded-full w-[86%]"></div>
           </div>
-          <p className="text-[10px] text-slate-400">Meta comercial mensual: $150.0M COP</p>
+          <p className="text-[10px] text-slate-400">
+            Meta comercial mensual: $150.0M COP
+          </p>
         </div>
 
         {/* KPI 3 */}
@@ -140,13 +155,19 @@ export const IndicadoresPage: React.FC = () => {
             </span>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-slate-900">89.1%</span>
-            <span className="text-xs text-blue-600 font-bold">107 Clientes</span>
+            <span className="text-2xl font-extrabold text-slate-900">
+              89.1%
+            </span>
+            <span className="text-xs text-blue-600 font-bold">
+              107 Clientes
+            </span>
           </div>
           <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
             <div className="bg-blue-600 h-full rounded-full w-[89%]"></div>
           </div>
-          <p className="text-[10px] text-slate-400">Clientes activos con visita este mes</p>
+          <p className="text-[10px] text-slate-400">
+            Clientes activos con visita este mes
+          </p>
         </div>
 
         {/* KPI 4 */}
@@ -158,13 +179,17 @@ export const IndicadoresPage: React.FC = () => {
             </span>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-slate-900">$16.1M</span>
+            <span className="text-2xl font-extrabold text-slate-900">
+              $16.1M
+            </span>
             <span className="text-xs text-emerald-600 font-bold">+12%</span>
           </div>
           <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
             <div className="bg-purple-600 h-full rounded-full w-[75%]"></div>
           </div>
-          <p className="text-[10px] text-slate-400">Promedio COP por orden de venta</p>
+          <p className="text-[10px] text-slate-400">
+            Promedio COP por orden de venta
+          </p>
         </div>
       </div>
 
@@ -194,28 +219,36 @@ export const IndicadoresPage: React.FC = () => {
                       idx === 0
                         ? 'bg-amber-400 text-slate-900 shadow-xs'
                         : idx === 1
-                        ? 'bg-slate-300 text-slate-800'
-                        : 'bg-orange-100 text-[#EA580C]'
+                          ? 'bg-slate-300 text-slate-800'
+                          : 'bg-orange-100 text-[#EA580C]'
                     }`}
                   >
                     #{idx + 1}
                   </span>
                   <div>
-                    <p className="font-bold text-slate-900 text-xs">{a.nombre}</p>
+                    <p className="font-bold text-slate-900 text-xs">
+                      {a.nombre}
+                    </p>
                     <p className="text-[11px] text-slate-400">{a.territorio}</p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-5 text-xs">
                   <div>
-                    <span className="text-[10px] text-slate-400 block font-semibold">Ventas</span>
+                    <span className="text-[10px] text-slate-400 block font-semibold">
+                      Ventas
+                    </span>
                     <span className="font-mono font-bold text-slate-800">
                       $ {(a.ventas / 1000000).toFixed(1)}M
                     </span>
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-400 block font-semibold">Pedidos</span>
-                    <span className="font-bold text-slate-800">{a.pedidos}</span>
+                    <span className="text-[10px] text-slate-400 block font-semibold">
+                      Pedidos
+                    </span>
+                    <span className="font-bold text-slate-800">
+                      {a.pedidos}
+                    </span>
                   </div>
                   <div className="w-24">
                     <div className="flex justify-between text-[10px] font-bold text-slate-700 mb-1">

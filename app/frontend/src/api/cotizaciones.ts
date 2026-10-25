@@ -14,7 +14,8 @@ export const MOCK_COTIZACIONES: ICotizacion[] = [
     valor: 18500000,
     moneda: 'COP',
     estado: 'ENVIADA',
-    descripcion: 'Equipos de corte por plasma y consumibles de alta resistencia',
+    descripcion:
+      'Equipos de corte por plasma y consumibles de alta resistencia',
   },
   {
     id_cotizacion: 'cot-2',
@@ -28,7 +29,8 @@ export const MOCK_COTIZACIONES: ICotizacion[] = [
     valor: 24800000,
     moneda: 'COP',
     estado: 'APROBADA',
-    descripcion: 'Equipos de soldadura industrial multiproceso y kit de protección',
+    descripcion:
+      'Equipos de soldadura industrial multiproceso y kit de protección',
   },
   {
     id_cotizacion: 'cot-3',
@@ -42,7 +44,8 @@ export const MOCK_COTIZACIONES: ICotizacion[] = [
     valor: 12600000,
     moneda: 'COP',
     estado: 'APROBADA',
-    descripcion: 'Lote de discos abrasivos, electrodos y herramientas eléctricas',
+    descripcion:
+      'Lote de discos abrasivos, electrodos y herramientas eléctricas',
   },
   {
     id_cotizacion: 'cot-4',
@@ -120,7 +123,7 @@ export const getCotizaciones = async (params?: {
         (c) =>
           c.numero.toLowerCase().includes(q) ||
           (c.cliente_nombre && c.cliente_nombre.toLowerCase().includes(q)) ||
-          (c.descripcion && c.descripcion.toLowerCase().includes(q))
+          (c.descripcion && c.descripcion.toLowerCase().includes(q)),
       );
     }
     if (params?.estado && params.estado !== 'Todos') {
@@ -130,7 +133,9 @@ export const getCotizaciones = async (params?: {
   }
 };
 
-export const crearCotizacionApi = async (data: Partial<ICotizacion>): Promise<ICotizacion> => {
+export const crearCotizacionApi = async (
+  data: Partial<ICotizacion>,
+): Promise<ICotizacion> => {
   const newCot: ICotizacion = {
     id_cotizacion: `cot-${Date.now()}`,
     numero: data.numero || `COT-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -139,7 +144,9 @@ export const crearCotizacionApi = async (data: Partial<ICotizacion>): Promise<IC
     id_asesor: data.id_asesor || 'ase-001',
     asesor_nombre: data.asesor_nombre || 'Juan Pérez',
     fecha: data.fecha || new Date().toISOString().split('T')[0],
-    validez: data.validez || new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0],
+    validez:
+      data.validez ||
+      new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0],
     valor: Number(data.valor || 15000000),
     moneda: data.moneda || 'COP',
     estado: (data.estado as any) || 'ENVIADA',
