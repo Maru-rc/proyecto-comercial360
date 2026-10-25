@@ -98,6 +98,7 @@ export class ClientsController {
   }
 
   @Get('catalogos')
+  @Auth()
   async getCatalogos() {
     return this.getCatalogsUseCase.execute();
   }
@@ -141,6 +142,7 @@ export class ClientsController {
   }
 
   @Get('plantilla')
+  @Auth()
   @BypassTransform()
   getPlantilla(@Res() res: Response) {
     const csvContent =
