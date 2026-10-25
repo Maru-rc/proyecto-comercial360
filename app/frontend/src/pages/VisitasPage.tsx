@@ -13,7 +13,9 @@ import { CustomerSummaryCard } from '../components/visitas/CustomerSummaryCard';
 import { CustomerInteractionsTimeline } from '../components/visitas/CustomerInteractionsTimeline';
 import { QuickActions } from '../components/visitas/QuickActions';
 import { IVisitaRegistroFormData } from '../types/visita';
+import { useQuery } from '@tanstack/react-query';
 import { useVisitas } from '../hooks/useVisitas';
+import { getVisita } from '../api/visitas';
 import { useClientes } from '../hooks/useClientes';
 import { useAuthStore } from '../store/useAuthStore';
 import { ICliente } from '../types/cliente';
@@ -135,6 +137,12 @@ export const VisitasPage: React.FC = () => {
   const clienteIdParam = searchParams.get('clienteId');
   const horaParam = searchParams.get('hora') || '';
   const visitaId = Number(searchParams.get('visita')) || undefined;
+  const soloLectura = searchParams.get('modo') === 'ver';
+  const visitaQuery = useQuery({
+    queryKey: ['visits', 'detail', visitaId],
+    queryFn: () => getVisita(visitaId!),
+    enabled: Boolean(visitaId),
+  });
   const [hoy] = useState(() => new Date());
 
   const {
@@ -188,10 +196,34 @@ export const VisitasPage: React.FC = () => {
 
   const clienteNombre = useWatch({ control, name: 'cliente_nombre' });
 
+  const clienteIdVisita = visitaQuery.data
+    ? String(visitaQuery.data.clientId)
+    : null;
   const activeCliente = useMemo(
-    () => findCliente(clientes, clienteIdParam, clienteNombre ?? ''),
-    [clientes, clienteIdParam, clienteNombre],
+    () =>
+      findCliente(
+        clientes,
+        clienteIdVisita ?? clienteIdParam,
+        clienteNombre ?? '',
+      ),
+    [clientes, clienteIdVisita, clienteIdParam, clienteNombre],
   );
+
+  // HU-24: an existing visit opens with its stored data
+  useEffect(() => {
+    const visita = visitaQuery.data;
+    if (!visita) return;
+    setValue('fecha_visita', String(visita.scheduledDate).slice(0, 10));
+    if (visita.startTime) setValue('hora_inicio', visita.startTime.slice(0, 5));
+    if (visita.endTime)
+      setValue('hora_fin', String(visita.endTime).slice(11, 16));
+    if (visita.objective) setValue('objetivo_visita', visita.objective);
+    if (visita.observation) setValue('observaciones', visita.observation);
+    if (visita.visitStatus === 'RESCHEDULED')
+      setValue('estado_visita', 'REPROGRAMADO');
+    if (visita.visitStatus === 'CANCELLED')
+      setValue('estado_visita', 'SIN_VISITAR');
+  }, [visitaQuery.data, setValue]);
 
   useEffect(() => {
     const match = activeCliente;
@@ -207,7 +239,14 @@ export const VisitasPage: React.FC = () => {
     }
   }, [activeCliente, setValue]);
 
+  const titulo = soloLectura
+    ? 'Detalle de visita'
+    : visitaId
+      ? 'Registrar resultado de visita'
+      : 'Registrar visita';
+
   const onSubmit = async (data: IVisitaRegistroFormData) => {
+    if (soloLectura) return;
     setSubmitError('');
     try {
       await registrarVisita({
@@ -255,13 +294,15 @@ export const VisitasPage: React.FC = () => {
               Visitas
             </span>
             <span>&gt;</span>
-            <span className="font-bold text-slate-800">Registrar visita</span>
+            <span className="font-bold text-slate-800">{titulo}</span>
           </div>
           <h1 className="text-lg font-extrabold text-[#0F172A] leading-tight">
-            Registrar visita
+            {titulo}
           </h1>
           <p className="text-xs text-slate-500">
-            Complete la información de la visita realizada
+            {soloLectura
+              ? 'Consulta de la visita registrada'
+              : 'Complete la información de la visita realizada'}
           </p>
         </div>
 
@@ -271,19 +312,38 @@ export const VisitasPage: React.FC = () => {
             onClick={() => navigate('/')}
             className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 cursor-pointer shadow-2xs transition-colors"
           >
-            Cancelar
+            {soloLectura ? 'Volver' : 'Cancelar'}
           </button>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-[#EA580C] hover:bg-[#D9480F] text-white px-5 py-2 text-xs font-bold cursor-pointer shadow-sm transition-colors disabled:opacity-50"
-          >
-            <Check className="h-4 w-4" />
-            {isSubmitting ? 'Guardando...' : 'Guardar visita'}
-          </button>
+          {soloLectura ? (
+            <button
+              type="button"
+              onClick={() =>
+                navigate(`/visitas/registrar?visita=${visitaId}`, {
+                  replace: true,
+                })
+              }
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[#EA580C] hover:bg-[#D9480F] text-white px-5 py-2 text-xs font-bold cursor-pointer shadow-sm transition-colors"
+            >
+              Editar visita
+            </button>
+          ) : (
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[#EA580C] hover:bg-[#D9480F] text-white px-5 py-2 text-xs font-bold cursor-pointer shadow-sm transition-colors disabled:opacity-50"
+            >
+              <Check className="h-4 w-4" />
+              {isSubmitting ? 'Guardando...' : 'Guardar visita'}
+            </button>
+          )}
         </div>
       </div>
 
+      {visitaQuery.isError && (
+        <p className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-700">
+          No se pudo cargar la visita: no existe o pertenece a otro asesor.
+        </p>
+      )}
       {(submitError || errors.id_cliente) && (
         <p className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-700">
           {submitError || errors.id_cliente?.message}
@@ -293,7 +353,10 @@ export const VisitasPage: React.FC = () => {
       {/* Grid: 5 Blocks Form (8 cols) & Side Summary (4 cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         {/* Main 5 Blocks Column */}
-        <div className="lg:col-span-8 space-y-4">
+        <fieldset
+          disabled={soloLectura}
+          className="lg:col-span-8 space-y-4 min-w-0"
+        >
           <VisitGeneralForm register={register} errors={errors} />
           <VisitCustomerForm
             register={register}
@@ -307,27 +370,29 @@ export const VisitasPage: React.FC = () => {
             setValue={setValue}
           />
           <VisitFollowupForm register={register} />
-        </div>
+        </fieldset>
 
         {/* Right Column: Customer Summary, Timeline, Quick Actions */}
         <div className="lg:col-span-4 space-y-4">
           <CustomerSummaryCard cliente={activeCliente} />
           <CustomerInteractionsTimeline clienteId={activeCliente?.id_cliente} />
-          <QuickActions
-            clienteNombre={activeCliente?.nombre_comercial}
-            onQuoteCreated={(num, val) => {
-              setValue('genero_cotizacion', true);
-              setValue('numero_cotizacion', num);
-              setValue('valor_cotizacion', val);
-            }}
-            onOrderCreated={(num, val, entrega) => {
-              setValue('genero_pedido', true);
-              setValue('numero_pedido', num);
-              setValue('valor_pedido', val);
-              setValue('fecha_estimada_entrega', entrega);
-            }}
-            onPhotoUploaded={handleUploadSuccess}
-          />
+          {!soloLectura && (
+            <QuickActions
+              clienteNombre={activeCliente?.nombre_comercial}
+              onQuoteCreated={(num, val) => {
+                setValue('genero_cotizacion', true);
+                setValue('numero_cotizacion', num);
+                setValue('valor_cotizacion', val);
+              }}
+              onOrderCreated={(num, val, entrega) => {
+                setValue('genero_pedido', true);
+                setValue('numero_pedido', num);
+                setValue('valor_pedido', val);
+                setValue('fecha_estimada_entrega', entrega);
+              }}
+              onPhotoUploaded={handleUploadSuccess}
+            />
+          )}
         </div>
       </div>
 

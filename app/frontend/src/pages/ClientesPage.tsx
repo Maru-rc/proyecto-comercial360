@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import {
   Search,
@@ -8,6 +9,7 @@ import {
   Mail,
   MapPin,
   Eye,
+  Pencil,
   Play,
   Check,
   Upload,
@@ -18,6 +20,8 @@ import { ICliente } from '../types/cliente';
 import {
   getClientes,
   crearCliente,
+  actualizarCliente,
+  getCatalogosClientes,
   importarClientes,
   descargarPlantilla,
   type ImportSummary,
@@ -27,6 +31,55 @@ import { Modal } from '../components/common/Modal';
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import { Pagination } from '../components/common/Pagination';
+import { useAuthStore } from '../store/useAuthStore';
+
+interface ClienteForm {
+  razon_social: string;
+  nombre_comercial: string;
+  nit: string;
+  direccion: string;
+  departamento: string;
+  municipio: string;
+  zona: string;
+  tipo: string;
+  potencial: string;
+  telefono: string;
+  email: string;
+  contacto: string;
+  cargo: string;
+}
+
+const EMPTY_FORM: ClienteForm = {
+  razon_social: '',
+  nombre_comercial: '',
+  nit: '',
+  direccion: '',
+  departamento: '',
+  municipio: '',
+  zona: '',
+  tipo: '',
+  potencial: '',
+  telefono: '',
+  email: '',
+  contacto: '',
+  cargo: '',
+};
+
+const toForm = (c: ICliente): ClienteForm => ({
+  razon_social: c.razon_social ?? '',
+  nombre_comercial: c.nombre_comercial ?? '',
+  nit: c.nit ?? '',
+  direccion: c.direccion ?? '',
+  departamento: c.departamento ?? '',
+  municipio: c.municipio ?? '',
+  zona: c.zona_nombre ?? '',
+  tipo: c.tipo_cliente_nombre ?? '',
+  potencial: c.potencial_nombre ?? '',
+  telefono: c.telefono ?? '',
+  email: c.email ?? '',
+  contacto: c.contactos?.[0]?.nombre ?? '',
+  cargo: c.contactos?.[0]?.cargo ?? '',
+});
 
 export const ClientesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -40,16 +93,18 @@ export const ClientesPage: React.FC = () => {
   const [pageSize, setPageSize] = useState(10);
 
   // New Client form state
-  const [newNombre, setNewNombre] = useState('');
-  const [newNit, setNewNit] = useState('');
-  const [newDireccion, setNewDireccion] = useState('');
-  const [newMunicipio, setNewMunicipio] = useState('Barranquilla');
-  const [newTipo, setNewTipo] = useState('Industrial');
-  const [newPotencial, setNewPotencial] = useState('Alto');
-  const [newTelefono, setNewTelefono] = useState('');
-  const [newEmail, setNewEmail] = useState('');
-  const [newContacto, setNewContacto] = useState('');
-  const [newCargo, setNewCargo] = useState('Jefe de Compras');
+  const [form, setForm] = useState<ClienteForm>(EMPTY_FORM);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [formError, setFormError] = useState('');
+  const [zona, setZona] = useState('Todas');
+  const [municipio, setMunicipio] = useState('');
+  const isDirector = useAuthStore((state) => state.user?.rol) !== 'ASESOR';
+  const { data: catalogos } = useQuery({
+    queryKey: ['clientes', 'catalogos'],
+    queryFn: getCatalogosClientes,
+  });
+  const setField = (field: keyof ClienteForm, value: string) =>
+    setForm((prev) => ({ ...prev, [field]: value }));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
@@ -57,8 +112,10 @@ export const ClientesPage: React.FC = () => {
   const [importResult, setImportResult] = useState<ImportSummary | null>(null);
 
   const fetchClientes = useCallback(() => {
-    getClientes({ search, tipo }).then((data) => setClientes(data));
-  }, [search, tipo]);
+    getClientes({ search, tipo, zona, municipio })
+      .then((data) => setClientes(data))
+      .catch(() => setClientes([]));
+  }, [search, tipo, zona, municipio]);
 
   useEffect(() => {
     fetchClientes();
@@ -80,12 +137,8 @@ export const ClientesPage: React.FC = () => {
       const blob = await descargarPlantilla();
       triggerBlobDownload(blob, 'plantilla_clientes.csv');
     } catch {
-      const csv =
-        'nit,razon_social,nombre_comercial,direccion,departamento,municipio,barrio,telefono,email,zona,tipo_cliente,potencial,estado_cliente,frecuencia_visita_dias,latitud,longitud,contacto_nombre,contacto_cargo,contacto_telefono,contacto_celular,contacto_email\n900.123.456-1,Metalúrgicas S.A.S,Metalúrgicas,Cra 38 # 74-120,Atlántico,Barranquilla,Betania,3001234567,contacto@metalurgicas.com,NORTE,Industrial,Alto,Activo,7,,,Carlos Julio Mendoza,Jefe de Compras,3001234567,3001234567,cmendoza@metalurgicas.com\n';
-      triggerBlobDownload(
-        new Blob([csv], { type: 'text/csv;charset=utf-8;' }),
-        'plantilla_clientes.csv',
-      );
+      setToastMessage('No se pudo descargar la plantilla.');
+      setTimeout(() => setToastMessage(''), 3000);
     }
   };
 
@@ -111,47 +164,85 @@ export const ClientesPage: React.FC = () => {
     }
   };
 
+  const openNewClient = () => {
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setFormError('');
+    setIsNewModalOpen(true);
+  };
+
+  const openEditClient = (cliente: ICliente) => {
+    setEditingId(String(cliente.id_cliente));
+    setForm(toForm(cliente));
+    setFormError('');
+    setIsNewModalOpen(true);
+  };
+
   const handleCreateClient = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newNombre.trim()) return;
+    const required: Array<keyof ClienteForm> = [
+      'razon_social',
+      'nit',
+      'direccion',
+      'departamento',
+      'municipio',
+      'zona',
+      'tipo',
+      'potencial',
+      'contacto',
+    ];
+    if (required.some((field) => !form[field].trim())) {
+      setFormError('Completa los campos obligatorios (*).');
+      return;
+    }
+    setFormError('');
     setIsSubmitting(true);
+    const datos: Partial<ICliente> = {
+      razon_social: form.razon_social.trim(),
+      nombre_comercial:
+        form.nombre_comercial.trim() || form.razon_social.trim(),
+      nit: form.nit.trim(),
+      direccion: form.direccion.trim(),
+      departamento: form.departamento.trim(),
+      municipio: form.municipio.trim(),
+      zona_nombre: form.zona,
+      tipo_cliente_nombre: form.tipo,
+      potencial_nombre: form.potencial as ICliente['potencial_nombre'],
+      telefono: form.telefono.trim() || undefined,
+      email: form.email.trim() || undefined,
+      contactos: [
+        {
+          id_contacto: '',
+          nombre: form.contacto.trim(),
+          cargo: form.cargo.trim(),
+          telefono: form.telefono.trim(),
+          email: form.email.trim(),
+          principal: true,
+        },
+      ],
+    };
     try {
-      const created = await crearCliente({
-        nombre_comercial: newNombre,
-        razon_social: newNombre,
-        nit:
-          newNit ||
-          `900.${Math.floor(100 + Math.random() * 900)}.${Math.floor(100 + Math.random() * 900)}-1`,
-        direccion: newDireccion || 'Calle 45 # 30-10',
-        municipio: newMunicipio,
-        tipo_cliente_nombre: newTipo,
-        potencial_nombre: newPotencial as 'Alto' | 'Medio' | 'Bajo',
-        telefono: newTelefono || '300 123 4567',
-        email: newEmail || 'compras@cliente.com',
-        contactos: [
-          {
-            id_contacto: `con-${Date.now()}`,
-            nombre: newContacto || 'Contacto Comercial',
-            cargo: newCargo,
-            telefono: newTelefono || '300 123 4567',
-            email: newEmail || 'compras@cliente.com',
-            principal: true,
-          },
-        ],
-      });
+      const saved = editingId
+        ? await actualizarCliente(editingId, datos)
+        : await crearCliente(datos);
       setIsNewModalOpen(false);
       setToastMessage(
-        `Cliente ${created.nombre_comercial} registrado con éxito.`,
+        `Cliente ${saved.nombre_comercial} ${editingId ? 'actualizado' : 'registrado'} con éxito.`,
       );
       setTimeout(() => setToastMessage(''), 3000);
-      // Reset form
-      setNewNombre('');
-      setNewNit('');
-      setNewDireccion('');
-      setNewTelefono('');
-      setNewEmail('');
-      setNewContacto('');
+      setForm(EMPTY_FORM);
+      setEditingId(null);
       fetchClientes();
+    } catch (err) {
+      const status = (err as { response?: { status?: number } }).response
+        ?.status;
+      setFormError(
+        status === 409
+          ? 'Ya existe otro cliente con ese NIT.'
+          : status === 403
+            ? 'Solo un director puede crear o editar clientes.'
+            : 'No se pudo guardar el cliente. Revisa los datos.',
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -182,7 +273,7 @@ export const ClientesPage: React.FC = () => {
           </button>
           <button
             type="button"
-            onClick={() => setIsNewModalOpen(true)}
+            onClick={openNewClient}
             className="inline-flex items-center gap-1.5 rounded-lg bg-[#EA580C] hover:bg-[#D9480F] text-white px-4 py-2 text-xs font-bold cursor-pointer shadow-sm transition-colors"
           >
             <Plus className="h-4 w-4" />
@@ -211,10 +302,31 @@ export const ClientesPage: React.FC = () => {
             className="rounded-lg border border-slate-200 bg-slate-50 py-1.5 px-3 text-xs text-slate-700 font-medium focus:outline-none cursor-pointer"
           >
             <option value="Todos">Todos los tipos</option>
-            <option value="Industrial">Industrial</option>
-            <option value="Distribuidor">Distribuidor</option>
-            <option value="Retail">Retail</option>
+            {catalogos?.tipos.map((t) => (
+              <option key={t.id} value={t.nombre}>
+                {t.nombre}
+              </option>
+            ))}
           </select>
+          <select
+            value={zona}
+            onChange={(e) => setZona(e.target.value)}
+            className="rounded-lg border border-slate-200 bg-slate-50 py-1.5 px-3 text-xs text-slate-700 font-medium focus:outline-none cursor-pointer"
+          >
+            <option value="Todas">Todas las zonas</option>
+            {catalogos?.zonas.map((z) => (
+              <option key={z.id} value={z.nombre}>
+                {z.nombre}
+              </option>
+            ))}
+          </select>
+          <input
+            type="text"
+            value={municipio}
+            onChange={(e) => setMunicipio(e.target.value)}
+            placeholder="Municipio"
+            className="w-32 rounded-lg border border-slate-200 bg-slate-50 py-1.5 px-3 text-xs text-slate-700 focus:outline-none"
+          />
         </div>
       </div>
 
@@ -288,13 +400,23 @@ export const ClientesPage: React.FC = () => {
                         >
                           <Eye className="h-3.5 w-3.5" />
                         </button>
+                        {isDirector && (
+                          <button
+                            type="button"
+                            onClick={() => openEditClient(c)}
+                            className="p-1.5 text-slate-400 hover:text-[#EA580C] hover:bg-orange-50 rounded-md cursor-pointer transition-colors"
+                            title="Editar cliente"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                        )}
                         <button
                           type="button"
                           onClick={() =>
                             navigate(
                               `/visitas/registrar?cliente=${encodeURIComponent(
                                 c.nombre_comercial,
-                              )}`,
+                              )}&clienteId=${c.id_cliente}`,
                             )
                           }
                           className="inline-flex items-center gap-1 px-2 py-1 bg-orange-50 hover:bg-[#EA580C] text-[#EA580C] hover:text-white rounded-md text-[11px] font-bold cursor-pointer transition-colors"
@@ -399,8 +521,16 @@ export const ClientesPage: React.FC = () => {
         <Modal
           isOpen={isNewModalOpen}
           onClose={() => setIsNewModalOpen(false)}
-          title="Crear nuevo cliente comercial"
-          description="Registre la cuenta para asignarle rutas, visitas y cotizaciones."
+          title={
+            editingId
+              ? 'Editar cliente comercial'
+              : 'Crear nuevo cliente comercial'
+          }
+          description={
+            editingId
+              ? 'Los cambios quedan registrados en el historial del cliente.'
+              : 'Registre la cuenta para asignarle rutas, visitas y cotizaciones.'
+          }
           maxWidth="lg"
           footer={
             <>
@@ -417,81 +547,114 @@ export const ClientesPage: React.FC = () => {
                 onClick={handleCreateClient}
                 isLoading={isSubmitting}
               >
-                Guardar cliente
+                {editingId ? 'Guardar cambios' : 'Guardar cliente'}
               </Button>
             </>
           }
         >
           <form onSubmit={handleCreateClient} className="space-y-4 text-xs">
+            {formError && (
+              <p className="rounded-lg bg-red-50 p-2 text-red-700">
+                {formError}
+              </p>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <Input
-                label="Nombre Comercial / Razón Social"
+                label="Razón social *"
                 placeholder="Ej. Distribuciones del Mar S.A.S"
-                value={newNombre}
-                onChange={(e) => setNewNombre(e.target.value)}
+                value={form.razon_social}
+                onChange={(e) => setField('razon_social', e.target.value)}
                 required
               />
               <Input
-                label="NIT o Cédula"
-                placeholder="Ej. 901.445.678-9"
-                value={newNit}
-                onChange={(e) => setNewNit(e.target.value)}
+                label="Nombre comercial"
+                placeholder="Si se omite, se usa la razón social"
+                value={form.nombre_comercial}
+                onChange={(e) => setField('nombre_comercial', e.target.value)}
               />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <Input
-                label="Dirección física"
-                placeholder="Ej. Calle 72 # 54-20"
-                value={newDireccion}
-                onChange={(e) => setNewDireccion(e.target.value)}
+                label="NIT o Cédula *"
+                placeholder="Ej. 901.445.678-9"
+                value={form.nit}
+                onChange={(e) => setField('nit', e.target.value)}
+                required
               />
-              <div className="space-y-1">
-                <label className="block text-xs font-semibold text-slate-700">
-                  Municipio
-                </label>
-                <select
-                  value={newMunicipio}
-                  onChange={(e) => setNewMunicipio(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 p-2 text-xs text-slate-800 focus:border-[#EA580C] focus:outline-none"
-                >
-                  <option value="Barranquilla">Barranquilla</option>
-                  <option value="Soledad">Soledad</option>
-                  <option value="Malambo">Malambo</option>
-                  <option value="Galapa">Galapa</option>
-                  <option value="Puerto Colombia">Puerto Colombia</option>
-                </select>
-              </div>
+              <Input
+                label="Dirección física *"
+                placeholder="Ej. Calle 72 # 54-20"
+                value={form.direccion}
+                onChange={(e) => setField('direccion', e.target.value)}
+                required
+              />
+              <Input
+                label="Departamento *"
+                placeholder="Ej. Atlántico"
+                value={form.departamento}
+                onChange={(e) => setField('departamento', e.target.value)}
+                required
+              />
+              <Input
+                label="Municipio *"
+                placeholder="Ej. Barranquilla"
+                value={form.municipio}
+                onChange={(e) => setField('municipio', e.target.value)}
+                required
+              />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="space-y-1">
                 <label className="block text-xs font-semibold text-slate-700">
-                  Tipo de cliente
+                  Zona *
                 </label>
                 <select
-                  value={newTipo}
-                  onChange={(e) => setNewTipo(e.target.value)}
+                  value={form.zona}
+                  onChange={(e) => setField('zona', e.target.value)}
+                  required
                   className="w-full rounded-lg border border-slate-300 p-2 text-xs text-slate-800 focus:border-[#EA580C] focus:outline-none"
                 >
-                  <option value="Industrial">Industrial</option>
-                  <option value="Distribuidor">Distribuidor</option>
-                  <option value="Retail">Retail</option>
+                  <option value="">Selecciona</option>
+                  {catalogos?.zonas.map((item) => (
+                    <option key={item.id} value={item.nombre}>
+                      {item.nombre}
+                    </option>
+                  ))}
                 </select>
               </div>
-
               <div className="space-y-1">
                 <label className="block text-xs font-semibold text-slate-700">
-                  Potencial
+                  Tipo de cliente *
                 </label>
                 <select
-                  value={newPotencial}
-                  onChange={(e) => setNewPotencial(e.target.value)}
+                  value={form.tipo}
+                  onChange={(e) => setField('tipo', e.target.value)}
+                  required
                   className="w-full rounded-lg border border-slate-300 p-2 text-xs text-slate-800 focus:border-[#EA580C] focus:outline-none"
                 >
-                  <option value="Alto">Alto</option>
-                  <option value="Medio">Medio</option>
-                  <option value="Bajo">Bajo</option>
+                  <option value="">Selecciona</option>
+                  {catalogos?.tipos.map((item) => (
+                    <option key={item.id} value={item.nombre}>
+                      {item.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="block text-xs font-semibold text-slate-700">
+                  Potencial *
+                </label>
+                <select
+                  value={form.potencial}
+                  onChange={(e) => setField('potencial', e.target.value)}
+                  required
+                  className="w-full rounded-lg border border-slate-300 p-2 text-xs text-slate-800 focus:border-[#EA580C] focus:outline-none"
+                >
+                  <option value="">Selecciona</option>
+                  {catalogos?.potenciales.map((item) => (
+                    <option key={item.id} value={item.nombre}>
+                      {item.nombre}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -502,29 +665,30 @@ export const ClientesPage: React.FC = () => {
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <Input
-                  label="Nombre del contacto"
+                  label="Nombre del contacto *"
                   placeholder="Ej. Andrés Morales"
-                  value={newContacto}
-                  onChange={(e) => setNewContacto(e.target.value)}
+                  value={form.contacto}
+                  onChange={(e) => setField('contacto', e.target.value)}
+                  required
                 />
                 <Input
                   label="Cargo"
                   placeholder="Ej. Gerente de Operaciones"
-                  value={newCargo}
-                  onChange={(e) => setNewCargo(e.target.value)}
+                  value={form.cargo}
+                  onChange={(e) => setField('cargo', e.target.value)}
                 />
                 <Input
                   label="Teléfono / Celular"
                   placeholder="Ej. 301 234 5678"
-                  value={newTelefono}
-                  onChange={(e) => setNewTelefono(e.target.value)}
+                  value={form.telefono}
+                  onChange={(e) => setField('telefono', e.target.value)}
                 />
                 <Input
                   label="Correo Electrónico"
-                  type="email"
                   placeholder="Ej. contacto@empresa.com"
-                  value={newEmail}
-                  onChange={(e) => setNewEmail(e.target.value)}
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => setField('email', e.target.value)}
                 />
               </div>
             </div>

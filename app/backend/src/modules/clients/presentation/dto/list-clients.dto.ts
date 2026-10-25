@@ -13,4 +13,12 @@ export class ListClientsDto extends PaginationQueryDto {
   @IsOptional()
   @IsString()
   zona?: string;
+
+  @IsOptional()
+  @IsString()
+  municipio?: string;
+
+  @IsOptional()
+  @IsString()
+  potencial?: string;
 }

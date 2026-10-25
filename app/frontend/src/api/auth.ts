@@ -40,3 +40,22 @@ export const getCurrentUser = async (): Promise<IUser> => {
 export const signOut = async (): Promise<void> => {
   await apiClient.post('/auth/sign-out', {});
 };
+
+/**
+ * HU-22: asks Better Auth to email a recovery link. The answer is the same
+ * whether the email exists or not.
+ */
+export const requestPasswordReset = async (email: string): Promise<void> => {
+  await apiClient.post('/auth/request-password-reset', {
+    email,
+    redirectTo: `${window.location.origin}/restablecer-contrasena`,
+  });
+};
+
+/** HU-22: sets the new password with the one-time token from the email. */
+export const resetPassword = async (
+  token: string,
+  newPassword: string,
+): Promise<void> => {
+  await apiClient.post('/auth/reset-password', { token, newPassword });
+};

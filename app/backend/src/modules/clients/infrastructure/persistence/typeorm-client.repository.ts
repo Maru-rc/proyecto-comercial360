@@ -7,6 +7,7 @@ import {
 } from 'typeorm';
 import {
   ClientHistoryRecord,
+  ClientListFilter,
   ClientRepository,
   ClientSummaryRecord,
   SaveClientTransactionData,
@@ -81,11 +82,7 @@ export class TypeOrmClientRepository implements ClientRepository, ClientReader {
     }));
   }
 
-  async findAll(filter?: {
-    search?: string;
-    tipo?: string;
-    zona?: string;
-  }): Promise<ClientSummaryRecord[]> {
+  async findAll(filter?: ClientListFilter): Promise<ClientSummaryRecord[]> {
     const qb = this.customerRepo
       .createQueryBuilder('c')
       .leftJoinAndSelect('c.zone', 'zone')
@@ -116,6 +113,24 @@ export class TypeOrmClientRepository implements ClientRepository, ClientReader {
         zona: filter.zona,
         zonaId: isNaN(Number(filter.zona)) ? -1 : Number(filter.zona),
       });
+    }
+
+    if (filter?.municipio && filter.municipio !== 'Todos') {
+      qb.andWhere('c.municipality ILIKE :municipio', {
+        municipio: filter.municipio.trim(),
+      });
+    }
+
+    if (filter?.potencial && filter.potencial !== 'Todos') {
+      qb.andWhere(
+        '(customerPotential.name = :potencial OR c.potentialId = :potencialId)',
+        {
+          potencial: filter.potencial,
+          potencialId: isNaN(Number(filter.potencial))
+            ? -1
+            : Number(filter.potencial),
+        },
+      );
     }
 
     qb.orderBy('c.createdAt', 'DESC');
@@ -151,6 +166,41 @@ export class TypeOrmClientRepository implements ClientRepository, ClientReader {
       });
 
       return this.mapToSummaryRecord(full ?? savedCustomer);
+    });
+  }
+
+  async updateWithRelations(
+    id: number,
+    data: SaveClientTransactionData,
+  ): Promise<ClientSummaryRecord> {
+    return this.dataSource.transaction(async (manager) => {
+      const existing = await manager.findOneOrFail(CustomerOrmEntity, {
+        where: { id },
+        relations: { contacts: true },
+      });
+
+      Object.assign(existing, this.buildCustomerData(data.client));
+      await manager.save(CustomerOrmEntity, existing);
+
+      await this.upsertContactRecord(
+        manager,
+        id,
+        existing.contacts,
+        data.primaryContact,
+      );
+
+      await manager.delete(CustomerPortfolioOrmEntity, { customerId: id });
+      if (data.portfolioIds.length > 0) {
+        await this.savePortfolios(manager, id, data.portfolioIds);
+      }
+
+      await this.saveHistoryRecord(manager, id, data.history);
+
+      const full = await manager.findOneOrFail(CustomerOrmEntity, {
+        where: { id },
+        relations: CLIENT_RELATIONS,
+      });
+      return this.mapToSummaryRecord(full);
     });
   }
 

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { CreateClientUseCase } from './create-client.use-case.js';
+import { UpdateClientUseCase } from './update-client.use-case.js';
 import {
   ClientHistoryRecord,
   ClientRepository,
@@ -20,6 +21,7 @@ import {
 } from '../ports/geocoding.port.js';
 import {
   CatalogoInvalidoError,
+  ClienteNoEncontradoError,
   ClienteYaExisteError,
 } from '../../domain/client.errors.js';
 
@@ -100,6 +102,23 @@ class InMemoryClientRepository implements ClientRepository {
   ): Promise<'created' | 'updated'> {
     await this.saveWithRelations(data);
     return 'created';
+  }
+
+  async updateWithRelations(
+    id: number,
+    data: SaveClientTransactionData,
+  ): Promise<ClientSummaryRecord> {
+    this.savedTransactions.push(data);
+    const index = this.clients.findIndex((c) => c.id_cliente === id);
+    const updated: ClientSummaryRecord = {
+      ...this.clients[index],
+      nit: data.client.nit.value,
+      razon_social: data.client.legalName,
+      nombre_comercial: data.client.commercialName,
+      municipio: data.client.municipality,
+    };
+    this.clients[index] = updated;
+    return updated;
   }
 }
 
@@ -323,5 +342,79 @@ describe('CreateClientUseCase', () => {
         contacto_nombre: 'Pedro',
       }),
     ).rejects.toThrow(CatalogoInvalidoError);
+  });
+});
+
+describe('UpdateClientUseCase (HU-23)', () => {
+  let clientRepo: InMemoryClientRepository;
+  let useCase: UpdateClientUseCase;
+  const form = {
+    nit: '900.123.456-1',
+    razon_social: 'Metalúrgicas S.A.S',
+    direccion: 'Cra 38 # 74-120',
+    departamento: 'Atlántico',
+    municipio: 'Barranquilla',
+    zona: 'NORTE',
+    tipo_cliente: 'Industrial',
+    potencial: 'Alto',
+    contacto_nombre: 'Carlos Mendoza',
+  };
+
+  beforeEach(async () => {
+    clientRepo = new InMemoryClientRepository();
+    const catalogRepo = new InMemoryCatalogRepository();
+    const geocoding = new InMemoryGeocodingService();
+    await new CreateClientUseCase(clientRepo, catalogRepo, geocoding).execute(
+      form,
+    );
+    await new CreateClientUseCase(clientRepo, catalogRepo, geocoding).execute({
+      ...form,
+      nit: '800.555.444-2',
+      razon_social: 'Otra S.A.S',
+    });
+    clientRepo.savedTransactions = [];
+    useCase = new UpdateClientUseCase(clientRepo, catalogRepo, geocoding);
+  });
+
+  it('updates the client and logs "Cliente actualizado" with the editor', async () => {
+    const result = await useCase.execute(
+      1,
+      {
+        ...form,
+        razon_social: 'Metalúrgicas del Caribe',
+        municipio: 'Soledad',
+      },
+      { name: 'Directora Comercial' },
+    );
+
+    expect(result.razon_social).toBe('Metalúrgicas del Caribe');
+    expect(result.municipio).toBe('Soledad');
+    const [tx] = clientRepo.savedTransactions;
+    expect(tx.history.action).toBe('Cliente actualizado');
+    expect(tx.history.user).toBe('Directora Comercial');
+  });
+
+  it('keeps its own NIT without a conflict', async () => {
+    await expect(useCase.execute(1, form)).resolves.toBeDefined();
+  });
+
+  it('rejects a NIT that belongs to another client', async () => {
+    await expect(
+      useCase.execute(1, { ...form, nit: '800.555.444-2' }),
+    ).rejects.toBeInstanceOf(ClienteYaExisteError);
+    expect(clientRepo.savedTransactions).toHaveLength(0);
+  });
+
+  it('a client that does not exist → ClienteNoEncontradoError', async () => {
+    await expect(useCase.execute(99, form)).rejects.toBeInstanceOf(
+      ClienteNoEncontradoError,
+    );
+  });
+
+  it('rejects an unknown catalog value without saving', async () => {
+    await expect(
+      useCase.execute(1, { ...form, zona: 'LUNA' }),
+    ).rejects.toBeInstanceOf(CatalogoInvalidoError);
+    expect(clientRepo.savedTransactions).toHaveLength(0);
   });
 });

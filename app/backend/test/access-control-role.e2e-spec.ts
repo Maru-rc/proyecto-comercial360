@@ -594,6 +594,96 @@ describe('HU-10: role-based access control (e2e, real endpoints)', () => {
     });
   });
 
+  describe('PUT /api/clientes/:id (HU-23)', () => {
+    it('a director edits a client and the history logs it; an advisor → 403', async () => {
+      await ds.query(
+        `INSERT INTO "zones" (name) VALUES ('E2E-ZONA') ON CONFLICT DO NOTHING`,
+      );
+      await ds.query(
+        `INSERT INTO "customer_types" (name) VALUES ('E2E-TIPO') ON CONFLICT DO NOTHING`,
+      );
+      await ds.query(
+        `INSERT INTO "potentials" (name, sort_order) VALUES ('E2E-POT', 1) ON CONFLICT DO NOTHING`,
+      );
+      await ds.query(
+        `INSERT INTO "customer_statuses" (name) VALUES ('Activo') ON CONFLICT DO NOTHING`,
+      );
+      const form = {
+        nit: 'HU23-TEST',
+        razon_social: 'HU23 Cliente',
+        direccion: 'Calle 1 # 2-3',
+        departamento: 'Atlántico',
+        municipio: 'Barranquilla',
+        zona: 'E2E-ZONA',
+        tipo_cliente: 'E2E-TIPO',
+        potencial: 'E2E-POT',
+        estado_cliente: 'Activo',
+        latitud: 10.98,
+        longitud: -74.79,
+        contacto_nombre: 'Contacto HU23',
+      };
+      try {
+        const created = await api('post', '/clientes', cookies.director, form);
+        expect(created.status).toBe(201);
+        const id = created.body.data.id_cliente as number;
+
+        const forbidden = await api(
+          'put',
+          `/clientes/${id}`,
+          cookies.advisorA,
+          {
+            ...form,
+            razon_social: 'Intento de asesor',
+          },
+        );
+        expect(forbidden.status).toBe(403);
+
+        const updated = await api('put', `/clientes/${id}`, cookies.director, {
+          ...form,
+          razon_social: 'HU23 Cliente Editado',
+          municipio: 'Soledad',
+        });
+        expect(updated.status).toBe(200);
+        expect(updated.body.data.razon_social).toBe('HU23 Cliente Editado');
+        expect(updated.body.data.municipio).toBe('Soledad');
+
+        const conflict = await api('put', `/clientes/${id}`, cookies.director, {
+          ...form,
+          nit: 'HU10-TEST',
+        });
+        expect(conflict.status).toBe(409);
+
+        const history = await api(
+          'get',
+          `/clientes/${id}/historial?limit=5`,
+          cookies.director,
+        );
+        expect(
+          (history.body.data as Array<{ accion: string }>).map((h) => h.accion),
+        ).toContain('Cliente actualizado');
+
+        const filtered = await api(
+          'get',
+          '/clientes?municipio=Soledad',
+          cookies.director,
+        );
+        expect(
+          (filtered.body.data as Array<{ id_cliente: number }>).map(
+            (c) => c.id_cliente,
+          ),
+        ).toEqual([id]);
+      } finally {
+        await ds.query(
+          `DELETE FROM "customer_history" WHERE customer_id IN (SELECT customer_id FROM "customers" WHERE tax_id = 'HU23-TEST')`,
+        );
+        await ds.query(
+          `DELETE FROM "customer_contacts" WHERE customer_id IN (SELECT customer_id FROM "customers" WHERE tax_id = 'HU23-TEST')`,
+        );
+        await ds.query(`DELETE FROM "customers" WHERE tax_id = 'HU23-TEST'`);
+      }
+    });
+  });
+
   describe('GET /api/rutas', () => {
     it('an advisor sees only the routes assigned to them; a director all', async () => {
       const insertRoute = async (name: string, advisorId: number) => {

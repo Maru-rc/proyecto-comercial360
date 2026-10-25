@@ -9,6 +9,8 @@ import type { Auth } from '../src/modules/auth/infrastructure/better-auth/auth.f
 import { AuthModule } from '../src/modules/auth/auth.module.js';
 import { Auth as AuthDecorator } from '../src/modules/auth/presentation/auth.decorator.js';
 import { seedDemoUsers } from '../src/core/infrastructure/database/seeds/seed-demo-users.js';
+import { EMAIL_SENDER } from '../src/modules/auth/application/ports/email-sender.port.js';
+import type { EmailMessage } from '../src/modules/auth/application/ports/email-sender.port.js';
 
 const ORIGIN = 'http://localhost:5173';
 const ADVISOR = {
@@ -46,6 +48,12 @@ class TestGuardsModule {}
 
 describe('Authentication and Roles (e2e, PostgreSQL)', () => {
   let app: INestApplication;
+  const sentEmails: EmailMessage[] = [];
+  const fakeEmailSender = {
+    send: async (message: EmailMessage) => {
+      sentEmails.push(message);
+    },
+  };
   let dataSource: DataSource;
   let auth: Auth;
 
@@ -80,7 +88,10 @@ describe('Authentication and Roles (e2e, PostgreSQL)', () => {
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule, TestGuardsModule],
-    }).compile();
+    })
+      .overrideProvider(EMAIL_SENDER)
+      .useValue(fakeEmailSender)
+      .compile();
     app = moduleRef.createNestApplication();
     configureApp(app);
     await app.init();
@@ -396,6 +407,59 @@ describe('Authentication and Roles (e2e, PostgreSQL)', () => {
       expect(a).toBe(1);
       // And users can still log in
       expect((await login(DIRECTOR)).status).toBe(200);
+    });
+  });
+
+  describe('HU-22: password recovery', () => {
+    const NEW_PASSWORD = 'Advisor-Nueva-456!';
+    const waitForEmail = async (to: string) => {
+      for (let i = 0; i < 50; i++) {
+        const found = sentEmails.find((m) => m.to === to);
+        if (found) return found;
+        await new Promise((resolve) => setTimeout(resolve, 20));
+      }
+      return undefined;
+    };
+    const requestReset = (email: string) =>
+      request(app.getHttpServer())
+        .post('/api/auth/request-password-reset')
+        .set('Origin', ORIGIN)
+        .send({ email, redirectTo: `${ORIGIN}/restablecer-contrasena` });
+
+    it('an unknown email gets the same answer and no email is sent', async () => {
+      sentEmails.length = 0;
+      const res = await requestReset('nadie@comercial360.com');
+      expect(res.status).toBe(200);
+      expect(await waitForEmail('nadie@comercial360.com')).toBeUndefined();
+    });
+
+    it('sends a one-time link; the new password works and the old one no longer does', async () => {
+      sentEmails.length = 0;
+      const res = await requestReset(ADVISOR.email);
+      expect(res.status).toBe(200);
+
+      const email = await waitForEmail(ADVISOR.email);
+      expect(email?.subject).toMatch(/contraseña/i);
+      const token = /reset-password\/([^?\s"]+)/.exec(email!.text)?.[1];
+      expect(token).toBeTruthy();
+
+      const reset = await request(app.getHttpServer())
+        .post('/api/auth/reset-password')
+        .set('Origin', ORIGIN)
+        .send({ token, newPassword: NEW_PASSWORD });
+      expect(reset.status).toBe(200);
+
+      expect((await login(ADVISOR)).status).toBe(401);
+      expect(
+        (await login({ email: ADVISOR.email, password: NEW_PASSWORD })).status,
+      ).toBe(200);
+
+      // The token is single-use
+      const reused = await request(app.getHttpServer())
+        .post('/api/auth/reset-password')
+        .set('Origin', ORIGIN)
+        .send({ token, newPassword: 'Otra-Clave-789!' });
+      expect(reused.status).toBe(400);
     });
   });
 });

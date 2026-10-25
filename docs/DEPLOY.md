@@ -32,6 +32,7 @@ Esta guía cubre cómo se despliega la aplicación con el Jenkins del proyecto. 
   - **HTTPS es obligatorio**: en producción la cookie de sesión es `Secure`, así que sin TLS el login no funciona.
   - Frontend y API van en el **mismo dominio**: el frontend llama a `/api` en su propio origen.
 - **Salida a internet durante el build**: el servidor de Jenkins debe poder llegar a `registry.npmjs.org` y a `cdn.sheetjs.com`, desde donde se descarga `xlsx` 0.20.3, la versión corregida que no está publicada en npm.
+- **Correo para recuperar la contraseña (HU-22, opcional)**: `MAIL_FROM` con un remitente verificado en Amazon SES, y `SES_REGION` si no es la misma de `AWS_REGION`. El rol IAM necesita `ses:SendEmail`. Sin `MAIL_FROM`, la pantalla de recuperación responde igual pero no llega ningún correo.
 - **Variables de autenticación**: `BETTER_AUTH_SECRET` (`openssl rand -hex 32`), y `BETTER_AUTH_URL` y `FRONTEND_URL` iguales a `https://<dominio>`, sin ruta.
 
 ## Instalar el Jenkins del proyecto

@@ -155,3 +155,23 @@ export const agendarVisita = async (input: {
   const { data } = await apiClient.post<{ id: number }>('/visits', input);
   return data;
 };
+
+export interface IVisitaDetalle {
+  id: number;
+  clientId: number;
+  advisorId: number;
+  routeId: number | null;
+  scheduledDate: string;
+  startTime: string | null;
+  endTime: string | null;
+  visitStatus: string;
+  objective: string | null;
+  observation: string | null;
+  evidenceS3Key: string | null;
+}
+
+/** HU-24: an advisor only reads their own visits (403 otherwise). */
+export const getVisita = async (id: number): Promise<IVisitaDetalle> => {
+  const { data } = await apiClient.get<IVisitaDetalle>(`/visits/${id}`);
+  return data;
+};

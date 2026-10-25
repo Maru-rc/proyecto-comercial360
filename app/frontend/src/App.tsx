@@ -9,6 +9,8 @@ import {
 import { useAuthStore } from './store/useAuthStore';
 import { AppLayout } from './components/layout/AppLayout';
 import { LoginPage } from './pages/LoginPage';
+import { RecuperarContrasenaPage } from './pages/RecuperarContrasenaPage';
+import { RestablecerContrasenaPage } from './pages/RestablecerContrasenaPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { RutasPage } from './pages/RutasPage';
 import { RutasAsignadasPage } from './pages/RutasAsignadasPage';
@@ -57,6 +59,14 @@ export const App: React.FC = () => {
         <Routes>
           {/* Public login route */}
           <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/recuperar-contrasena"
+            element={<RecuperarContrasenaPage />}
+          />
+          <Route
+            path="/restablecer-contrasena"
+            element={<RestablecerContrasenaPage />}
+          />
 
           {/* Protected layout routes */}
           <Route

@@ -190,7 +190,7 @@ export const VisitsTable: React.FC<VisitsTableProps> = ({ filas }) => {
                         navigate(
                           `/visitas/registrar?cliente=${encodeURIComponent(
                             row.cliente,
-                          )}&visita=${row.id}`,
+                          )}&visita=${row.id}&modo=ver`,
                         )
                       }
                       className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md cursor-pointer transition-colors"

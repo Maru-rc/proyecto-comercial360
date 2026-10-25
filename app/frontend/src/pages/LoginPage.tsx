@@ -12,8 +12,6 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
-import { Modal } from '../components/common/Modal';
-import { Button } from '../components/common/Button';
 
 // "Recordarme" mantiene la sesión 30 días (Better Auth) y además guarda el
 // correo para el próximo inicio de sesión. La contraseña nunca se guarda.
@@ -46,7 +44,6 @@ export const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
-  const [forgotModalOpen, setForgotModalOpen] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -303,10 +300,10 @@ export const LoginPage: React.FC = () => {
                   <span className="text-slate-700 font-medium">Recordarme</span>
                 </label>
                 <a
-                  href="#olvide"
+                  href="/recuperar-contrasena"
                   onClick={(e) => {
                     e.preventDefault();
-                    setForgotModalOpen(true);
+                    navigate('/recuperar-contrasena');
                   }}
                   className="font-semibold text-[#EA580C] hover:underline"
                 >
@@ -358,49 +355,6 @@ export const LoginPage: React.FC = () => {
           Términos y condiciones
         </a>
       </footer>
-
-      {/* Forgot Password Modal */}
-      {forgotModalOpen && (
-        <Modal
-          isOpen={forgotModalOpen}
-          onClose={() => setForgotModalOpen(false)}
-          title="Recuperación de Acceso"
-          description="Siga las directrices de seguridad corporativa para restablecer credenciales."
-          maxWidth="sm"
-          footer={
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => setForgotModalOpen(false)}
-            >
-              Entendido
-            </Button>
-          }
-        >
-          <div className="space-y-3 text-xs text-slate-600">
-            <p>
-              Por motivos de seguridad y autenticación única (SSO / Azure AD),
-              el restablecimiento de contraseñas de Comercial 360 se gestiona a
-              través del departamento de TI o mesa de ayuda.
-            </p>
-            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-1">
-              <span className="font-bold text-slate-800">
-                Canales de Soporte TI:
-              </span>
-              <p>
-                • Correo:{' '}
-                <span className="font-mono text-slate-700">
-                  soporte@comercial360.com
-                </span>
-              </p>
-              <p>
-                • Extensión interna:{' '}
-                <span className="font-mono text-slate-700">4450</span>
-              </p>
-            </div>
-          </div>
-        </Modal>
-      )}
     </div>
   );
 };

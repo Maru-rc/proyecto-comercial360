@@ -24,11 +24,9 @@ export const getClienteById = async (id: string): Promise<ICliente> => {
   return res.data;
 };
 
-export const crearCliente = async (
-  nuevo: Partial<ICliente>,
-): Promise<ICliente> => {
+const toClientePayload = (nuevo: Partial<ICliente>) => {
   const primaryContact = nuevo.contactos?.[0];
-  const payload = {
+  return {
     nit: nuevo.nit,
     razon_social: nuevo.razon_social,
     nombre_comercial: nuevo.nombre_comercial || nuevo.razon_social,
@@ -48,7 +46,15 @@ export const crearCliente = async (
     contacto_telefono: primaryContact?.telefono,
     contacto_email: primaryContact?.email,
   };
-  const res = await apiClient.post<ICliente>('/clientes', payload);
+};
+
+export const crearCliente = async (
+  nuevo: Partial<ICliente>,
+): Promise<ICliente> => {
+  const res = await apiClient.post<ICliente>(
+    '/clientes',
+    toClientePayload(nuevo),
+  );
   return res.data;
 };
 
@@ -98,6 +104,36 @@ export const getClienteHistorial = async (
   const res = await apiClient.get<ClienteHistorialItem[]>(
     `/clientes/${numericId}/historial`,
     { params: { limit } },
+  );
+  return res.data;
+};
+
+export interface ICatalogoItem {
+  id: number;
+  nombre: string;
+}
+
+export interface ICatalogosClientes {
+  zonas: ICatalogoItem[];
+  tipos: ICatalogoItem[];
+  potenciales: ICatalogoItem[];
+  estados: ICatalogoItem[];
+  portafolios: ICatalogoItem[];
+}
+
+export const getCatalogosClientes = async (): Promise<ICatalogosClientes> => {
+  const res = await apiClient.get<ICatalogosClientes>('/clientes/catalogos');
+  return res.data;
+};
+
+/** HU-23: same payload as creation; only directors may edit. */
+export const actualizarCliente = async (
+  id: string | number,
+  cambios: Partial<ICliente>,
+): Promise<ICliente> => {
+  const res = await apiClient.put<ICliente>(
+    `/clientes/${id}`,
+    toClientePayload(cambios),
   );
   return res.data;
 };
