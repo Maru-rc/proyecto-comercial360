@@ -9,10 +9,10 @@ export class RouteOrmEntity {
   @Column({ name: 'name', length: 200 })
   name: string;
 
-  @Column({ name: 'sales_representative_id', nullable: true })
+  @Column({ name: 'sales_representative_id', type: 'int', nullable: true })
   salesRepresentativeId: number | null;
 
-  @Column({ name: 'zone_id', nullable: true })
+  @Column({ name: 'zone_id', type: 'int', nullable: true })
   zoneId: number | null;
 
   @Column({ name: 'start_date', type: 'date', nullable: true })

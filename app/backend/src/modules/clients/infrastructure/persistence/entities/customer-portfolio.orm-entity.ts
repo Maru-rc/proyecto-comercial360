@@ -21,14 +21,14 @@ export class CustomerPortfolioOrmEntity {
   @JoinColumn({ name: 'customer_id' })
   customer: Relation<CustomerOrmEntity>;
 
-  @Column({ name: 'customer_id', nullable: true })
+  @Column({ name: 'customer_id', type: 'int', nullable: true })
   customerId: number | null;
 
   @ManyToOne(() => PortfolioOrmEntity)
   @JoinColumn({ name: 'portfolio_id' })
   portfolio: PortfolioOrmEntity;
 
-  @Column({ name: 'portfolio_id', nullable: true })
+  @Column({ name: 'portfolio_id', type: 'int', nullable: true })
   portfolioId: number | null;
 
   @CreateDateColumn({ name: 'registered_at' })
