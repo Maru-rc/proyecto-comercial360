@@ -67,8 +67,8 @@ services:
   # ==========================================================
   api:
     build:
-      context: ./app/backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: app/backend/Dockerfile
     image: ${APP_IMAGE:-comercial360-nest:latest}
     container_name: comercial360-api
     restart: unless-stopped
@@ -107,15 +107,18 @@ services:
       minio-init:
         condition: service_completed_successfully
     networks:
-      - backend
+      backend:
+        # nginx.conf proxies /api to backend:3000
+        aliases:
+          - backend
 
   # ==========================================================
   # FRONTEND REACT (PUERTO 3021:80)
   # ==========================================================
   frontend:
     build:
-      context: ./app/frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: app/frontend/Dockerfile
     image: ${FRONTEND_IMAGE:-comercial360-frontend:latest}
     container_name: comercial360-frontend
     restart: unless-stopped

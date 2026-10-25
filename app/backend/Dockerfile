@@ -1,23 +1,43 @@
-FROM node:22-alpine AS builder
+# syntax=docker/dockerfile:1
+# Build context: repository root (pnpm workspace + pnpm-lock.yaml).
+#   docker build -f app/backend/Dockerfile .
 
-WORKDIR /usr/src/app
+FROM node:22-alpine AS base
+ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH CI=true
+RUN corepack enable
 
-COPY package*.json ./
-RUN npm ci
+# ---------- Build ----------
+FROM base AS build
+WORKDIR /repo
 
-COPY . .
-RUN npm run build
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY app/backend/package.json app/backend/package.json
+RUN pnpm fetch --filter backend...
 
+COPY app/backend app/backend
+RUN pnpm install --offline --frozen-lockfile --filter backend... --ignore-scripts \
+ && pnpm --filter backend build \
+ && pnpm --filter backend deploy --prod --legacy /out \
+ && cp -r app/backend/dist /out/dist
 
+# Amazon RDS CA bundle, used when DATABASE_SSL_CA points to it
+ADD https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem /out/certs/rds-global-bundle.pem
+
+# ---------- Runtime ----------
 FROM node:22-alpine AS production
-
+ENV NODE_ENV=production PORT=3000
 WORKDIR /usr/src/app
 
-COPY package*.json ./
-RUN npm ci --omit=dev && npm cache clean --force
-
-COPY --from=builder --chown=node:node /usr/src/app/dist ./dist
+COPY --from=build --chown=node:node /out ./
+COPY --chown=node:node docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod 0755 /usr/local/bin/docker-entrypoint.sh \
+ && chmod 0644 certs/rds-global-bundle.pem
 
 USER node
+EXPOSE 3000
 
-CMD ["node", "dist/main.js"]
+HEALTHCHECK --interval=15s --timeout=5s --start-period=40s --retries=5 \
+  CMD wget -qO- "http://127.0.0.1:${PORT}/api/health" >/dev/null || exit 1
+
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["start"]

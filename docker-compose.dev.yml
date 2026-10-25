@@ -79,8 +79,8 @@ services:
   # ==========================================================
   backend:
     build:
-      context: ./app/backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: app/backend/Dockerfile
     container_name: comercial360-dev-backend
     restart: unless-stopped
     depends_on:
@@ -122,8 +122,8 @@ services:
   # ==========================================================
   frontend:
     build:
-      context: ./app/frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: app/frontend/Dockerfile
     container_name: comercial360-dev-frontend
     restart: unless-stopped
     depends_on:
