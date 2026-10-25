@@ -27,7 +27,8 @@ export interface RouteStopRecord {
 export interface RouteRepository {
   save(route: Partial<RouteRecord>): Promise<RouteRecord>;
   findById(id: number): Promise<RouteRecord | null>;
-  findAll(): Promise<RouteRecord[]>;
+  /** Newest first; with advisorId, only the routes assigned to that advisor. */
+  findAll(filter?: { advisorId?: number }): Promise<RouteRecord[]>;
   existsByName(name: string): Promise<boolean>;
   setStops(
     routeId: number,

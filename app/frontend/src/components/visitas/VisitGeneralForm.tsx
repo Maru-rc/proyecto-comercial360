@@ -134,14 +134,12 @@ export const VisitGeneralForm: React.FC<VisitGeneralFormProps> = ({
           <label className="block text-xs font-semibold text-slate-700">
             Asesor <span className="text-rose-500">*</span>
           </label>
-          <select
+          {/* The advisor always comes from the session (HU-10) */}
+          <input
             {...register('asesor_nombre')}
-            className="w-full rounded-lg border border-slate-300 bg-white py-2 px-3 text-xs text-slate-800 focus:border-[#EA580C] focus:outline-none focus:ring-1 focus:ring-[#EA580C] cursor-pointer"
-          >
-            <option value="Juan Pérez">Juan Pérez</option>
-            <option value="Carlos Gómez">Carlos Gómez</option>
-            <option value="Laura Restrepo">Laura Restrepo</option>
-          </select>
+            readOnly
+            className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 px-3 text-xs text-slate-800 focus:outline-none"
+          />
         </div>
       </div>
     </div>

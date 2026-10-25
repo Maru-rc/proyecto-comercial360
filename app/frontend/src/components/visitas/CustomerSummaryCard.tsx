@@ -9,12 +9,12 @@ interface CustomerSummaryCardProps {
 export const CustomerSummaryCard: React.FC<CustomerSummaryCardProps> = ({
   cliente,
 }) => {
-  const nombre = cliente?.nombre_comercial || 'Metalúrgicas S.A.S.';
-  const codigo = cliente?.codigo || 'CJI-001245';
-  const municipio = cliente?.municipio || 'Barranquilla';
-  const departamento = cliente?.departamento || 'Atlántico';
-  const tipo = cliente?.tipo_cliente_nombre || 'Industrial';
-  const potencial = cliente?.potencial_nombre || 'Alto';
+  const nombre = cliente?.nombre_comercial || 'Cliente sin seleccionar';
+  const codigo = cliente?.codigo || '—';
+  const municipio = cliente?.municipio || '—';
+  const departamento = cliente?.departamento || '—';
+  const tipo = cliente?.tipo_cliente_nombre || '—';
+  const potencial = cliente?.potencial_nombre || '—';
 
   return (
     <div className="bg-white rounded-xl border border-slate-200/90 p-4 shadow-xs space-y-3">

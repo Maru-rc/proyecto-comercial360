@@ -6,6 +6,7 @@ import { CreateBetterAuthTables1792500000001 } from './migrations/1792500000001-
 import { InitialSchema1792634405120 } from './migrations/1792634405120-InitialSchema.js';
 import { AddVisitTrackingIndexes1792800000000 } from './migrations/1792800000000-AddVisitTrackingIndexes.js';
 import { FixUserRoleCheck1792900000000 } from './migrations/1792900000000-FixUserRoleCheck.js';
+import { AddCommercialVisitAndAdvisorLinks1793000000000 } from './migrations/1793000000000-AddCommercialVisitAndAdvisorLinks.js';
 import { resolvePostgresConnection } from './postgres-connection.js';
 
 try {
@@ -39,6 +40,7 @@ export function buildDataSourceOptions(
       InitialSchema1792634405120,
       AddVisitTrackingIndexes1792800000000,
       FixUserRoleCheck1792900000000,
+      AddCommercialVisitAndAdvisorLinks1793000000000,
     ],
     synchronize: false,
     extra: { max: 10 },

@@ -36,7 +36,7 @@ export const VisitsTable: React.FC<VisitsTableProps> = ({ filas }) => {
   };
 
   const handleExport = () => {
-    downloadCsvReport(territorio, semanaNumero);
+    void downloadCsvReport(territorio, `Semana${semanaNumero}`);
   };
 
   return (
@@ -190,7 +190,7 @@ export const VisitsTable: React.FC<VisitsTableProps> = ({ filas }) => {
                         navigate(
                           `/visitas/registrar?cliente=${encodeURIComponent(
                             row.cliente,
-                          )}`,
+                          )}&visita=${row.id}`,
                         )
                       }
                       className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md cursor-pointer transition-colors"
@@ -204,7 +204,7 @@ export const VisitsTable: React.FC<VisitsTableProps> = ({ filas }) => {
                         navigate(
                           `/visitas/registrar?cliente=${encodeURIComponent(
                             row.cliente,
-                          )}`,
+                          )}&visita=${row.id}`,
                         )
                       }
                       className="p-1 text-slate-400 hover:text-[#EA580C] hover:bg-orange-50 rounded-md cursor-pointer transition-colors"

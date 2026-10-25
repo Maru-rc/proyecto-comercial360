@@ -4,6 +4,10 @@ import type {
 } from '../../../../domain-contracts/index.js';
 import { Order } from '../../domain/entities/order.entity.js';
 import type { IOrderRepository } from '../../domain/repositories/order-repository.port.js';
+import type {
+  CommercialPage,
+  CommercialPageFilter,
+} from '../../domain/repositories/commercial-page.js';
 import { OrderMapper } from './mappers/order.mapper.js';
 
 export class InMemoryOrderRepository implements IOrderRepository, OrderReader {
@@ -53,6 +57,20 @@ export class InMemoryOrderRepository implements IOrderRepository, OrderReader {
 
   async findByVisit(visitId: number): Promise<Order[]> {
     return this.orders.filter((o) => o.visitId === visitId);
+  }
+
+  async findPage(filter: CommercialPageFilter): Promise<CommercialPage<Order>> {
+    const matching = this.orders
+      .filter(
+        (item) =>
+          filter.advisorId === null || item.advisorId === filter.advisorId,
+      )
+      .sort((a, b) => (b.id ?? 0) - (a.id ?? 0));
+    const start = (filter.page - 1) * filter.limit;
+    return {
+      items: matching.slice(start, start + filter.limit),
+      total: matching.length,
+    };
   }
 
   async findAll(): Promise<Order[]> {

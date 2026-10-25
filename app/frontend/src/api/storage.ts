@@ -7,51 +7,51 @@ export interface IS3UploadResponse {
   size: number;
 }
 
+interface UploadUrlResponse {
+  uploadUrl: string;
+  s3Key: string;
+  expiresInSeconds: number;
+  headers: Record<string, string>;
+}
+
+/**
+ * HU-19: the backend signs a short-lived URL (content type and size included)
+ * and the browser uploads straight to S3. `fetch` is used instead of axios so
+ * the session cookie and API interceptors never reach the bucket.
+ */
 export const uploadFileToS3 = async (
   file: File,
-  folder: 'visitas' | 'cotizaciones' = 'visitas',
-  entityId: string = '123',
 ): Promise<IS3UploadResponse> => {
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('folder', folder);
-  formData.append('entityId', entityId);
+  const { data } = await apiClient.post<UploadUrlResponse>(
+    '/storage/upload-url',
+    {
+      contentType: file.type,
+      fileSize: file.size,
+      purpose: 'visit-evidence',
+    },
+  );
 
-  try {
-    const { data } = await apiClient.post<IS3UploadResponse>(
-      '/storage/upload',
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      },
-    );
-    return data;
-  } catch {
-    // Simulated S3 response matching specification:
-    // Key pattern: visitas/{id_visita}/fotos/{uuid}.jpg or cotizaciones/{id_cotizacion}/documento.pdf
-    const uniqueId = Math.random().toString(36).substring(2, 9);
-    const extension = file.name.split('.').pop() || 'jpg';
-    const s3_key = `${folder}/${entityId}/${folder === 'visitas' ? 'fotos' : 'docs'}/${uniqueId}.${extension}`;
-    const url = URL.createObjectURL(file);
-
-    return {
-      s3_key,
-      url,
-      originalName: file.name,
-      size: file.size,
-    };
+  const res = await fetch(data.uploadUrl, {
+    method: 'PUT',
+    headers: data.headers,
+    body: file,
+  });
+  if (!res.ok) {
+    throw new Error(`S3 upload failed with status ${res.status}`);
   }
+
+  return {
+    s3_key: data.s3Key,
+    url: URL.createObjectURL(file),
+    originalName: file.name,
+    size: file.size,
+  };
 };
 
 export const getSignedS3Url = async (s3_key: string): Promise<string> => {
-  try {
-    const { data } = await apiClient.get<{ signedUrl: string }>(
-      `/storage/url/${encodeURIComponent(s3_key)}`,
-    );
-    return data.signedUrl;
-  } catch {
-    return `https://s3.us-east-1.amazonaws.com/comercial360-bucket/${s3_key}`;
-  }
+  const { data } = await apiClient.get<{ downloadUrl: string }>(
+    '/storage/download-url',
+    { params: { s3Key: s3_key } },
+  );
+  return data.downloadUrl;
 };

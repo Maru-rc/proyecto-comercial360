@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 import { Input } from '../common/Input';
-import { crearPedido } from '../../api/visitas';
+import { generarNumeroDocumento } from '../../api/document-number';
 
 interface OrderModalProps {
   isOpen: boolean;
@@ -15,31 +15,19 @@ export const OrderModal: React.FC<OrderModalProps> = ({
   isOpen,
   onClose,
   onSuccess,
-  clienteNombre = 'Metalúrgicas S.A.S.',
+  clienteNombre = 'Cliente sin seleccionar',
 }) => {
-  const [numero, setNumero] = useState(
-    () => `PED-${Math.floor(100 + Math.random() * 900)}`,
-  );
-  const [valor, setValor] = useState('18500000');
-  const [fechaEntrega, setFechaEntrega] = useState('2024-05-30');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [numero, setNumero] = useState(() => generarNumeroDocumento('PED'));
+  const [valor, setValor] = useState('');
+  const [fechaEntrega, setFechaEntrega] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // The order is persisted together with the visit (HU-13, one transaction)
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    try {
-      const numVal = parseFloat(valor) || 18500000;
-      await crearPedido({
-        numero,
-        valor: numVal,
-        fecha_entrega: fechaEntrega,
-      });
-      onSuccess(numero, numVal, fechaEntrega);
-      setIsSubmitting(false);
-      onClose();
-    } catch {
-      setIsSubmitting(false);
-    }
+    const numVal = parseFloat(valor);
+    if (!numero.trim() || !(numVal > 0)) return;
+    onSuccess(numero.trim(), numVal, fechaEntrega);
+    onClose();
   };
 
   return (
@@ -47,19 +35,14 @@ export const OrderModal: React.FC<OrderModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title="Crear pedido confirmado"
-      description={`Cliente: ${clienteNombre}. Esta acción actualiza los KPIs de pedidos cerrados.`}
+      description={`Cliente: ${clienteNombre}. Se registra al guardar la visita y actualiza los KPIs de pedidos cerrados.`}
       maxWidth="md"
       footer={
         <>
           <Button variant="outline" size="sm" onClick={onClose}>
             Cancelar
           </Button>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={handleSubmit}
-            isLoading={isSubmitting}
-          >
+          <Button variant="primary" size="sm" onClick={handleSubmit}>
             Confirmar pedido
           </Button>
         </>

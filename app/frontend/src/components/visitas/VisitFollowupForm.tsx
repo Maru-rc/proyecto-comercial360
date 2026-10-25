@@ -68,7 +68,7 @@ export const VisitFollowupForm: React.FC<VisitFollowupFormProps> = ({
           <input
             type="text"
             {...register('responsable_seguimiento')}
-            placeholder="Juan Pérez"
+            placeholder="Responsable del seguimiento"
             className="w-full rounded-lg border border-slate-300 py-2 px-3 text-xs text-slate-800 focus:border-[#EA580C] focus:outline-none focus:ring-1 focus:ring-[#EA580C]"
           />
         </div>

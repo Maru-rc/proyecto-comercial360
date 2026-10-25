@@ -11,6 +11,12 @@ import { ORDER_REPOSITORY } from '../../domain/repositories/order-repository.por
 import type { IOrderRepository } from '../../domain/repositories/order-repository.port.js';
 import { QUOTATION_REPOSITORY } from '../../domain/repositories/quotation-repository.port.js';
 import type { IQuotationRepository } from '../../domain/repositories/quotation-repository.port.js';
+import { resolveOwnerAdvisor } from '../resolve-owner-advisor.js';
+import { COMMERCIAL_ADVISOR_SCOPE } from '../ports/advisor-scope-resolver.port.js';
+import type {
+  AdvisorScopeResolver,
+  CommercialRequester,
+} from '../ports/advisor-scope-resolver.port.js';
 
 export interface CreateOrderInputDto {
   number?: string;
@@ -23,6 +29,8 @@ export interface CreateOrderInputDto {
   status?: OrderStatus;
   date?: Date | string;
   estimatedDeliveryDate?: Date | string | null;
+  /** When present, the advisor is resolved from the session (anti-IDOR). */
+  requester?: CommercialRequester;
 }
 
 @Injectable()
@@ -33,6 +41,9 @@ export class CreateOrderUseCase {
     @Optional()
     @Inject(QUOTATION_REPOSITORY)
     private readonly quotationRepository?: IQuotationRepository,
+    @Optional()
+    @Inject(COMMERCIAL_ADVISOR_SCOPE)
+    private readonly advisorScope?: AdvisorScopeResolver,
   ) {}
 
   async execute(dto: CreateOrderInputDto): Promise<Order> {
@@ -70,10 +81,11 @@ export class CreateOrderUseCase {
         : dto.estimatedDeliveryDate
       : null;
 
+    const advisorId = await resolveOwnerAdvisor(this.advisorScope, dto);
     const order = Order.create({
       number,
       clientId: dto.clientId,
-      advisorId: dto.advisorId,
+      advisorId,
       visitId: dto.visitId,
       quotationId: dto.quotationId,
       amount: dto.amount,

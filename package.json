@@ -26,5 +26,11 @@
     "husky": "^9.1.7",
     "lint-staged": "^17.6.0",
     "prettier": "^3.4.2"
+  },
+  "pnpm": {
+    "overrides": {
+      "multer@<2.5.0": "^2.5.0",
+      "body-parser@<2.4.0": "^2.4.0"
+    }
   }
 }

@@ -11,6 +11,7 @@ import {
 import { useAuthStore } from '../../store/useAuthStore';
 import { useFilterStore } from '../../store/useFilterStore';
 import { useNavigate } from 'react-router-dom';
+import { useVisitasAgenda } from '../../hooks/useVisitasAgenda';
 
 interface HeaderProps {
   onToggleSidebar?: () => void;
@@ -37,42 +38,31 @@ export const Header: React.FC<HeaderProps> = ({
   } = useFilterStore();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [notifMenuOpen, setNotifMenuOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(4);
+  const [readIds, setReadIds] = useState<string[]>([]);
+  const { agenda } = useVisitasAgenda();
 
-  const notifications = [
-    {
-      id: 1,
-      titulo: 'Nueva ruta asignada',
-      detalle: 'RUT-ATL-001 (Atlántico Industrial) para el día de hoy',
-      tiempo: 'Hace 10 min',
-      ruta: '/rutas/asignadas',
-      color: 'bg-orange-500',
-    },
-    {
-      id: 2,
-      titulo: 'Cotización aprobada',
-      detalle: 'Metalúrgicas S.A.S aprobó COT-1242 por $24.8M',
-      tiempo: 'Hace 35 min',
-      ruta: '/cotizaciones',
-      color: 'bg-emerald-500',
-    },
-    {
-      id: 3,
+  // Field notifications: today's visits still pending for the session
+  const notifications = agenda
+    .filter((v) => {
+      const status = (v.visitStatus || v.status || '').toUpperCase();
+      return status === 'SCHEDULED' || status === 'PENDING' || status === '';
+    })
+    .slice(0, 5)
+    .map((v) => ({
+      id: String(v.id),
       titulo: 'Cliente pendiente de visita',
-      detalle: 'ConstruInnova S.A.S agendada para las 11:45 AM',
-      tiempo: 'Hace 1 hora',
+      detalle: `${v.clientName || `Cliente #${v.clientId}`}${
+        v.suggestedTime || v.time ? ` a las ${v.suggestedTime || v.time}` : ''
+      }`,
+      tiempo: 'Hoy',
       ruta: '/agenda',
       color: 'bg-blue-500',
-    },
-    {
-      id: 4,
-      titulo: 'Alerta de cobertura',
-      detalle: 'Ferretería La 14 cumple 16 días sin visita programada',
-      tiempo: 'Hace 2 horas',
-      ruta: '/clientes',
-      color: 'bg-amber-500',
-    },
-  ];
+    }));
+  const unreadCount = notifications.filter(
+    (n) => !readIds.includes(n.id),
+  ).length;
+  const setUnreadCount = (_count: 0) =>
+    setReadIds(notifications.map((n) => n.id));
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -254,6 +244,11 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
 
               <div className="divide-y divide-slate-100 max-h-72 overflow-y-auto space-y-1">
+                {notifications.length === 0 && (
+                  <p className="p-2.5 text-xs text-slate-500">
+                    Sin visitas pendientes para hoy.
+                  </p>
+                )}
                 {notifications.map((n) => (
                   <div
                     key={n.id}
@@ -301,7 +296,7 @@ export const Header: React.FC<HeaderProps> = ({
             />
             <div className="hidden xl:block">
               <p className="text-xs font-bold text-slate-800 leading-tight">
-                {user?.nombre || 'Juan Pérez'}
+                {user?.nombre || 'Usuario'}
               </p>
               <p className="text-[11px] text-slate-500 leading-tight">
                 {user?.cargo ||

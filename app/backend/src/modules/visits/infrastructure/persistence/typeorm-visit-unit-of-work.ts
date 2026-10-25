@@ -72,13 +72,14 @@ export class TypeOrmVisitUnitOfWork implements IVisitUnitOfWork {
               quote_number: string;
             }>(
               manager,
-              `INSERT INTO "quotes" ("quote_number", "customer_id", "sales_representative_id", "amount", "currency", "status", "date")
-               VALUES ($1, $2, $3, $4, $5, $6, CURRENT_DATE)
+              `INSERT INTO "quotes" ("quote_number", "customer_id", "sales_representative_id", "visit_id", "amount", "currency", "status", "date")
+               VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_DATE)
                RETURNING "quote_id", "quote_number"`,
               [
                 input.number,
                 input.clientId,
                 input.advisorId ?? null,
+                input.visitId ?? null,
                 input.amount,
                 input.currency ?? 'COP',
                 input.status ?? 'ENVIADA',
@@ -98,12 +99,14 @@ export class TypeOrmVisitUnitOfWork implements IVisitUnitOfWork {
               order_number: string;
             }>(
               manager,
-              `INSERT INTO "orders" ("order_number", "customer_id", "quote_id", "amount", "status", "date", "estimated_delivery_date")
-               VALUES ($1, $2, $3, $4, $5, CURRENT_DATE, $6)
+              `INSERT INTO "orders" ("order_number", "customer_id", "sales_representative_id", "visit_id", "quote_id", "amount", "status", "date", "estimated_delivery_date")
+               VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_DATE, $8)
                RETURNING "order_id", "order_number"`,
               [
                 input.number,
                 input.clientId,
+                input.advisorId ?? null,
+                input.visitId ?? null,
                 input.quotationId ?? null,
                 input.amount,
                 input.status ?? 'CERRADO',

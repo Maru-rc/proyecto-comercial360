@@ -1,8 +1,19 @@
-import { ConflictException, Inject, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Inject,
+  Injectable,
+  Optional,
+} from '@nestjs/common';
 import { Quotation } from '../../domain/entities/quotation.entity.js';
 import type { QuotationStatus } from '../../domain/entities/quotation.entity.js';
 import { QUOTATION_REPOSITORY } from '../../domain/repositories/quotation-repository.port.js';
 import type { IQuotationRepository } from '../../domain/repositories/quotation-repository.port.js';
+import { COMMERCIAL_ADVISOR_SCOPE } from '../ports/advisor-scope-resolver.port.js';
+import { resolveOwnerAdvisor } from '../resolve-owner-advisor.js';
+import type {
+  AdvisorScopeResolver,
+  CommercialRequester,
+} from '../ports/advisor-scope-resolver.port.js';
 
 export interface CreateQuotationInputDto {
   number?: string;
@@ -14,6 +25,8 @@ export interface CreateQuotationInputDto {
   currency?: string;
   status?: QuotationStatus;
   date?: Date | string;
+  /** When present, the advisor is resolved from the session (anti-IDOR). */
+  requester?: CommercialRequester;
 }
 
 @Injectable()
@@ -21,6 +34,9 @@ export class CreateQuotationUseCase {
   constructor(
     @Inject(QUOTATION_REPOSITORY)
     private readonly quotationRepository: IQuotationRepository,
+    @Optional()
+    @Inject(COMMERCIAL_ADVISOR_SCOPE)
+    private readonly advisorScope?: AdvisorScopeResolver,
   ) {}
 
   async execute(dto: CreateQuotationInputDto): Promise<Quotation> {
@@ -43,10 +59,11 @@ export class CreateQuotationUseCase {
         : dto.date
       : new Date();
 
+    const advisorId = await resolveOwnerAdvisor(this.advisorScope, dto);
     const quotation = Quotation.create({
       number,
       clientId: dto.clientId,
-      advisorId: dto.advisorId,
+      advisorId,
       visitId: dto.visitId,
       amount: dto.amount,
       currency: dto.currency ?? 'COP',

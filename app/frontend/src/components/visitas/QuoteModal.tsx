@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 import { Input } from '../common/Input';
-import { crearCotizacion } from '../../api/visitas';
+import { generarNumeroDocumento } from '../../api/document-number';
 
 interface QuoteModalProps {
   isOpen: boolean;
@@ -15,32 +15,19 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
   isOpen,
   onClose,
   onSuccess,
-  clienteNombre = 'Metalúrgicas S.A.S.',
+  clienteNombre = 'Cliente sin seleccionar',
 }) => {
-  const [numero, setNumero] = useState(
-    () => `COT-${Math.floor(1000 + Math.random() * 9000)}`,
-  );
-  const [valor, setValor] = useState('24800000');
-  const [producto, setProducto] = useState(
-    'Equipos de soldadura industrial y consumibles',
-  );
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [numero, setNumero] = useState(() => generarNumeroDocumento('COT'));
+  const [valor, setValor] = useState('');
+  const [producto, setProducto] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // The quotation is persisted together with the visit (HU-13, one transaction)
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    try {
-      const numVal = parseFloat(valor) || 24800000;
-      await crearCotizacion({
-        numero,
-        valor: numVal,
-      });
-      onSuccess(numero, numVal);
-      setIsSubmitting(false);
-      onClose();
-    } catch {
-      setIsSubmitting(false);
-    }
+    const numVal = parseFloat(valor);
+    if (!numero.trim() || !(numVal > 0)) return;
+    onSuccess(numero.trim(), numVal);
+    onClose();
   };
 
   return (
@@ -48,19 +35,14 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title="Generar cotización"
-      description={`Cliente destinatario: ${clienteNombre}`}
+      description={`Cliente destinatario: ${clienteNombre}. Se emite al guardar la visita.`}
       maxWidth="md"
       footer={
         <>
           <Button variant="outline" size="sm" onClick={onClose}>
             Cancelar
           </Button>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={handleSubmit}
-            isLoading={isSubmitting}
-          >
+          <Button variant="primary" size="sm" onClick={handleSubmit}>
             Confirmar y emitir
           </Button>
         </>

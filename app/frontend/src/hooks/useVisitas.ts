@@ -10,11 +10,19 @@ export const useVisitas = () => {
       data: IVisitaRegistroFormData;
       fotos: string[];
       docs: string[];
-    }) => registrarVisita(variables.data, variables.fotos, variables.docs),
+      visitId?: number;
+    }) =>
+      registrarVisita(
+        variables.data,
+        variables.fotos,
+        variables.docs,
+        variables.visitId,
+      ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['kpis'] });
       queryClient.invalidateQueries({ queryKey: ['seguimiento'] });
       queryClient.invalidateQueries({ queryKey: ['agenda'] });
+      queryClient.invalidateQueries({ queryKey: ['visits'] });
     },
   });
 

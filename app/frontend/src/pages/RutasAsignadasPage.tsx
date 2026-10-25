@@ -17,7 +17,6 @@ import { Badge } from '../components/common/Badge';
 import { Modal } from '../components/common/Modal';
 import { Button } from '../components/common/Button';
 import { Pagination } from '../components/common/Pagination';
-import { useRouteDraftStore } from '../store/useRouteDraftStore';
 
 export const RutasAsignadasPage: React.FC = () => {
   const navigate = useNavigate();
@@ -28,7 +27,6 @@ export const RutasAsignadasPage: React.FC = () => {
   const [selectedRuta, setSelectedRuta] = useState<IRuta | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(6);
-  const { paradas: draftParadas } = useRouteDraftStore();
 
   useEffect(() => {
     getRutas().then((data) => setRutas(data));
@@ -50,7 +48,6 @@ export const RutasAsignadasPage: React.FC = () => {
 
   const getStopsForRuta = (ruta: IRuta) => {
     if (ruta.paradas && ruta.paradas.length > 0) return ruta.paradas;
-    if (draftParadas && draftParadas.length > 0) return draftParadas;
     return [];
   };
 
@@ -209,7 +206,10 @@ export const RutasAsignadasPage: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <User className="h-3.5 w-3.5 text-slate-400" />
                       <span className="font-semibold text-slate-800">
-                        {ruta.asesor_nombre || 'Juan Pérez'}
+                        {ruta.asesor_nombre ||
+                          (ruta.id_asesor
+                            ? `Asesor #${ruta.id_asesor}`
+                            : 'Sin asignar')}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -334,66 +334,7 @@ export const RutasAsignadasPage: React.FC = () => {
             </div>
 
             <div className="divide-y divide-slate-100 max-h-80 overflow-y-auto">
-              {(getStopsForRuta(selectedRuta).length > 0
-                ? getStopsForRuta(selectedRuta)
-                : [
-                    {
-                      id: '1',
-                      orden: 1,
-                      hora_sugerida: '08:30 AM',
-                      cliente: {
-                        nombre_comercial: 'Ferretería del Norte',
-                        direccion: 'Calle 84 # 42-15',
-                        tipo_cliente_nombre: 'Distribuidor',
-                      },
-                      estado_visita: 'VISITADO',
-                    },
-                    {
-                      id: '2',
-                      orden: 2,
-                      hora_sugerida: '10:15 AM',
-                      cliente: {
-                        nombre_comercial: 'Metalúrgicas S.A.S',
-                        direccion: 'Cra 38 # 74-120',
-                        tipo_cliente_nombre: 'Industrial',
-                      },
-                      estado_visita: 'VISITADO',
-                    },
-                    {
-                      id: '3',
-                      orden: 3,
-                      hora_sugerida: '11:45 AM',
-                      cliente: {
-                        nombre_comercial: 'ConstruInnova S.A.S',
-                        direccion: 'Calle 30 # 12-50',
-                        tipo_cliente_nombre: 'Industrial',
-                      },
-                      estado_visita: 'PENDIENTE',
-                    },
-                    {
-                      id: '4',
-                      orden: 4,
-                      hora_sugerida: '02:00 PM',
-                      cliente: {
-                        nombre_comercial: 'Soluciones Industriales',
-                        direccion: 'Cra 21 # 30-45',
-                        tipo_cliente_nombre: 'Industrial',
-                      },
-                      estado_visita: 'PENDIENTE',
-                    },
-                    {
-                      id: '5',
-                      orden: 5,
-                      hora_sugerida: '03:30 PM',
-                      cliente: {
-                        nombre_comercial: 'Aceros del Caribe Ltda.',
-                        direccion: 'Vía 40 # 65-200',
-                        tipo_cliente_nombre: 'Industrial',
-                      },
-                      estado_visita: 'PENDIENTE',
-                    },
-                  ]
-              ).map((stop: any, idx: number) => (
+              {getStopsForRuta(selectedRuta).map((stop: any, idx: number) => (
                 <div
                   key={stop.id || idx}
                   className="py-2.5 flex items-center justify-between gap-3"

@@ -127,7 +127,7 @@ export const DailyAgenda: React.FC<DailyAgendaProps> = ({
                       navigate(
                         `/visitas/registrar?cliente=${encodeURIComponent(
                           item.cliente,
-                        )}&hora=${encodeURIComponent(item.hora)}`,
+                        )}&visita=${item.id}&hora=${encodeURIComponent(item.hora)}`,
                       );
                     }}
                     className="w-full flex items-center justify-center gap-2 rounded-lg bg-[#EA580C] hover:bg-[#D9480F] text-white py-2 px-4 text-xs font-bold shadow-xs cursor-pointer transition-colors"

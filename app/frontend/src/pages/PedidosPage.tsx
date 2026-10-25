@@ -10,7 +10,8 @@ import {
 } from 'lucide-react';
 import { IPedido } from '../types/visita';
 import { getPedidos, crearPedidoApi } from '../api/pedidos';
-import { MOCK_CLIENTES } from '../api/clientes';
+import { generarNumeroDocumento } from '../api/document-number';
+import { useClientes } from '../hooks/useClientes';
 import { Modal } from '../components/common/Modal';
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
@@ -27,18 +28,18 @@ export const PedidosPage: React.FC = () => {
   const [pageSize, setPageSize] = useState(10);
 
   // Form state
-  const [clienteNombre, setClienteNombre] = useState('Metalúrgicas S.A.S');
-  const [valor, setValor] = useState('18500000');
-  const [fechaEntrega, setFechaEntrega] = useState('2024-05-30');
-  const [observaciones, setObservaciones] = useState(
-    'Despacho prioritario en planta industrial',
-  );
+  const { clientes } = useClientes();
+  const [clienteId, setClienteId] = useState('');
+  const [valor, setValor] = useState('');
+  const [fechaEntrega, setFechaEntrega] = useState('');
+  const [observaciones, setObservaciones] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState('');
 
   const fetchPedidos = useCallback(() => {
-    getPedidos({ search, estado: estadoFilter }).then((data) =>
-      setPedidos(data),
-    );
+    getPedidos({ search, estado: estadoFilter })
+      .then((data) => setPedidos(data))
+      .catch(() => setPedidos([]));
   }, [search, estadoFilter]);
 
   useEffect(() => {
@@ -47,12 +48,20 @@ export const PedidosPage: React.FC = () => {
 
   const handleCreatePedido = async (e: React.FormEvent) => {
     e.preventDefault();
+    const monto = parseFloat(valor);
+    if (!clienteId || !(monto > 0)) {
+      setFormError('Selecciona un cliente e ingresa un valor mayor a cero.');
+      return;
+    }
+    setFormError('');
     setIsSubmitting(true);
     try {
       const created = await crearPedidoApi({
-        cliente_nombre: clienteNombre,
-        valor: parseFloat(valor) || 18500000,
-        fecha_entrega: fechaEntrega,
+        numero: generarNumeroDocumento('PED'),
+        id_cliente: clienteId,
+        valor: monto,
+        fecha: new Date().toISOString().slice(0, 10),
+        fecha_entrega: fechaEntrega || undefined,
         observaciones,
         estado: 'PENDIENTE',
       });
@@ -60,6 +69,8 @@ export const PedidosPage: React.FC = () => {
       setToastMessage(`Pedido ${created.numero} registrado con éxito.`);
       setTimeout(() => setToastMessage(''), 3000);
       fetchPedidos();
+    } catch {
+      setFormError('No se pudo registrar el pedido. Intenta de nuevo.');
     } finally {
       setIsSubmitting(false);
     }
@@ -203,9 +214,7 @@ export const PedidosPage: React.FC = () => {
                     <td className="py-2.5 px-3 font-mono text-slate-600">
                       {ped.fecha_entrega}
                     </td>
-                    <td className="py-2.5 px-3">
-                      {ped.asesor_nombre || 'Juan Pérez'}
-                    </td>
+                    <td className="py-2.5 px-3">{ped.asesor_nombre || '—'}</td>
                     <td className="py-2.5 px-3 font-mono font-bold text-slate-900">
                       $ {ped.valor.toLocaleString('es-CO')}
                     </td>
@@ -377,17 +386,24 @@ export const PedidosPage: React.FC = () => {
           }
         >
           <form onSubmit={handleCreatePedido} className="space-y-3 text-xs">
+            {formError && (
+              <p className="rounded-lg bg-red-50 p-2 text-red-700">
+                {formError}
+              </p>
+            )}
             <div className="space-y-1">
               <label className="block text-xs font-semibold text-slate-700">
                 Cliente
               </label>
               <select
-                value={clienteNombre}
-                onChange={(e) => setClienteNombre(e.target.value)}
+                value={clienteId}
+                onChange={(e) => setClienteId(e.target.value)}
+                required
                 className="w-full rounded-lg border border-slate-300 p-2 text-xs text-slate-800 focus:border-[#EA580C] focus:outline-none"
               >
-                {MOCK_CLIENTES.map((c) => (
-                  <option key={c.id_cliente} value={c.nombre_comercial}>
+                <option value="">Selecciona un cliente</option>
+                {clientes.map((c) => (
+                  <option key={c.id_cliente} value={c.id_cliente}>
                     {c.nombre_comercial} ({c.municipio})
                   </option>
                 ))}

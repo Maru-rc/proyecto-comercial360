@@ -40,8 +40,8 @@ export class RoutesController {
 
   @Get()
   @Auth()
-  async findAll() {
-    return this.listRoutesUseCase.execute();
+  async findAll(@CurrentUser() user: AuthenticatedUser) {
+    return this.listRoutesUseCase.execute(user);
   }
 
   @Post()

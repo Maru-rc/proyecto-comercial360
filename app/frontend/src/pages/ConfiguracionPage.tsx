@@ -21,7 +21,7 @@ export const ConfiguracionPage: React.FC = () => {
   >('perfil');
 
   // Perfil form
-  const [nombre, setNombre] = useState(user?.nombre || 'Juan Pérez');
+  const [nombre, setNombre] = useState(user?.nombre || '');
   const [email, setEmail] = useState(user?.email || 'jperez@comercial360.com');
   const [telefono, setTelefono] = useState('300 123 4567');
   const [cargo, setCargo] = useState(user?.cargo || 'Asesor Comercial Senior');

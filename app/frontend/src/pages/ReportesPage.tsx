@@ -1,35 +1,115 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Download, FileSpreadsheet, CheckCircle } from 'lucide-react';
-import { MOCK_SEGUIMIENTO_VISITAS, downloadCsvReport } from '../api/kpis';
-import { MOCK_COTIZACIONES } from '../api/cotizaciones';
-import { MOCK_PEDIDOS } from '../api/pedidos';
-import { MOCK_CLIENTES } from '../api/clientes';
+import { getSeguimientoVisitas, downloadCsvReport } from '../api/kpis';
+import { getCotizaciones } from '../api/cotizaciones';
+import { getPedidos } from '../api/pedidos';
+import { getClientes } from '../api/clientes';
 import { Badge } from '../components/common/Badge';
 import { Pagination } from '../components/common/Pagination';
+
+/** Quotes a CSV cell and neutralises spreadsheet formulas (CSV injection). */
+const toCsvCell = (value: unknown): string => {
+  let text = value === null || value === undefined ? '' : String(value);
+  if (/^[=+\-@\t\r]/.test(text)) text = `'${text}`;
+  return `"${text.replace(/"/g, '""')}"`;
+};
+
+const enRango = (fecha: string | undefined, desde: string, hasta: string) => {
+  const dia = (fecha ?? '').slice(0, 10);
+  return !dia || (dia >= desde && dia <= hasta);
+};
 
 export const ReportesPage: React.FC = () => {
   const [tipoReporte, setTipoReporte] = useState<
     'visitas' | 'cotizaciones' | 'pedidos' | 'clientes'
   >('visitas');
-  const [fechaDesde, setFechaDesde] = useState('2024-05-01');
-  const [fechaHasta, setFechaHasta] = useState('2024-05-31');
+  const [fechaDesde, setFechaDesde] = useState(
+    () => `${new Date().toISOString().slice(0, 8)}01`,
+  );
+  const [fechaHasta, setFechaHasta] = useState(() =>
+    new Date().toISOString().slice(0, 10),
+  );
   const [territorio, setTerritorio] = useState('Todos');
   const [downloadSuccess, setDownloadSuccess] = useState(false);
+  const [downloadError, setDownloadError] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
+  const seguimientoQuery = useQuery({
+    queryKey: ['seguimiento', 'month'],
+    queryFn: () => getSeguimientoVisitas('month'),
+    enabled: tipoReporte === 'visitas',
+  });
+  const cotizacionesQuery = useQuery({
+    queryKey: ['cotizaciones'],
+    queryFn: () => getCotizaciones(),
+    enabled: tipoReporte === 'cotizaciones',
+  });
+  const pedidosQuery = useQuery({
+    queryKey: ['pedidos'],
+    queryFn: () => getPedidos(),
+    enabled: tipoReporte === 'pedidos',
+  });
+  const clientesQuery = useQuery({
+    queryKey: ['clientes'],
+    queryFn: () => getClientes(),
+    enabled: tipoReporte === 'clientes',
+  });
+
+  const seguimiento = useMemo(
+    () =>
+      (seguimientoQuery.data ?? []).filter(
+        (f) =>
+          enRango(f.fecha, fechaDesde, fechaHasta) &&
+          (territorio === 'Todos' ||
+            f.territorio.toUpperCase().includes(territorio)),
+      ),
+    [seguimientoQuery.data, fechaDesde, fechaHasta, territorio],
+  );
+  const cotizaciones = useMemo(
+    () =>
+      (cotizacionesQuery.data ?? []).filter((c) =>
+        enRango(c.fecha, fechaDesde, fechaHasta),
+      ),
+    [cotizacionesQuery.data, fechaDesde, fechaHasta],
+  );
+  const pedidos = useMemo(
+    () =>
+      (pedidosQuery.data ?? []).filter((p) =>
+        enRango(p.fecha, fechaDesde, fechaHasta),
+      ),
+    [pedidosQuery.data, fechaDesde, fechaHasta],
+  );
+  const clientes = clientesQuery.data ?? [];
+
+  const activeQuery =
+    tipoReporte === 'visitas'
+      ? seguimientoQuery
+      : tipoReporte === 'cotizaciones'
+        ? cotizacionesQuery
+        : tipoReporte === 'pedidos'
+          ? pedidosQuery
+          : clientesQuery;
+
   const totalRows =
     tipoReporte === 'visitas'
-      ? MOCK_SEGUIMIENTO_VISITAS.length
+      ? seguimiento.length
       : tipoReporte === 'cotizaciones'
-        ? MOCK_COTIZACIONES.length
+        ? cotizaciones.length
         : tipoReporte === 'pedidos'
-          ? MOCK_PEDIDOS.length
-          : MOCK_CLIENTES.length;
+          ? pedidos.length
+          : clientes.length;
 
-  const handleDownloadReport = (format: 'csv' | 'excel') => {
+  const handleDownloadReport = async (format: 'csv' | 'excel') => {
+    setDownloadError('');
     if (tipoReporte === 'visitas') {
-      downloadCsvReport(territorio, '21');
+      try {
+        await downloadCsvReport(territorio, fechaHasta, 'month');
+      } catch {
+        setDownloadError('No se pudo generar el reporte de seguimiento.');
+        return;
+      }
     } else if (tipoReporte === 'cotizaciones') {
       const headers = [
         'Numero',
@@ -40,7 +120,7 @@ export const ReportesPage: React.FC = () => {
         'Valor',
         'Estado',
       ];
-      const rows = MOCK_COTIZACIONES.map((c) => [
+      const rows = cotizaciones.map((c) => [
         c.numero,
         c.cliente_nombre,
         c.fecha,
@@ -53,7 +133,7 @@ export const ReportesPage: React.FC = () => {
         '\uFEFF' +
         [
           headers.join(','),
-          ...rows.map((r) => r.map((val) => `"${val}"`).join(',')),
+          ...rows.map((r) => r.map(toCsvCell).join(',')),
         ].join('\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
@@ -71,7 +151,7 @@ export const ReportesPage: React.FC = () => {
         'Valor',
         'Estado',
       ];
-      const rows = MOCK_PEDIDOS.map((p) => [
+      const rows = pedidos.map((p) => [
         p.numero,
         p.cliente_nombre,
         p.fecha,
@@ -84,7 +164,7 @@ export const ReportesPage: React.FC = () => {
         '\uFEFF' +
         [
           headers.join(','),
-          ...rows.map((r) => r.map((val) => `"${val}"`).join(',')),
+          ...rows.map((r) => r.map(toCsvCell).join(',')),
         ].join('\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
@@ -102,7 +182,7 @@ export const ReportesPage: React.FC = () => {
         'Tipo',
         'Potencial',
       ];
-      const rows = MOCK_CLIENTES.map((c) => [
+      const rows = clientes.map((c) => [
         c.codigo,
         c.nombre_comercial,
         c.nit,
@@ -115,7 +195,7 @@ export const ReportesPage: React.FC = () => {
         '\uFEFF' +
         [
           headers.join(','),
-          ...rows.map((r) => r.map((val) => `"${val}"`).join(',')),
+          ...rows.map((r) => r.map(toCsvCell).join(',')),
         ].join('\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
@@ -269,6 +349,20 @@ export const ReportesPage: React.FC = () => {
           </span>
         </div>
 
+        {(activeQuery.isLoading || activeQuery.isError || downloadError) && (
+          <p
+            className={`px-4 py-3 text-xs ${
+              activeQuery.isError || downloadError
+                ? 'text-red-700'
+                : 'text-slate-500'
+            }`}
+          >
+            {downloadError ||
+              (activeQuery.isError
+                ? 'No se pudieron cargar los datos del reporte.'
+                : 'Cargando datos...')}
+          </p>
+        )}
         <div className="overflow-x-auto">
           {tipoReporte === 'visitas' && (
             <table className="w-full text-left border-collapse text-xs">
@@ -284,22 +378,23 @@ export const ReportesPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-700">
-                {MOCK_SEGUIMIENTO_VISITAS.slice(
-                  (currentPage - 1) * pageSize,
-                  currentPage * pageSize,
-                ).map((f) => (
-                  <tr key={f.id} className="hover:bg-slate-50">
-                    <td className="py-2 px-3 font-mono">{f.fecha}</td>
-                    <td className="py-2 px-3 font-bold">{f.cliente}</td>
-                    <td className="py-2 px-3">{f.asesor}</td>
-                    <td className="py-2 px-3">{f.territorio}</td>
-                    <td className="py-2 px-3">
-                      <Badge variant={f.estado_visita}>{f.estado_visita}</Badge>
-                    </td>
-                    <td className="py-2 px-3 font-mono">{f.cotizacion}</td>
-                    <td className="py-2 px-3 font-mono">{f.pedido}</td>
-                  </tr>
-                ))}
+                {seguimiento
+                  .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+                  .map((f) => (
+                    <tr key={f.id} className="hover:bg-slate-50">
+                      <td className="py-2 px-3 font-mono">{f.fecha}</td>
+                      <td className="py-2 px-3 font-bold">{f.cliente}</td>
+                      <td className="py-2 px-3">{f.asesor}</td>
+                      <td className="py-2 px-3">{f.territorio}</td>
+                      <td className="py-2 px-3">
+                        <Badge variant={f.estado_visita}>
+                          {f.estado_visita}
+                        </Badge>
+                      </td>
+                      <td className="py-2 px-3 font-mono">{f.cotizacion}</td>
+                      <td className="py-2 px-3 font-mono">{f.pedido}</td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           )}
@@ -317,25 +412,28 @@ export const ReportesPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-700">
-                {MOCK_COTIZACIONES.slice(
-                  (currentPage - 1) * pageSize,
-                  currentPage * pageSize,
-                ).map((c) => (
-                  <tr key={c.numero} className="hover:bg-slate-50">
-                    <td className="py-2 px-3 font-mono font-bold text-[#EA580C]">
-                      {c.numero}
-                    </td>
-                    <td className="py-2 px-3 font-bold">{c.cliente_nombre}</td>
-                    <td className="py-2 px-3 font-mono">{c.fecha}</td>
-                    <td className="py-2 px-3 font-mono">{c.validez}</td>
-                    <td className="py-2 px-3 font-mono font-bold">
-                      $ {c.valor.toLocaleString('es-CO')}
-                    </td>
-                    <td className="py-2 px-3">
-                      <span className="font-bold text-[10px]">{c.estado}</span>
-                    </td>
-                  </tr>
-                ))}
+                {cotizaciones
+                  .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+                  .map((c) => (
+                    <tr key={c.numero} className="hover:bg-slate-50">
+                      <td className="py-2 px-3 font-mono font-bold text-[#EA580C]">
+                        {c.numero}
+                      </td>
+                      <td className="py-2 px-3 font-bold">
+                        {c.cliente_nombre}
+                      </td>
+                      <td className="py-2 px-3 font-mono">{c.fecha}</td>
+                      <td className="py-2 px-3 font-mono">{c.validez}</td>
+                      <td className="py-2 px-3 font-mono font-bold">
+                        $ {c.valor.toLocaleString('es-CO')}
+                      </td>
+                      <td className="py-2 px-3">
+                        <span className="font-bold text-[10px]">
+                          {c.estado}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           )}
@@ -353,25 +451,28 @@ export const ReportesPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-700">
-                {MOCK_PEDIDOS.slice(
-                  (currentPage - 1) * pageSize,
-                  currentPage * pageSize,
-                ).map((p) => (
-                  <tr key={p.numero} className="hover:bg-slate-50">
-                    <td className="py-2 px-3 font-mono font-bold text-blue-600">
-                      {p.numero}
-                    </td>
-                    <td className="py-2 px-3 font-bold">{p.cliente_nombre}</td>
-                    <td className="py-2 px-3 font-mono">{p.fecha}</td>
-                    <td className="py-2 px-3 font-mono">{p.fecha_entrega}</td>
-                    <td className="py-2 px-3 font-mono font-bold">
-                      $ {p.valor.toLocaleString('es-CO')}
-                    </td>
-                    <td className="py-2 px-3">
-                      <span className="font-bold text-[10px]">{p.estado}</span>
-                    </td>
-                  </tr>
-                ))}
+                {pedidos
+                  .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+                  .map((p) => (
+                    <tr key={p.numero} className="hover:bg-slate-50">
+                      <td className="py-2 px-3 font-mono font-bold text-blue-600">
+                        {p.numero}
+                      </td>
+                      <td className="py-2 px-3 font-bold">
+                        {p.cliente_nombre}
+                      </td>
+                      <td className="py-2 px-3 font-mono">{p.fecha}</td>
+                      <td className="py-2 px-3 font-mono">{p.fecha_entrega}</td>
+                      <td className="py-2 px-3 font-mono font-bold">
+                        $ {p.valor.toLocaleString('es-CO')}
+                      </td>
+                      <td className="py-2 px-3">
+                        <span className="font-bold text-[10px]">
+                          {p.estado}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           )}
@@ -389,27 +490,26 @@ export const ReportesPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-700">
-                {MOCK_CLIENTES.slice(
-                  (currentPage - 1) * pageSize,
-                  currentPage * pageSize,
-                ).map((cl) => (
-                  <tr key={cl.codigo} className="hover:bg-slate-50">
-                    <td className="py-2 px-3 font-mono font-bold">
-                      {cl.codigo}
-                    </td>
-                    <td className="py-2 px-3 font-bold">
-                      {cl.nombre_comercial}
-                    </td>
-                    <td className="py-2 px-3 font-mono">{cl.nit}</td>
-                    <td className="py-2 px-3">{cl.municipio}</td>
-                    <td className="py-2 px-3">{cl.tipo_cliente_nombre}</td>
-                    <td className="py-2 px-3">
-                      <Badge variant={cl.potencial_nombre}>
-                        {cl.potencial_nombre}
-                      </Badge>
-                    </td>
-                  </tr>
-                ))}
+                {clientes
+                  .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+                  .map((cl) => (
+                    <tr key={cl.codigo} className="hover:bg-slate-50">
+                      <td className="py-2 px-3 font-mono font-bold">
+                        {cl.codigo}
+                      </td>
+                      <td className="py-2 px-3 font-bold">
+                        {cl.nombre_comercial}
+                      </td>
+                      <td className="py-2 px-3 font-mono">{cl.nit}</td>
+                      <td className="py-2 px-3">{cl.municipio}</td>
+                      <td className="py-2 px-3">{cl.tipo_cliente_nombre}</td>
+                      <td className="py-2 px-3">
+                        <Badge variant={cl.potencial_nombre}>
+                          {cl.potencial_nombre}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           )}

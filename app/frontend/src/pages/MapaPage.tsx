@@ -16,17 +16,20 @@ export const MapaPage: React.FC = () => {
 
   const { mapStops, isLoading } = useVisitasMap();
 
-  const allMarkers: IMapMarkerItem[] = mapStops.map((stop, idx) => ({
-    id: String(stop.id || stop.clientId || idx + 1),
-    lat: stop.latitude ?? 10.9685,
-    lng: stop.longitude ?? -74.7813,
-    title: stop.clientName,
-    subtitle: stop.address || `Parada #${stop.order || idx + 1}`,
-    orden: stop.order ?? idx + 1,
-    estado: stop.pinStatus,
-    colorHex: stop.colorHex,
-    direccion: stop.address || '',
-  }));
+  // Stops without geocoding are listed in the agenda, never placed on a guess
+  const allMarkers: IMapMarkerItem[] = mapStops
+    .filter((stop) => stop.latitude !== null && stop.longitude !== null)
+    .map((stop, idx) => ({
+      id: String(stop.id || stop.clientId || idx + 1),
+      lat: Number(stop.latitude),
+      lng: Number(stop.longitude),
+      title: stop.clientName,
+      subtitle: stop.address || `Parada #${stop.order || idx + 1}`,
+      orden: stop.order ?? idx + 1,
+      estado: stop.pinStatus,
+      colorHex: stop.colorHex,
+      direccion: stop.address || '',
+    }));
 
   const filteredMarkers = allMarkers.filter((m) => {
     const matchesSearch =
@@ -135,6 +138,14 @@ export const MapaPage: React.FC = () => {
           </div>
 
           <div className="flex-1 overflow-y-auto divide-y divide-slate-100 pr-1 space-y-1">
+            {isLoading && (
+              <p className="p-3 text-xs text-slate-500">Cargando mapa...</p>
+            )}
+            {!isLoading && filteredMarkers.length === 0 && (
+              <p className="p-3 text-xs text-slate-500">
+                No hay paradas georreferenciadas para hoy.
+              </p>
+            )}
             {filteredMarkers.map((marker) => {
               const isSelected = selectedItem?.id === marker.id;
               return (

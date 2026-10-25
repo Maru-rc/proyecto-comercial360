@@ -26,7 +26,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
   onQuoteCreated,
   onOrderCreated,
   onPhotoUploaded,
-  clienteNombre = 'Metalúrgicas S.A.S.',
+  clienteNombre = 'Cliente sin seleccionar',
 }) => {
   const [photoModalOpen, setPhotoModalOpen] = useState(false);
   const [docModalOpen, setDocModalOpen] = useState(false);

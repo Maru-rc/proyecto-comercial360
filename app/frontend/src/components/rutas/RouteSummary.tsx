@@ -1,6 +1,8 @@
 import React from 'react';
 import { Info, User } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { useRouteDraftStore } from '../../store/useRouteDraftStore';
+import { getAsesores } from '../../api/rutas';
 
 export const RouteSummary: React.FC = () => {
   const {
@@ -10,6 +12,10 @@ export const RouteSummary: React.FC = () => {
     formData,
     updateFormData,
   } = useRouteDraftStore();
+  const { data: asesores = [] } = useQuery({
+    queryKey: ['asesores'],
+    queryFn: getAsesores,
+  });
 
   const hours = Math.floor(tiempoTotalMin / 60);
   const minutes = tiempoTotalMin % 60;
@@ -29,13 +35,16 @@ export const RouteSummary: React.FC = () => {
           <div className="relative">
             <User className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
             <select
-              value={formData.id_asesor || 'ase-001'}
+              value={formData.id_asesor || ''}
               onChange={(e) => updateFormData({ id_asesor: e.target.value })}
               className="w-full rounded-lg border border-slate-300 bg-white py-1.5 pl-9 pr-3 text-xs text-slate-800 focus:border-[#EA580C] focus:outline-none focus:ring-1 focus:ring-[#EA580C] cursor-pointer"
             >
-              <option value="ase-001">Juan Pérez (NORTE)</option>
-              <option value="ase-002">Carlos Gómez (SUR)</option>
-              <option value="ase-003">Laura Restrepo (ORIENTE)</option>
+              <option value="">Sin asignar</option>
+              {asesores.map((a) => (
+                <option key={a.id} value={String(a.id)}>
+                  {a.name}
+                </option>
+              ))}
             </select>
           </div>
         </div>

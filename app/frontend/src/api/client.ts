@@ -35,7 +35,6 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401 && !isAuthRequest) {
       onUnauthorized?.();
     }
-    // If backend is not running, we handle mock fallback gracefully in our services
     return Promise.reject(error);
   },
 );

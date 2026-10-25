@@ -152,6 +152,8 @@ describe('HU-10: role-based access control (e2e, real endpoints)', () => {
       ['get', '/reportes/seguimiento.csv'],
       ['post', '/commercial/quotations'],
       ['get', '/commercial/orders/1'],
+      ['get', '/commercial/quotations'],
+      ['get', '/commercial/orders'],
       ['post', '/storage/upload-url'],
       ['get', '/storage/download-url?s3Key=x'],
       ['get', '/me'],
@@ -485,6 +487,141 @@ describe('HU-10: role-based access control (e2e, real endpoints)', () => {
     });
   });
 
+  // HU-13: quotations and orders, scoped by advisor (anti-IDOR).
+  describe('commercial', () => {
+    it('an advisor creates, lists and reads only their own quotations and orders', async () => {
+      const quote = await api(
+        'post',
+        '/commercial/quotations',
+        cookies.advisorA,
+        {
+          quotationNumber: 'COT-E2E-A',
+          clientId: customerId,
+          amount: 120000,
+        },
+      );
+      expect(quote.status).toBe(201);
+      expect(quote.body.data.advisorId).toBe(advisorAId);
+
+      const order = await api('post', '/commercial/orders', cookies.advisorA, {
+        orderNumber: 'PED-E2E-A',
+        clientId: customerId,
+        quotationId: quote.body.data.id,
+        amount: 120000,
+      });
+      expect(order.status).toBe(201);
+      expect(order.body.data.advisorId).toBe(advisorAId);
+
+      const own = await api('get', '/commercial/quotations', cookies.advisorA);
+      expect(own.status).toBe(200);
+      expect(own.body.meta).toMatchObject({ page: 1 });
+      expect(
+        (own.body.data as { advisorId: number }[]).every(
+          (q) => q.advisorId === advisorAId,
+        ),
+      ).toBe(true);
+
+      const other = await api(
+        'get',
+        '/commercial/quotations',
+        cookies.advisorB,
+      );
+      expect(
+        (other.body.data as { number: string }[]).map((q) => q.number),
+      ).not.toContain('COT-E2E-A');
+
+      expect(
+        (
+          await api(
+            'get',
+            `/commercial/quotations/${quote.body.data.id}`,
+            cookies.advisorB,
+          )
+        ).status,
+      ).toBe(403);
+      expect(
+        (
+          await api(
+            'get',
+            `/commercial/orders/${order.body.data.id}`,
+            cookies.advisorB,
+          )
+        ).status,
+      ).toBe(403);
+      expect(
+        (
+          await api(
+            'get',
+            `/commercial/orders/${order.body.data.id}`,
+            cookies.director,
+          )
+        ).status,
+      ).toBe(200);
+    });
+
+    it('an advisor cannot create a quotation for another advisor → 403', async () => {
+      const res = await api(
+        'post',
+        '/commercial/quotations',
+        cookies.advisorA,
+        {
+          quotationNumber: 'COT-E2E-X',
+          clientId: customerId,
+          advisorId: advisorBId,
+          amount: 1,
+        },
+      );
+      expect(res.status).toBe(403);
+    });
+
+    it('a director lists every advisor and can filter by one', async () => {
+      const all = await api(
+        'get',
+        '/commercial/orders?limit=100',
+        cookies.director,
+      );
+      expect(all.status).toBe(200);
+      const filtered = await api(
+        'get',
+        `/commercial/quotations?advisorId=${advisorBId}`,
+        cookies.director,
+      );
+      expect(
+        (filtered.body.data as { advisorId: number }[]).every(
+          (q) => q.advisorId === advisorBId,
+        ),
+      ).toBe(true);
+    });
+  });
+
+  describe('GET /api/rutas', () => {
+    it('an advisor sees only the routes assigned to them; a director all', async () => {
+      const insertRoute = async (name: string, advisorId: number) => {
+        const [row] = await ds.query(
+          `INSERT INTO "routes" (name, sales_representative_id) VALUES ($1, $2) RETURNING route_id`,
+          [name, advisorId],
+        );
+        return row.route_id as number;
+      };
+      const routeA = await insertRoute('Ruta E2E A', advisorAId);
+      const routeB = await insertRoute('Ruta E2E B', advisorBId);
+
+      const ids = async (cookie: string[]) =>
+        (
+          (await api('get', '/rutas', cookie)).body.data as { id: number }[]
+        ).map((r) => r.id);
+      const forA = await ids(cookies.advisorA);
+      expect(forA).toContain(routeA);
+      expect(forA).not.toContain(routeB);
+      expect(await ids(cookies.director)).toEqual(
+        expect.arrayContaining([routeA, routeB]),
+      );
+      await ds.query('DELETE FROM "routes" WHERE route_id = ANY($1)', [
+        [routeA, routeB],
+      ]);
+    });
+  });
+
   describe('follow-ups', () => {
     it('schedules, lists as pending and completes a follow-up', async () => {
       const visitId = await insertVisit(advisorAId);
@@ -558,6 +695,43 @@ describe('HU-10: role-based access control (e2e, real endpoints)', () => {
       });
       expect(res.status).toBe(201);
       expect(res.body.data.advisorId).toBe(advisorBId);
+    });
+    it('the web flow: unplanned visit, then outcome with quotation, order and end time', async () => {
+      const created = await api('post', '/visits', cookies.advisorA, {
+        clientId: customerId,
+        scheduledDate: DATE,
+        startTime: '10:15',
+        objective: 'Presentación de catálogo',
+      });
+      expect(created.status).toBe(201);
+      const visitId = created.body.data.id as number;
+
+      const closed = await api('put', `/visits/${visitId}`, cookies.advisorA, {
+        outcome: 'SUCCESSFUL',
+        observations: 'Cliente interesado',
+        endTime: `${DATE}T11:30:00`,
+        quotation: {
+          quotationNumber: 'COT-WEB-0001',
+          amount: 1200000,
+          currency: 'COP',
+        },
+        order: { orderNumber: 'PED-WEB-0001', amount: 900000 },
+        followUp: { nextContactDate: DATE, activity: 'Llamar al cliente' },
+      });
+      expect(closed.status).toBe(200);
+      expect(closed.body.data.quotationId).toEqual(expect.any(Number));
+      expect(closed.body.data.orderId).toEqual(expect.any(Number));
+
+      const quotations = await api(
+        'get',
+        '/commercial/quotations',
+        cookies.advisorA,
+      );
+      expect(
+        (
+          quotations.body.data as Array<{ number: string; visitId: number }>
+        ).find((q) => q.number === 'COT-WEB-0001')?.visitId,
+      ).toBe(visitId);
     });
   });
 

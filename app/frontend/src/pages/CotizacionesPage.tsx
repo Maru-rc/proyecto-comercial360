@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Search, Printer, Eye, Check } from 'lucide-react';
 import { ICotizacion } from '../types/visita';
 import { getCotizaciones, crearCotizacionApi } from '../api/cotizaciones';
-import { MOCK_CLIENTES } from '../api/clientes';
+import { generarNumeroDocumento } from '../api/document-number';
+import { useClientes } from '../hooks/useClientes';
 import { Modal } from '../components/common/Modal';
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
@@ -19,18 +20,18 @@ export const CotizacionesPage: React.FC = () => {
   const [pageSize, setPageSize] = useState(10);
 
   // Form State
-  const [clienteNombre, setClienteNombre] = useState('Metalúrgicas S.A.S');
-  const [valor, setValor] = useState('24800000');
-  const [descripcion, setDescripcion] = useState(
-    'Equipos de soldadura y consumibles industriales',
-  );
-  const [validez, setValidez] = useState('2024-06-15');
+  const { clientes } = useClientes();
+  const [clienteId, setClienteId] = useState('');
+  const [valor, setValor] = useState('');
+  const [descripcion, setDescripcion] = useState('');
+  const [validez, setValidez] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState('');
 
   const fetchCotizaciones = useCallback(() => {
-    getCotizaciones({ search, estado: estadoFilter }).then((data) =>
-      setCotizaciones(data),
-    );
+    getCotizaciones({ search, estado: estadoFilter })
+      .then((data) => setCotizaciones(data))
+      .catch(() => setCotizaciones([]));
   }, [search, estadoFilter]);
 
   useEffect(() => {
@@ -39,11 +40,19 @@ export const CotizacionesPage: React.FC = () => {
 
   const handleCreateCotizacion = async (e: React.FormEvent) => {
     e.preventDefault();
+    const monto = parseFloat(valor);
+    if (!clienteId || !(monto > 0)) {
+      setFormError('Selecciona un cliente e ingresa un valor mayor a cero.');
+      return;
+    }
+    setFormError('');
     setIsSubmitting(true);
     try {
       const created = await crearCotizacionApi({
-        cliente_nombre: clienteNombre,
-        valor: parseFloat(valor) || 20000000,
+        numero: generarNumeroDocumento('COT'),
+        id_cliente: clienteId,
+        valor: monto,
+        fecha: new Date().toISOString().slice(0, 10),
         descripcion,
         validez,
         estado: 'ENVIADA',
@@ -52,6 +61,8 @@ export const CotizacionesPage: React.FC = () => {
       setToastMessage(`Cotización ${created.numero} generada exitosamente.`);
       setTimeout(() => setToastMessage(''), 3000);
       fetchCotizaciones();
+    } catch {
+      setFormError('No se pudo emitir la cotización. Intenta de nuevo.');
     } finally {
       setIsSubmitting(false);
     }
@@ -199,9 +210,7 @@ export const CotizacionesPage: React.FC = () => {
                     <td className="py-2.5 px-3 font-mono text-slate-600">
                       {cot.validez || '15 días'}
                     </td>
-                    <td className="py-2.5 px-3">
-                      {cot.asesor_nombre || 'Juan Pérez'}
-                    </td>
+                    <td className="py-2.5 px-3">{cot.asesor_nombre || '—'}</td>
                     <td className="py-2.5 px-3 font-mono font-bold text-slate-900">
                       $ {cot.valor.toLocaleString('es-CO')}
                     </td>
@@ -393,17 +402,24 @@ export const CotizacionesPage: React.FC = () => {
           }
         >
           <form onSubmit={handleCreateCotizacion} className="space-y-3 text-xs">
+            {formError && (
+              <p className="rounded-lg bg-red-50 p-2 text-red-700">
+                {formError}
+              </p>
+            )}
             <div className="space-y-1">
               <label className="block text-xs font-semibold text-slate-700">
                 Cliente Destinatario
               </label>
               <select
-                value={clienteNombre}
-                onChange={(e) => setClienteNombre(e.target.value)}
+                value={clienteId}
+                onChange={(e) => setClienteId(e.target.value)}
+                required
                 className="w-full rounded-lg border border-slate-300 p-2 text-xs text-slate-800 focus:border-[#EA580C] focus:outline-none"
               >
-                {MOCK_CLIENTES.map((c) => (
-                  <option key={c.id_cliente} value={c.nombre_comercial}>
+                <option value="">Selecciona un cliente</option>
+                {clientes.map((c) => (
+                  <option key={c.id_cliente} value={c.id_cliente}>
                     {c.nombre_comercial} ({c.municipio})
                   </option>
                 ))}

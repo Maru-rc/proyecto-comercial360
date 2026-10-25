@@ -20,6 +20,7 @@ export const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
   const [uploadedResult, setUploadedResult] =
     useState<IS3UploadResponse | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -41,8 +42,9 @@ export const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({
   const handleUpload = async () => {
     if (!selectedFile) return;
     setIsUploading(true);
+    setUploadError('');
     try {
-      const res = await uploadFileToS3(selectedFile, 'visitas', 'vis-001');
+      const res = await uploadFileToS3(selectedFile);
       setUploadedResult(res);
       onUploadSuccess(res);
       setTimeout(() => {
@@ -50,6 +52,9 @@ export const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({
         handleClose();
       }, 1000);
     } catch {
+      setUploadError(
+        'No se pudo subir el archivo. Verifica el tipo (JPG, PNG, WEBP, PDF) y que pese menos de 15 MB.',
+      );
       setIsUploading(false);
     }
   };
@@ -58,6 +63,7 @@ export const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({
     setSelectedFile(null);
     setPreviewUrl(null);
     setUploadedResult(null);
+    setUploadError('');
     setIsUploading(false);
     onClose();
   };
@@ -95,7 +101,11 @@ export const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({
           <input
             ref={fileInputRef}
             type="file"
-            accept={isPhoto ? 'image/*' : '.pdf,.doc,.docx,.xls,.xlsx'}
+            accept={
+              isPhoto
+                ? 'image/jpeg,image/png,image/webp'
+                : '.pdf,.xls,.xlsx,.csv'
+            }
             onChange={handleFileChange}
             className="hidden"
           />
@@ -146,6 +156,11 @@ export const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({
         </div>
 
         {/* Uploaded key indicator */}
+        {uploadError && (
+          <p className="rounded-lg bg-red-50 p-2 text-xs text-red-700">
+            {uploadError}
+          </p>
+        )}
         {uploadedResult && (
           <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs">
             <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
