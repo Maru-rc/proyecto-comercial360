@@ -68,7 +68,13 @@ export class StreamClientFileParserAdapter implements ClientFileParser {
     return rawData.map((raw, index) => {
       const normalizedRecord: Record<string, string> = {};
       for (const [key, value] of Object.entries(raw)) {
-        normalizedRecord[this.normalizeKey(key)] = String(value ?? '').trim();
+        const stringValue =
+          typeof value === 'string' ||
+          typeof value === 'number' ||
+          typeof value === 'boolean'
+            ? String(value).trim()
+            : '';
+        normalizedRecord[this.normalizeKey(key)] = stringValue;
       }
       return this.mapRecordToRow(normalizedRecord, index + 2); // 1-indexed, row 1 is header
     });

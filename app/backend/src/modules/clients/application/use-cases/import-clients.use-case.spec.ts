@@ -10,7 +10,6 @@ import {
   CatalogItem,
   CatalogRepository,
   CatalogsGroup,
-  PortfolioCatalogItem,
   PotentialCatalogItem,
 } from '../ports/catalog.repository.port.js';
 import {

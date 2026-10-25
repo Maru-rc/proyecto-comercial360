@@ -97,28 +97,28 @@ export class CustomerOrmEntity {
   @JoinColumn({ name: 'zone_id' })
   zone: ZoneOrmEntity | null;
 
-  @Column({ name: 'zone_id', nullable: true })
+  @Column({ name: 'zone_id', type: 'int', nullable: true })
   zoneId: number | null;
 
   @ManyToOne(() => CustomerTypeOrmEntity, { nullable: true })
   @JoinColumn({ name: 'customer_type_id' })
   customerType: CustomerTypeOrmEntity | null;
 
-  @Column({ name: 'customer_type_id', nullable: true })
+  @Column({ name: 'customer_type_id', type: 'int', nullable: true })
   customerTypeId: number | null;
 
   @ManyToOne(() => PotentialOrmEntity, { nullable: true })
   @JoinColumn({ name: 'potential_id' })
   customerPotential: PotentialOrmEntity | null;
 
-  @Column({ name: 'potential_id', nullable: true })
+  @Column({ name: 'potential_id', type: 'int', nullable: true })
   potentialId: number | null;
 
   @ManyToOne(() => CustomerStatusOrmEntity, { nullable: true })
   @JoinColumn({ name: 'customer_status_id' })
   customerStatus: CustomerStatusOrmEntity | null;
 
-  @Column({ name: 'customer_status_id', nullable: true })
+  @Column({ name: 'customer_status_id', type: 'int', nullable: true })
   customerStatusId: number | null;
 
   @OneToMany(() => CustomerContactOrmEntity, (contact) => contact.customer)

@@ -9,21 +9,25 @@ import { TypeOrmRouteRepository } from './infrastructure/persistence/typeorm-rou
 import { TypeOrmRouteVisitGeneratorAdapter } from './infrastructure/adapters/typeorm-route-visit-generator.adapter.js';
 import { TypeOrmAdvisorLookupAdapter } from './infrastructure/adapters/typeorm-advisor-lookup.adapter.js';
 import { CreateRouteUseCase } from './application/use-cases/create-route.use-case.js';
+import { ListRoutesUseCase } from './application/use-cases/list-routes.use-case.js';
 import { SetRouteStopsUseCase } from './application/use-cases/set-route-stops.use-case.js';
 import { GetRouteByIdUseCase } from './application/use-cases/get-route-by-id.use-case.js';
 import { AssignRouteUseCase } from './application/use-cases/assign-route.use-case.js';
 import { RoutesController } from './routes.controller.js';
 import { AdvisorsController } from './presentation/advisors.controller.js';
 import { ClientsModule } from '../clients/clients.module.js';
+import { AuthModule } from '../auth/auth.module.js';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([RouteOrmEntity, RouteStopOrmEntity]),
     ClientsModule,
+    AuthModule,
   ],
   controllers: [RoutesController, AdvisorsController],
   providers: [
     CreateRouteUseCase,
+    ListRoutesUseCase,
     SetRouteStopsUseCase,
     GetRouteByIdUseCase,
     AssignRouteUseCase,

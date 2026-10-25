@@ -18,7 +18,6 @@ import {
   GeocodeResult,
   GeocodingService,
 } from '../ports/geocoding.port.js';
-import { Client } from '../../domain/entities/client.entity.js';
 import {
   CatalogoInvalidoError,
   ClienteYaExisteError,

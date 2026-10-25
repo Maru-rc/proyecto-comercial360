@@ -49,6 +49,13 @@ export class TypeOrmRouteRepository implements RouteRepository, RouteReader {
     return route ? this.mapToRecord(route) : null;
   }
 
+  async findAll(): Promise<RouteRecord[]> {
+    const routes = await this.routeRepo.find({
+      order: { id: 'DESC' },
+    });
+    return routes.map((route) => this.mapToRecord(route));
+  }
+
   async existsByName(name: string): Promise<boolean> {
     return this.routeRepo.exists({
       where: { name: name.trim() },

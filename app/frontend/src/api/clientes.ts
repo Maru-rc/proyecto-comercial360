@@ -350,12 +350,26 @@ export const crearCliente = async (
   };
 
   try {
+    const primaryContact = nuevo.contactos?.[0];
     const payload = {
-      ...cliente,
+      nit: cliente.nit,
+      razon_social: cliente.razon_social,
+      nombre_comercial: cliente.nombre_comercial,
+      direccion: cliente.direccion,
+      departamento: cliente.departamento,
+      municipio: cliente.municipio,
+      telefono: cliente.telefono,
+      email: cliente.email,
       zona: nuevo.zona_nombre || "NORTE",
       tipo_cliente: nuevo.tipo_cliente_nombre || "Industrial",
       potencial: nuevo.potencial_nombre || "Alto",
       estado_cliente: nuevo.estado_cliente_nombre || "Activo",
+      latitud: nuevo.latitud,
+      longitud: nuevo.longitud,
+      contacto_nombre: primaryContact?.nombre || "Contacto Comercial",
+      contacto_cargo: primaryContact?.cargo,
+      contacto_telefono: primaryContact?.telefono,
+      contacto_email: primaryContact?.email,
     };
     const res = await apiClient.post<ICliente>("/clientes", payload);
     MOCK_CLIENTES.unshift(res.data);

@@ -18,6 +18,7 @@ import {
 } from '../../domain-contracts/index.js';
 import type { AdvisorReader } from '../../domain-contracts/advisors/advisor-reader.interface.js';
 import { CreateRouteUseCase } from './application/use-cases/create-route.use-case.js';
+import { ListRoutesUseCase } from './application/use-cases/list-routes.use-case.js';
 import { SetRouteStopsUseCase } from './application/use-cases/set-route-stops.use-case.js';
 import { GetRouteByIdUseCase } from './application/use-cases/get-route-by-id.use-case.js';
 import { AssignRouteUseCase } from './application/use-cases/assign-route.use-case.js';
@@ -29,12 +30,19 @@ import { AssignRouteDto } from './presentation/dto/assign-route.dto.js';
 export class RoutesController {
   constructor(
     private readonly createRouteUseCase: CreateRouteUseCase,
+    private readonly listRoutesUseCase: ListRoutesUseCase,
     private readonly setRouteStopsUseCase: SetRouteStopsUseCase,
     private readonly getRouteByIdUseCase: GetRouteByIdUseCase,
     private readonly assignRouteUseCase: AssignRouteUseCase,
     @Inject(ADVISOR_READER)
     private readonly advisorReader: AdvisorReader,
   ) {}
+
+  @Get()
+  @Auth()
+  async findAll() {
+    return this.listRoutesUseCase.execute();
+  }
 
   @Post()
   @Auth('DIRECTOR')

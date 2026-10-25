@@ -19,7 +19,7 @@ export class CustomerContactOrmEntity {
   @JoinColumn({ name: 'customer_id' })
   customer: Relation<CustomerOrmEntity>;
 
-  @Column({ name: 'customer_id', nullable: true })
+  @Column({ name: 'customer_id', type: 'int', nullable: true })
   customerId: number | null;
 
   @Column({ name: 'name', length: 150 })
