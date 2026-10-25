@@ -9,14 +9,6 @@ import type {
   VisitRequestUser,
 } from '../ports/advisor-scope-resolver.port.js';
 
-/**
- * Anti-IDOR rule for a single visit (HU-10).
- *
- * Loads the visit and checks that the user may read or change it:
- * - Advisor: only if the visit is theirs (otherwise 403).
- * - Director: any visit.
- * If the visit does not exist, it answers 404.
- */
 @Injectable()
 export class AuthorizeVisitAccessUseCase {
   constructor(
@@ -32,7 +24,6 @@ export class AuthorizeVisitAccessUseCase {
       throw new NotFoundException(`Visit with ID ${visitId} not found`);
     }
 
-    // Advisor: their real id. Director without a filter: null (may see all).
     const ownAdvisorId = await this.advisorScope.execute(user);
     if (ownAdvisorId !== null && ownAdvisorId !== visit.advisorId) {
       throw new ForbiddenOperationException(

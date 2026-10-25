@@ -47,7 +47,7 @@ export class TypeOrmVisitRepository extends BaseVisitRepository {
         advisorId,
         scheduledDate: Between(start, end),
       },
-      order: { visitOrder: 'ASC' },
+      order: { scheduledDate: 'ASC', id: 'ASC' },
     });
     return list.map((item) => VisitMapper.toDomain(item));
   }
@@ -60,7 +60,7 @@ export class TypeOrmVisitRepository extends BaseVisitRepository {
       where: {
         scheduledDate: Between(start, end),
       },
-      order: { visitOrder: 'ASC' },
+      order: { scheduledDate: 'ASC', id: 'ASC' },
     });
     return list.map((item) => VisitMapper.toDomain(item));
   }
