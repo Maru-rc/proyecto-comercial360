@@ -21,6 +21,9 @@ pipeline {
 
   triggers {
     githubPush()
+    // Sin URL pública no llega el webhook: Jenkins revisa el repositorio cada ~5 min.
+    // Va aquí y no en la interfaz porque el Jenkinsfile reemplaza los disparadores del job.
+    pollSCM('H/5 * * * *')
   }
 
   parameters {
