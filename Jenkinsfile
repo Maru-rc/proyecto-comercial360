@@ -155,7 +155,8 @@ pipeline {
     }
     failure {
       script {
-        if (env.IS_DEPLOY == 'true' && fileExists("${env.STATE_DIR}/last_good_tag")) {
+        // Sin .env.deploy el fallo fue antes de Imágenes: no se desplegó nada que revertir
+        if (env.IS_DEPLOY == 'true' && fileExists(env.ENV_FILE) && fileExists("${env.STATE_DIR}/last_good_tag")) {
           def previous = readFile("${env.STATE_DIR}/last_good_tag").trim()
           if (previous && previous != env.IMAGE_TAG) {
             echo "Rollback a la versión ${previous}"
@@ -166,7 +167,8 @@ pipeline {
         }
       }
     }
-    always {
+    // cleanup y no always: Jenkins corre always antes que failure, y el rollback necesita el .env
+    cleanup {
       sh 'rm -f "$ENV_FILE"'
     }
   }
