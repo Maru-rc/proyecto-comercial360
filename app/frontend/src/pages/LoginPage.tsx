@@ -17,6 +17,8 @@ import { useAuthStore } from '../store/useAuthStore';
 // correo para el próximo inicio de sesión. La contraseña nunca se guarda.
 const REMEMBERED_EMAIL_KEY = 'comercial360.rememberedEmail';
 
+const ANIO_ACTUAL = new Date().getFullYear();
+
 const readRememberedEmail = (): string => {
   try {
     return localStorage.getItem(REMEMBERED_EMAIL_KEY) ?? '';
@@ -346,7 +348,7 @@ export const LoginPage: React.FC = () => {
 
       {/* Global Page Footer */}
       <footer className="py-4 px-6 text-center text-xs text-slate-500 border-t border-slate-200 bg-white">
-        © 2024 Comercial 360. Todos los derechos reservados. |{' '}
+        © {ANIO_ACTUAL} Comercial 360. Todos los derechos reservados. |{' '}
         <a href="#privacidad" className="hover:underline">
           Política de privacidad
         </a>{' '}

@@ -5,6 +5,7 @@ import {
   createAuth,
   REMEMBER_ME_SESSION_SECONDS,
   SESSION_WITHOUT_REMEMBER_SECONDS,
+  TRUSTED_PROXY_CIDRS,
 } from './auth.factory.js';
 
 // The Better Auth instance does not open connections upon creation
@@ -66,6 +67,13 @@ describe('createAuth (Better Auth configuration)', () => {
       httpOnly: true,
       sameSite: 'lax',
     });
+  });
+
+  it('trusts the private-network proxies to resolve the client IP', () => {
+    const auth = createAuth(pool, ENV);
+    expect(auth.options.advanced?.ipAddress?.trustedProxies).toEqual(
+      TRUSTED_PROXY_CIDRS,
+    );
   });
 });
 
