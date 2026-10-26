@@ -1,13 +1,14 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 
 vi.mock('./client', () => ({
-  apiClient: { get: vi.fn() },
+  apiClient: { get: vi.fn(), post: vi.fn() },
 }));
 
 import { apiClient } from './client';
-import { getPedidos } from './pedidos';
+import { crearPedidoApi, getPedidos } from './pedidos';
 
 const get = vi.mocked(apiClient.get);
+const post = vi.mocked(apiClient.post);
 
 const order = (id: number, status: string) => ({
   id,
@@ -36,5 +37,22 @@ describe('getPedidos', () => {
 
     const pendientes = await getPedidos({ estado: 'PENDIENTE' });
     expect(pendientes.map((p) => p.numero)).toEqual(['PED-1', 'PED-3']);
+  });
+});
+
+describe('crearPedidoApi', () => {
+  afterEach(() => vi.clearAllMocks());
+
+  it('sends no quotationId when the order has no linked quotation', async () => {
+    post.mockResolvedValue({ data: order(9, 'PENDING') });
+
+    await crearPedidoApi({
+      numero: 'PED-9',
+      id_cliente: '1',
+      valor: 1000,
+      id_cotizacion: '',
+    });
+
+    expect(post.mock.calls[0][1]).toMatchObject({ quotationId: undefined });
   });
 });

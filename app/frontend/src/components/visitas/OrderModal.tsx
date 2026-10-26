@@ -58,6 +58,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({
         <Input
           label="Valor del pedido (COP)"
           type="number"
+          min="1"
           value={valor}
           onChange={(e) => setValor(e.target.value)}
           required

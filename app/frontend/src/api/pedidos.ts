@@ -87,7 +87,10 @@ export const crearPedidoApi = async (
     {
       orderNumber: data.numero,
       clientId: Number(data.id_cliente),
-      quotationId: Number.isInteger(quotationId) ? quotationId : undefined,
+      quotationId:
+        Number.isInteger(quotationId) && quotationId > 0
+          ? quotationId
+          : undefined,
       amount: Number(data.valor),
       status: data.estado ? STATUS_FROM_ES[data.estado] : undefined,
       date: data.fecha,

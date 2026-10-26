@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import { Check, ClipboardCheck } from 'lucide-react';
 import { VisitGeneralForm } from '../components/visitas/VisitGeneralForm';
 import { VisitCustomerForm } from '../components/visitas/VisitCustomerForm';
@@ -21,6 +20,7 @@ import { useAuthStore } from '../store/useAuthStore';
 import { ICliente } from '../types/cliente';
 import { DIAS_SEMANA as DIAS, isoWeek } from '../lib/semana';
 import { IS3UploadResponse } from '../api/storage';
+import { visitaSchema } from '../lib/visita-schema';
 
 const findCliente = (
   clientes: ICliente[],
@@ -37,68 +37,6 @@ const findCliente = (
   );
   return partial.length === 1 ? partial[0] : undefined;
 };
-
-const visitaSchema = z.object({
-  fecha_visita: z.string().min(1, 'La fecha es obligatoria'),
-  hora_inicio: z.string().min(1, 'Hora de inicio requerida'),
-  hora_fin: z.string().min(1, 'Hora de fin requerida'),
-  id_ruta: z.string().default(''),
-  territorio: z.string().default(''),
-  semana: z.number().min(1),
-  dia: z.string().min(1),
-  asesor_nombre: z.string().min(1),
-
-  id_cliente: z.string().min(1, 'Selecciona un cliente registrado'),
-  cliente_nombre: z.string().min(1, 'Cliente requerido'),
-  codigo_cliente: z.string().default(''),
-  tipo_cliente: z.string().default(''),
-  municipio: z.string().default(''),
-  contacto: z.string().default(''),
-  telefono: z.string().default(''),
-  cargo: z.string().default(''),
-  canal_contacto: z.string().default('Presencial'),
-
-  objetivo_visita: z.string().default(''),
-  tipo_visita: z.string().default(''),
-  potencial_cliente: z.string().default(''),
-  estado_visita: z.enum([
-    'VISITADO',
-    'PENDIENTE',
-    'SIN_VISITAR',
-    'PEDIDO_CERRADO',
-    'REPROGRAMADO',
-    'PROGRAMADA',
-  ]),
-  resultado_visita: z.enum([
-    'Interesado',
-    'Pedido',
-    'Programada',
-    'No visitado',
-    'Cotización enviada',
-    'No interesado',
-  ]),
-  interes_productos: z.string().default(''),
-  modulo_interes: z.string().default(''),
-  competencia_mencionada: z.string().default(''),
-  observaciones: z.string().max(500),
-
-  genero_cotizacion: z.boolean().default(false),
-  numero_cotizacion: z.string().optional(),
-  valor_cotizacion: z.number().optional(),
-  moneda: z.string().default('COP'),
-
-  genero_pedido: z.boolean().default(false),
-  numero_pedido: z.string().optional(),
-  valor_pedido: z.number().optional(),
-  fecha_estimada_entrega: z.string().optional(),
-
-  fecha_proxima_visita: z
-    .string()
-    .min(1, 'Fecha de próximo seguimiento requerida'),
-  hora_proxima_visita: z.string().optional(),
-  objetivo_proximo_seguimiento: z.string().optional(),
-  responsable_seguimiento: z.string().optional(),
-});
 
 export const VisitasPage: React.FC = () => {
   const navigate = useNavigate();
