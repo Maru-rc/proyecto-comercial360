@@ -1,13 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Plus,
-  Search,
-  Truck,
-  CheckCircle2,
-  Package,
-  Eye,
-  Check,
-} from 'lucide-react';
+import { Plus, Search, Truck, CheckCircle2, Package, Eye } from 'lucide-react';
 import { IPedido } from '../types/visita';
 import { getPedidos, crearPedidoApi } from '../api/pedidos';
 import { generarNumeroDocumento } from '../api/document-number';
@@ -16,6 +8,9 @@ import { Modal } from '../components/common/Modal';
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import { Pagination } from '../components/common/Pagination';
+import { notifyError, notifyFormErrors, notifySuccess } from '../lib/alerts';
+import { usePageReset } from '../hooks/usePageReset';
+import { toLocalIsoDate } from '../lib/fecha';
 
 export const PedidosPage: React.FC = () => {
   const [pedidos, setPedidos] = useState<IPedido[]>([]);
@@ -23,8 +18,6 @@ export const PedidosPage: React.FC = () => {
   const [estadoFilter, setEstadoFilter] = useState('Todos');
   const [selectedPedido, setSelectedPedido] = useState<IPedido | null>(null);
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
   // Form state
@@ -34,7 +27,6 @@ export const PedidosPage: React.FC = () => {
   const [fechaEntrega, setFechaEntrega] = useState('');
   const [observaciones, setObservaciones] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formError, setFormError] = useState('');
 
   const fetchPedidos = useCallback(() => {
     getPedidos({ search, estado: estadoFilter })
@@ -50,27 +42,31 @@ export const PedidosPage: React.FC = () => {
     e.preventDefault();
     const monto = parseFloat(valor);
     if (!clienteId || !(monto > 0)) {
-      setFormError('Selecciona un cliente e ingresa un valor mayor a cero.');
+      notifyFormErrors([
+        'Selecciona un cliente',
+        'Ingresa un valor mayor a cero',
+      ]);
       return;
     }
-    setFormError('');
     setIsSubmitting(true);
     try {
       const created = await crearPedidoApi({
         numero: generarNumeroDocumento('PED'),
         id_cliente: clienteId,
         valor: monto,
-        fecha: new Date().toISOString().slice(0, 10),
+        fecha: toLocalIsoDate(),
         fecha_entrega: fechaEntrega || undefined,
         observaciones,
         estado: 'PENDIENTE',
       });
       setIsNewModalOpen(false);
-      setToastMessage(`Pedido ${created.numero} registrado con éxito.`);
-      setTimeout(() => setToastMessage(''), 3000);
+      notifySuccess(`Pedido ${created.numero} registrado`);
       fetchPedidos();
     } catch {
-      setFormError('No se pudo registrar el pedido. Intenta de nuevo.');
+      notifyError(
+        'No se pudo registrar el pedido',
+        'Revisa tu conexión e intenta de nuevo.',
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -78,6 +74,12 @@ export const PedidosPage: React.FC = () => {
 
   const totalFacturado = pedidos.reduce((acc, p) => acc + (p.valor || 0), 0);
   const entregados = pedidos.filter((p) => p.estado === 'ENTREGADO').length;
+
+  const [currentPage, setCurrentPage] = usePageReset([
+    search,
+    estadoFilter,
+    pageSize,
+  ]);
 
   return (
     <div className="space-y-5 pb-16">
@@ -386,11 +388,6 @@ export const PedidosPage: React.FC = () => {
           }
         >
           <form onSubmit={handleCreatePedido} className="space-y-3 text-xs">
-            {formError && (
-              <p className="rounded-lg bg-red-50 p-2 text-red-700">
-                {formError}
-              </p>
-            )}
             <div className="space-y-1">
               <label className="block text-xs font-semibold text-slate-700">
                 Cliente
@@ -441,14 +438,6 @@ export const PedidosPage: React.FC = () => {
             </div>
           </form>
         </Modal>
-      )}
-
-      {/* Toast */}
-      {toastMessage && (
-        <div className="fixed bottom-8 right-8 z-50 flex items-center gap-3 bg-emerald-600 text-white px-5 py-3.5 rounded-xl shadow-2xl animate-in fade-in slide-in-from-bottom-5">
-          <Check className="h-5 w-5" />
-          <span className="text-xs font-bold">{toastMessage}</span>
-        </div>
       )}
     </div>
   );

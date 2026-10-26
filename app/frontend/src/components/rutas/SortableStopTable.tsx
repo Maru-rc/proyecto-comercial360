@@ -162,26 +162,27 @@ export const SortableStopTable: React.FC = () => {
 
   return (
     <div className="bg-white rounded-xl border border-slate-200/90 shadow-xs overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse text-xs">
-          <thead>
-            <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[10px]">
-              <th className="py-2.5 px-2 text-center w-8"></th>
-              <th className="py-2.5 px-2 text-center w-10">Orden</th>
-              <th className="py-2.5 px-3">Cliente</th>
-              <th className="py-2.5 px-3">Tipo cliente</th>
-              <th className="py-2.5 px-3">Dirección</th>
-              <th className="py-2.5 px-3">Municipio</th>
-              <th className="py-2.5 px-3">Hora sugerida</th>
-              <th className="py-2.5 px-3 text-center">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
+      {/* DndContext renders its own <div> announcements: it cannot live inside <tbody> */}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[10px]">
+                <th className="py-2.5 px-2 text-center w-8"></th>
+                <th className="py-2.5 px-2 text-center w-10">Orden</th>
+                <th className="py-2.5 px-3">Cliente</th>
+                <th className="py-2.5 px-3">Tipo cliente</th>
+                <th className="py-2.5 px-3">Dirección</th>
+                <th className="py-2.5 px-3">Municipio</th>
+                <th className="py-2.5 px-3">Hora sugerida</th>
+                <th className="py-2.5 px-3 text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
               <SortableContext
                 items={paradas.map((p) => p.id)}
                 strategy={verticalListSortingStrategy}
@@ -194,18 +195,18 @@ export const SortableStopTable: React.FC = () => {
                   />
                 ))}
               </SortableContext>
-            </DndContext>
-            {paradas.length === 0 && (
-              <tr>
-                <td colSpan={8} className="py-8 text-center text-slate-400">
-                  No hay paradas en esta ruta. Usa el buscador lateral para
-                  agregar clientes.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+              {paradas.length === 0 && (
+                <tr>
+                  <td colSpan={8} className="py-8 text-center text-slate-400">
+                    No hay paradas en esta ruta. Usa el buscador lateral para
+                    agregar clientes.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </DndContext>
     </div>
   );
 };

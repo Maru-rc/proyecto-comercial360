@@ -95,6 +95,21 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
   return <>{children}</>;
 };
 
+// Route creation is the director's job: an advisor who types the URL lands on
+// their assigned routes instead of a form the backend would reject (403)
+const DirectorOnly: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const isDirector = useAuthStore(
+    (state) => state.user?.rol === 'DIRECTOR_REGIONAL',
+  );
+  return isDirector ? (
+    <>{children}</>
+  ) : (
+    <Navigate to="/rutas/asignadas" replace />
+  );
+};
+
 export const App: React.FC = () => {
   const checkSession = useAuthStore((state) => state.checkSession);
 
@@ -134,10 +149,24 @@ export const App: React.FC = () => {
               <Route path="/dashboard" element={<DashboardPage />} />
 
               {/* Rutas (Creación, Asignadas, Agenda asesores) */}
-              <Route path="/rutas" element={<RutasPage />} />
+              <Route
+                path="/rutas"
+                element={
+                  <DirectorOnly>
+                    <RutasPage />
+                  </DirectorOnly>
+                }
+              />
               <Route path="/rutas/asignadas" element={<RutasAsignadasPage />} />
               <Route path="/rutas/agenda" element={<AdvisorAgendaPage />} />
-              <Route path="/rutas/*" element={<RutasPage />} />
+              <Route
+                path="/rutas/*"
+                element={
+                  <DirectorOnly>
+                    <RutasPage />
+                  </DirectorOnly>
+                }
+              />
 
               {/* Agenda & Mapa */}
               <Route path="/agenda" element={<AgendaPage />} />

@@ -205,6 +205,9 @@ importers:
       react-router-dom:
         specifier: ^7.18.4
         version: 7.18.4(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      sweetalert2:
+        specifier: ^11.22.0
+        version: 11.22.0
       zod:
         specifier: ^4.6.7
         version: 4.6.7
@@ -3121,6 +3124,9 @@ packages:
     engines: {node: '>= v0.10.32'}
     peerDependencies:
       express: '>=4.0.0 || >=5.0.0-beta'
+
+  sweetalert2@11.22.0:
+    resolution: {integrity: sha512-pSMuRGDULhh+wrFkO22O0YsIXxs8yFE0O+WVYXcqc/sTa1oRnf0JlR+vfQIRY1QM1UeFfnCjyw6DYnG75/oxiQ==}
 
   tailwindcss@4.3.3:
     resolution: {integrity: sha512-gOhV3P7ufE62QDGg1zVaTgCR+EtPv92k2nIhVcVKcLmxT1sUBsQGhnZj175j+MqRt4zLF7ic+sCYjfhxMxj7YQ==}
@@ -6062,6 +6068,8 @@ snapshots:
     dependencies:
       express: 5.3.0
       swagger-ui-dist: 5.34.0
+
+  sweetalert2@11.22.0: {}
 
   tailwindcss@4.3.3: {}
 

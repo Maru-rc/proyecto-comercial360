@@ -6,6 +6,7 @@ import { Badge } from '../common/Badge';
 import { Pagination } from '../common/Pagination';
 import { downloadCsvReport } from '../../api/kpis';
 import { useFilterStore } from '../../store/useFilterStore';
+import { usePageReset } from '../../hooks/usePageReset';
 
 interface VisitsTableProps {
   filas: ISeguimientoFila[];
@@ -14,11 +15,15 @@ interface VisitsTableProps {
 export const VisitsTable: React.FC<VisitsTableProps> = ({ filas }) => {
   const navigate = useNavigate();
   const { territorio, semanaNumero } = useFilterStore();
-  const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
-  const [filterPeriod, setFilterPeriod] = useState('Esta semana');
   const [filterEstado, setFilterEstado] = useState('Todos');
   const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [currentPage, setCurrentPage] = usePageReset([
+    filterEstado,
+    pageSize,
+    semanaNumero,
+    territorio,
+  ]);
 
   const filteredFilas = filas.filter((r) => {
     if (filterEstado === 'Todos') return true;
@@ -48,15 +53,10 @@ export const VisitsTable: React.FC<VisitsTableProps> = ({ filas }) => {
         </h3>
 
         <div className="flex items-center gap-2.5">
-          <select
-            value={filterPeriod}
-            onChange={(e) => setFilterPeriod(e.target.value)}
-            className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#EA580C] cursor-pointer"
-          >
-            <option value="Esta semana">Esta semana</option>
-            <option value="Semana anterior">Semana anterior</option>
-            <option value="Mes actual">Mes actual</option>
-          </select>
+          {/* The week comes from the selector in the header */}
+          <span className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700">
+            Semana {semanaNumero}
+          </span>
 
           <div className="relative">
             <button

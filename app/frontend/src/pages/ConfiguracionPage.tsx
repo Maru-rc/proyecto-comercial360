@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { User, Database, Check, RotateCcw } from 'lucide-react';
+import { User, Database, RotateCcw } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 import { useRouteDraftStore } from '../store/useRouteDraftStore';
 import { apiClient } from '../api/client';
+import { notifySuccess } from '../lib/alerts';
 
 interface HealthResponse {
   status: string;
@@ -46,7 +47,6 @@ export const ConfiguracionPage: React.FC = () => {
   const { user } = useAuthStore();
   const { limpiarRuta } = useRouteDraftStore();
   const [activeTab, setActiveTab] = useState<'perfil' | 'sistema'>('perfil');
-  const [toastMessage, setToastMessage] = useState('');
 
   // Real status of the API and the database (GET /api/health)
   const health = useQuery({
@@ -209,8 +209,7 @@ export const ConfiguracionPage: React.FC = () => {
               type="button"
               onClick={() => {
                 limpiarRuta();
-                setToastMessage('Borrador de rutas limpiado correctamente.');
-                setTimeout(() => setToastMessage(''), 3000);
+                notifySuccess('Borrador de rutas limpiado');
               }}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-bold cursor-pointer"
             >
@@ -218,14 +217,6 @@ export const ConfiguracionPage: React.FC = () => {
               Limpiar borrador
             </button>
           </div>
-        </div>
-      )}
-
-      {/* Success Toast */}
-      {toastMessage && (
-        <div className="fixed bottom-8 right-8 z-50 flex items-center gap-3 bg-emerald-600 text-white px-5 py-3.5 rounded-xl shadow-2xl animate-in fade-in slide-in-from-bottom-5">
-          <Check className="h-5 w-5" />
-          <span className="text-xs font-bold">{toastMessage}</span>
         </div>
       )}
     </div>

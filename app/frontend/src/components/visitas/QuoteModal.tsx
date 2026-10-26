@@ -58,6 +58,7 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
         <Input
           label="Valor estimado (COP)"
           type="number"
+          min="1"
           value={valor}
           onChange={(e) => setValor(e.target.value)}
           required
