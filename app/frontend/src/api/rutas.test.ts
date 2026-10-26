@@ -5,12 +5,63 @@ vi.mock('./client', () => ({
 }));
 
 import { apiClient } from './client';
-import { buildAsesoresSchedule, crearRuta, type IAsesor } from './rutas';
+import {
+  buildAsesoresSchedule,
+  crearRuta,
+  estadoRuta,
+  getParadasRuta,
+  type IAsesor,
+} from './rutas';
 import { generarNumeroDocumento } from './document-number';
 import type { IParadaRuta, IRuta, IRutaFormData } from '../types/ruta';
 
 const post = vi.mocked(apiClient.post);
 const put = vi.mocked(apiClient.put);
+const get = vi.mocked(apiClient.get);
+
+describe('estadoRuta', () => {
+  it('a BORRADOR route is shown as Borrador, not as Asignada', () => {
+    expect(estadoRuta('BORRADOR')).toEqual({
+      etiqueta: 'Borrador',
+      variante: 'default',
+    });
+    expect(estadoRuta('ASIGNADA').etiqueta).toBe('Asignada');
+    expect(estadoRuta('EN_CURSO').etiqueta).toBe('En curso');
+    expect(estadoRuta('COMPLETADA').etiqueta).toBe('Completada');
+  });
+});
+
+describe('getParadasRuta', () => {
+  afterEach(() => vi.clearAllMocks());
+
+  it('returns the saved stops in visit order with HH:mm times', async () => {
+    get.mockResolvedValue({
+      data: {
+        id: 7,
+        name: 'Ruta',
+        paradas: [
+          { customerId: 5, visitOrder: 2, suggestedTime: '10:00:00' },
+          { customerId: 3, visitOrder: 1, suggestedTime: '09:00:00' },
+          { customerId: 9, visitOrder: 3, suggestedTime: null },
+        ],
+      },
+    });
+
+    const paradas = await getParadasRuta('7');
+
+    expect(get).toHaveBeenCalledWith('/rutas/7');
+    expect(paradas).toEqual([
+      { id_cliente: '3', orden: 1, hora_sugerida: '09:00' },
+      { id_cliente: '5', orden: 2, hora_sugerida: '10:00' },
+      { id_cliente: '9', orden: 3, hora_sugerida: null },
+    ]);
+  });
+
+  it('a route without stops returns an empty list', async () => {
+    get.mockResolvedValue({ data: { id: 8, name: 'Vacía' } });
+    expect(await getParadasRuta('8')).toEqual([]);
+  });
+});
 
 const ruta = (overrides: Partial<IRuta>): IRuta => ({
   id_ruta: '1',
