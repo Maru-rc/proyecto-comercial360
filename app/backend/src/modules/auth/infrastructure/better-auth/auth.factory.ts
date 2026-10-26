@@ -14,6 +14,19 @@ export const SESSION_UPDATE_AGE_SECONDS = 60 * 60 * 24;
 
 export const RESET_PASSWORD_TOKEN_SECONDS = 60 * 60;
 
+/**
+ * Proxies between the client and the backend (host nginx, frontend container,
+ * Docker network), from TRUSTED_PROXY_CIDRS (comma separated). Without them a
+ * two-hop X-Forwarded-For is not resolved and every client shares one
+ * rate-limit bucket on sign-in.
+ */
+export function trustedProxies(env: NodeJS.ProcessEnv = process.env): string[] {
+  return (env.TRUSTED_PROXY_CIDRS ?? '')
+    .split(',')
+    .map((cidr) => cidr.trim())
+    .filter(Boolean);
+}
+
 export interface AuthHooks {
   /** HU-22: delivers the recovery link (email adapter behind a port). */
   readonly sendPasswordReset?: (request: PasswordResetRequest) => Promise<void>;
@@ -82,6 +95,7 @@ export function createAuth(
       useSecureCookies: env.NODE_ENV === 'production',
       defaultCookieAttributes: { httpOnly: true, sameSite: 'lax' },
       disableOriginCheck: false,
+      ipAddress: { trustedProxies: trustedProxies(env) },
     },
   });
 }

@@ -58,3 +58,11 @@ version-resolver:
       - 'docs'
       - 'chore'
   default: patch
+
+# Cuerpo de la release (obligatorio): $CHANGES lista los PR agrupados por categoría
+template: |
+  ## Cambios
+
+  $CHANGES
+
+  Gracias a $CONTRIBUTORS

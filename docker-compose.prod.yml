@@ -30,6 +30,9 @@ services:
       # Jenkins ejecuta las migraciones como un paso aparte del pipeline
       RUN_MIGRATIONS: ${RUN_MIGRATIONS:-false}
       RUN_BOOTSTRAP: ${RUN_BOOTSTRAP:-false}
+      # Proxies (nginx del host y del contenedor, red de Docker) de los que se
+      # acepta X-Forwarded-For: sin ellos el rate limit del login es compartido
+      TRUSTED_PROXY_CIDRS: ${TRUSTED_PROXY_CIDRS:-127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,::1/128}
     expose:
       - "3000"
     networks:

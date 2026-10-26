@@ -89,6 +89,8 @@ export class TypeOrmVisitRepository extends BaseVisitRepository {
 
   async findOutcomeByVisit(visitId: number): Promise<VisitOutcome | null> {
     const entity = await this.outcomeRepo.findOne({ where: { visitId } });
-    return entity ? VisitMapper.outcomeToDomain(entity) : null;
+    // visit_results does not store the outcome type (the visit status carries
+    // it), so a stored row cannot be rebuilt as a domain outcome
+    return entity?.outcome ? VisitMapper.outcomeToDomain(entity) : null;
   }
 }

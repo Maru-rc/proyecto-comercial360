@@ -12,10 +12,13 @@ WORKDIR /repo
 
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY app/backend/package.json app/backend/package.json
-RUN pnpm fetch --filter backend...
+# Paquetes en una caché de BuildKit: un cambio del lockfile no los vuelve a bajar todos
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
+    pnpm fetch --filter backend...
 
 COPY app/backend app/backend
-RUN pnpm install --offline --frozen-lockfile --filter backend... --ignore-scripts \
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
+    pnpm install --prefer-offline --frozen-lockfile --filter backend... --ignore-scripts \
  && pnpm --filter backend build \
  && pnpm --filter backend deploy --prod --legacy /out \
  && cp -r app/backend/dist /out/dist

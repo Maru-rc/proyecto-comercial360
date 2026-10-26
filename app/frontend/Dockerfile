@@ -9,14 +9,17 @@ WORKDIR /repo
 
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY app/frontend/package.json app/frontend/package.json
-RUN pnpm fetch --filter frontend...
+# Paquetes en una caché de BuildKit: un cambio del lockfile no los vuelve a bajar todos
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
+    pnpm fetch --filter frontend...
 
 COPY app/frontend app/frontend
 # Leave VITE_API_URL empty in production: the SPA calls /api on its own origin,
 # which keeps the Better Auth session cookie same-site.
 ARG VITE_API_URL=
 ENV VITE_API_URL=$VITE_API_URL
-RUN pnpm install --offline --frozen-lockfile --filter frontend... --ignore-scripts \
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
+    pnpm install --prefer-offline --frozen-lockfile --filter frontend... --ignore-scripts \
  && pnpm --filter frontend build
 
 # ---------- Runtime ----------
