@@ -15,6 +15,11 @@ export const useRutas = () => {
       crearRuta(vars.formData, vars.paradas),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['rutas'] });
+      // Assigning a route generates visits: refresh what shows them
+      queryClient.invalidateQueries({ queryKey: ['kpis'] });
+      queryClient.invalidateQueries({ queryKey: ['seguimiento'] });
+      queryClient.invalidateQueries({ queryKey: ['agenda'] });
+      queryClient.invalidateQueries({ queryKey: ['visits'] });
     },
   });
 

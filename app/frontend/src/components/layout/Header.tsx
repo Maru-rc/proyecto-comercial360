@@ -12,8 +12,6 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { useFilterStore } from '../../store/useFilterStore';
 import { useNavigate } from 'react-router-dom';
 import { useVisitasAgenda } from '../../hooks/useVisitasAgenda';
-import { useQuery } from '@tanstack/react-query';
-import { getCatalogosClientes } from '../../api/clientes';
 import { semanasRecientes } from '../../lib/semana';
 
 interface HeaderProps {
@@ -29,32 +27,25 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
-  const {
-    territorio,
-    setTerritorio,
-    semanaNumero,
-    setSemanaNumero,
-    regional,
-    setRegional,
-    searchQuery,
-    setSearchQuery,
-  } = useFilterStore();
+  const { semanaNumero, setSemanaNumero, searchQuery, setSearchQuery } =
+    useFilterStore();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [notifMenuOpen, setNotifMenuOpen] = useState(false);
   const [readIds, setReadIds] = useState<string[]>([]);
   const [semanas] = useState(() => semanasRecientes(6));
-  const { data: catalogos } = useQuery({
-    queryKey: ['clientes', 'catalogos'],
-    queryFn: getCatalogosClientes,
-    staleTime: 1000 * 60 * 30,
-  });
   const { agenda } = useVisitasAgenda();
 
-  // Field notifications: today's visits still pending for the session
+  // Field notifications: today's visits still pending for the session.
+  // Visits generated from a route are saved as PENDIENTE
   const notifications = agenda
     .filter((v) => {
       const status = (v.visitStatus || v.status || '').toUpperCase();
-      return status === 'SCHEDULED' || status === 'PENDING' || status === '';
+      return (
+        status === 'SCHEDULED' ||
+        status === 'PENDING' ||
+        status === 'PENDIENTE' ||
+        status === ''
+      );
     })
     .slice(0, 5)
     .map((v) => ({
@@ -75,8 +66,9 @@ export const Header: React.FC<HeaderProps> = ({
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Searches the client directory (it reads ?search= from the URL)
     if (searchQuery.trim()) {
-      navigate(`/clientes`);
+      navigate(`/clientes?search=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
 
@@ -151,7 +143,7 @@ export const Header: React.FC<HeaderProps> = ({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Buscar clientes, contactos, rutas... (Enter)"
+            placeholder="Buscar clientes por NIT, nombre o municipio... (Enter)"
             className="w-full rounded-lg border border-slate-200 bg-slate-50/70 py-1.5 pl-9 pr-3 text-xs text-slate-800 placeholder-slate-400 focus:border-[#EA580C] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#EA580C]"
           />
         </form>
@@ -159,49 +151,7 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Right side controls */}
       <div className="flex items-center gap-3">
-        {/* Territory or Regional selector */}
-        {isDirector ? (
-          <div className="hidden md:flex flex-col items-start bg-slate-50 px-3 py-1 rounded-lg border border-slate-200">
-            <span className="text-[10px] uppercase font-semibold text-slate-400">
-              Regional
-            </span>
-            <div className="flex items-center gap-1">
-              <select
-                value={regional}
-                onChange={(e) => setRegional(e.target.value)}
-                className="bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer pr-1"
-              >
-                <option value="Atlántico">Atlántico</option>
-                <option value="Bolívar">Bolívar</option>
-                <option value="Magdalena">Magdalena</option>
-              </select>
-              <ChevronDown className="h-3 w-3 text-slate-400" />
-            </div>
-          </div>
-        ) : (
-          <div className="hidden md:flex flex-col items-start bg-slate-50 px-3 py-1 rounded-lg border border-slate-200">
-            <span className="text-[10px] uppercase font-semibold text-slate-400">
-              Territorio
-            </span>
-            <div className="flex items-center gap-1">
-              <select
-                value={territorio}
-                onChange={(e) => setTerritorio(e.target.value)}
-                className="bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer pr-1"
-              >
-                <option value="Todos">Todos</option>
-                {catalogos?.zonas.map((z) => (
-                  <option key={z.id} value={z.nombre}>
-                    {z.nombre}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="h-3 w-3 text-slate-400" />
-            </div>
-          </div>
-        )}
-
-        {/* Semana selector */}
+        {/* Semana selector (filtra los indicadores del Dashboard) */}
         <div className="hidden sm:flex flex-col items-start bg-slate-50 px-3 py-1 rounded-lg border border-slate-200">
           <span className="text-[10px] uppercase font-semibold text-slate-400">
             Semana
@@ -299,14 +249,19 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={() => setUserMenuOpen(!userMenuOpen)}
             className="flex items-center gap-2.5 rounded-lg p-1 hover:bg-slate-100 transition-colors cursor-pointer text-left"
           >
-            <img
-              src={
-                user?.avatarUrl ||
-                'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'
-              }
-              alt={user?.nombre || 'Usuario'}
-              className="h-8 w-8 rounded-full object-cover ring-2 ring-slate-100"
-            />
+            {/* Initials instead of the same stock photo for every user */}
+            <span
+              role="img"
+              aria-label={user?.nombre || 'Usuario'}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100 text-[11px] font-extrabold text-[#EA580C] ring-2 ring-slate-100"
+            >
+              {(user?.nombre || 'U')
+                .split(' ')
+                .filter(Boolean)
+                .slice(0, 2)
+                .map((parte) => parte[0]?.toUpperCase())
+                .join('')}
+            </span>
             <div className="hidden xl:block">
               <p className="text-xs font-bold text-slate-800 leading-tight">
                 {user?.nombre || 'Usuario'}

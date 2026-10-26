@@ -5,21 +5,18 @@ import { useRouteDraftStore } from '../../store/useRouteDraftStore';
 import { getAsesores } from '../../api/rutas';
 
 export const RouteSummary: React.FC = () => {
-  const {
-    paradas,
-    distanciaTotalKm,
-    tiempoTotalMin,
-    formData,
-    updateFormData,
-  } = useRouteDraftStore();
+  const { paradas, formData, updateFormData } = useRouteDraftStore();
   const { data: asesores = [] } = useQuery({
     queryKey: ['asesores'],
     queryFn: getAsesores,
   });
 
-  const hours = Math.floor(tiempoTotalMin / 60);
-  const minutes = tiempoTotalMin % 60;
-  const timeFormatted = `${hours}h ${minutes > 0 ? `${minutes}m` : ''}`;
+  // Only data the route really has (no made-up distance or duration)
+  const horario =
+    formData.hora_inicio && formData.hora_fin
+      ? `${formData.hora_inicio} - ${formData.hora_fin}`
+      : '—';
+  const seAsigna = Boolean(formData.id_asesor) && paradas.length > 0;
 
   return (
     <div className="space-y-4">
@@ -64,20 +61,18 @@ export const RouteSummary: React.FC = () => {
             <p className="text-[10px] text-slate-500 font-medium">Paradas</p>
           </div>
           <div>
-            <p className="text-xl font-extrabold text-[#0F172A]">
-              {distanciaTotalKm.toLocaleString('es-CO')} km
+            <p className="text-sm font-extrabold text-[#0F172A] mt-1">
+              {formData.dia_ejecucion || '—'}
             </p>
             <p className="text-[10px] text-slate-500 font-medium">
-              Distancia aprox.
+              {formData.frecuencia || 'Día'}
             </p>
           </div>
           <div>
-            <p className="text-xl font-extrabold text-[#0F172A]">
-              {timeFormatted}
+            <p className="text-sm font-extrabold text-[#0F172A] mt-1">
+              {horario}
             </p>
-            <p className="text-[10px] text-slate-500 font-medium">
-              Tiempo estimado
-            </p>
+            <p className="text-[10px] text-slate-500 font-medium">Horario</p>
           </div>
         </div>
 
@@ -85,8 +80,9 @@ export const RouteSummary: React.FC = () => {
         <div className="flex items-start gap-2.5 rounded-lg bg-blue-50/80 p-3 text-blue-900 border border-blue-100">
           <Info className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
           <p className="text-[11px] leading-relaxed text-blue-800">
-            La ruta será asignada al asesor seleccionado para el día y
-            frecuencia configurados.
+            {seAsigna
+              ? 'La ruta será asignada al asesor seleccionado y se generarán sus visitas para el día y la frecuencia configurados.'
+              : 'Sin asesor o sin paradas, la ruta se guarda como borrador y no genera visitas.'}
           </p>
         </div>
       </div>

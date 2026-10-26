@@ -30,6 +30,7 @@ export const useDashboardKpis = () => {
   return {
     kpis: kpisQuery.data,
     isLoadingKpis: kpisQuery.isLoading,
+    isErrorKpis: kpisQuery.isError,
     filasSeguimiento: seguimientoQuery.data || [],
     isLoadingSeguimiento: seguimientoQuery.isLoading,
     agendaItems: agendaQuery.data || [],

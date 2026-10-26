@@ -7,7 +7,9 @@ type OrderStatus =
   | 'IN_PROCESS'
   | 'DISPATCHED'
   | 'DELIVERED'
-  | 'CANCELLED';
+  | 'CANCELLED'
+  // Pedidos creados al registrar una visita (default de la tabla orders)
+  | 'CERRADO';
 
 interface OrderResponse {
   id: number;
@@ -28,6 +30,8 @@ const STATUS_TO_ES: Record<OrderStatus, string> = {
   DISPATCHED: 'DESPACHADO',
   DELIVERED: 'ENTREGADO',
   CANCELLED: 'CANCELADO',
+  // Venta cerrada en la visita: queda pendiente de alistar y entregar
+  CERRADO: 'PENDIENTE',
 };
 
 const STATUS_FROM_ES: Record<string, OrderStatus> = {

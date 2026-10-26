@@ -1,8 +1,16 @@
 import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useRouteDraftStore } from '../../store/useRouteDraftStore';
+import { getCatalogosClientes } from '../../api/clientes';
 
 export const GeneralInfoForm: React.FC = () => {
   const { formData, updateFormData } = useRouteDraftStore();
+  // Real zones with their ids: the route stores the zone id
+  const { data: catalogos } = useQuery({
+    queryKey: ['clientes', 'catalogos'],
+    queryFn: getCatalogosClientes,
+    staleTime: 1000 * 60 * 30,
+  });
 
   const handleDescChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (e.target.value.length <= 200) {
@@ -40,10 +48,12 @@ export const GeneralInfoForm: React.FC = () => {
           onChange={(e) => updateFormData({ territorio_zona: e.target.value })}
           className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 focus:border-[#EA580C] focus:outline-none focus:ring-1 focus:ring-[#EA580C] cursor-pointer"
         >
-          <option value="Atlántico Este">Atlántico Este</option>
-          <option value="Atlántico Norte">Atlántico Norte</option>
-          <option value="Atlántico Sur">Atlántico Sur</option>
-          <option value="Barranquilla Centro">Barranquilla Centro</option>
+          <option value="">Selecciona una zona</option>
+          {catalogos?.zonas.map((zona) => (
+            <option key={zona.id} value={String(zona.id)}>
+              {zona.nombre}
+            </option>
+          ))}
         </select>
       </div>
 
