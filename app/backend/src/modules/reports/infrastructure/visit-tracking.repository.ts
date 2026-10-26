@@ -201,17 +201,18 @@ export class VisitTrackingRepository implements IVisitTrackingRepository {
         ORDER BY vr.visit_result_id DESC
         LIMIT 1
       ) outcome ON true
+      -- Quote and order of this visit (by client, every visit repeated them)
       LEFT JOIN LATERAL (
         SELECT q.quote_number, q.amount AS quote_amount
         FROM quotes q
-        WHERE q.customer_id = v.customer_id
+        WHERE q.visit_id = v.visit_id
         ORDER BY q.date DESC, q.quote_id DESC
         LIMIT 1
       ) q ON true
       LEFT JOIN LATERAL (
         SELECT o.order_number
         FROM orders o
-        WHERE o.customer_id = v.customer_id
+        WHERE o.visit_id = v.visit_id
         ORDER BY o.date DESC, o.order_id DESC
         LIMIT 1
       ) o ON true
