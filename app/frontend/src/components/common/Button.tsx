@@ -1,6 +1,7 @@
 import React from 'react';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
+export type ButtonVariant =
+  'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -71,7 +72,8 @@ export const Button: React.FC<ButtonProps> = ({
           />
         </svg>
       ) : (
-        icon && iconPosition === 'left' && <span className="inline-block">{icon}</span>
+        icon &&
+        iconPosition === 'left' && <span className="inline-block">{icon}</span>
       )}
       {children}
       {!isLoading && icon && iconPosition === 'right' && (

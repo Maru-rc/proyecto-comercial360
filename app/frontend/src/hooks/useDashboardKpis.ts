@@ -1,5 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import { getDashboardKpis, getSeguimientoVisitas, getAgendaDelDia } from '../api/kpis';
+import {
+  getDashboardKpis,
+  getSeguimientoVisitas,
+  getAgendaDelDia,
+} from '../api/kpis';
 import { useFilterStore } from '../store/useFilterStore';
 
 export const useDashboardKpis = () => {

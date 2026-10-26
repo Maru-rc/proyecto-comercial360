@@ -6,13 +6,15 @@ interface CustomerSummaryCardProps {
   cliente?: ICliente;
 }
 
-export const CustomerSummaryCard: React.FC<CustomerSummaryCardProps> = ({ cliente }) => {
-  const nombre = cliente?.nombre_comercial || 'Metalúrgicas S.A.S.';
-  const codigo = cliente?.codigo || 'CJI-001245';
-  const municipio = cliente?.municipio || 'Barranquilla';
-  const departamento = cliente?.departamento || 'Atlántico';
-  const tipo = cliente?.tipo_cliente_nombre || 'Industrial';
-  const potencial = cliente?.potencial_nombre || 'Alto';
+export const CustomerSummaryCard: React.FC<CustomerSummaryCardProps> = ({
+  cliente,
+}) => {
+  const nombre = cliente?.nombre_comercial || 'Cliente sin seleccionar';
+  const codigo = cliente?.codigo || '—';
+  const municipio = cliente?.municipio || '—';
+  const departamento = cliente?.departamento || '—';
+  const tipo = cliente?.tipo_cliente_nombre || '—';
+  const potencial = cliente?.potencial_nombre || '—';
 
   return (
     <div className="bg-white rounded-xl border border-slate-200/90 p-4 shadow-xs space-y-3">
@@ -26,18 +28,24 @@ export const CustomerSummaryCard: React.FC<CustomerSummaryCardProps> = ({ client
         </div>
 
         <div className="min-w-0 flex-1">
-          <h4 className="text-sm font-bold text-[#0F172A] truncate">{nombre}</h4>
+          <h4 className="text-sm font-bold text-[#0F172A] truncate">
+            {nombre}
+          </h4>
           <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
             Cliente activo
           </span>
 
           <div className="mt-2 space-y-0.5 text-xs text-slate-600">
             <p>
-              <span className="font-semibold text-slate-700">Código:</span> {codigo}
+              <span className="font-semibold text-slate-700">Código:</span>{' '}
+              {codigo}
             </p>
-            <p>{municipio}, {departamento}</p>
+            <p>
+              {municipio}, {departamento}
+            </p>
             <p className="text-[11px] text-slate-500">
-              Tipo: <span className="font-semibold text-slate-700">{tipo}</span> | Potencial:{' '}
+              Tipo: <span className="font-semibold text-slate-700">{tipo}</span>{' '}
+              | Potencial:{' '}
               <span className="font-bold text-[#EA580C]">{potencial}</span>
             </p>
           </div>

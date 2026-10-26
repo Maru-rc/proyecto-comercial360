@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 import {
   MapContainer,
   TileLayer,
@@ -6,23 +6,23 @@ import {
   Popup,
   Polyline,
   useMap,
-} from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
-import { Badge } from "../common/Badge";
+} from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import { Badge } from '../common/Badge';
 
 const ESTADO_COLORES: Record<string, string> = {
-  VISITADO: "#16A34A", // Verde
-  VISITED: "#16A34A",
-  PENDIENTE: "#EA580C", // Naranja
-  PENDING: "#EA580C",
-  SIN_VISITAR: "#64748B", // Gris
-  NOT_VISITED: "#64748B",
-  PEDIDO_CERRADO: "#2563EB", // Azul
-  ORDER_CLOSED: "#2563EB",
-  REPROGRAMADO: "#DC2626", // Rojo
-  RESCHEDULED: "#DC2626",
-  NO_ASIGNADO: "#3B82F6", // Azul claro
+  VISITADO: '#16A34A', // Verde
+  VISITED: '#16A34A',
+  PENDIENTE: '#EA580C', // Naranja
+  PENDING: '#EA580C',
+  SIN_VISITAR: '#64748B', // Gris
+  NOT_VISITED: '#64748B',
+  PEDIDO_CERRADO: '#2563EB', // Azul
+  ORDER_CLOSED: '#2563EB',
+  REPROGRAMADO: '#DC2626', // Rojo
+  RESCHEDULED: '#DC2626',
+  NO_ASIGNADO: '#3B82F6', // Azul claro
 };
 
 export interface IMapMarkerItem {
@@ -50,14 +50,14 @@ interface OpenStreetMapViewerProps {
 // Custom DivIcon generator to display colored numbered markers
 const createColoredMarkerIcon = (
   orden: number | undefined,
-  estado: string = "PENDIENTE",
+  estado: string = 'PENDIENTE',
   colorHex?: string,
 ) => {
-  const normalizedEstado = (estado || "PENDIENTE").toUpperCase();
-  const color = colorHex || ESTADO_COLORES[normalizedEstado] || "#EA580C";
+  const normalizedEstado = (estado || 'PENDIENTE').toUpperCase();
+  const color = colorHex || ESTADO_COLORES[normalizedEstado] || '#EA580C';
 
   return L.divIcon({
-    className: "custom-leaflet-marker",
+    className: 'custom-leaflet-marker',
     html: `
       <div style="
         background-color: ${color};
@@ -75,7 +75,7 @@ const createColoredMarkerIcon = (
         position: relative;
         cursor: pointer;
       ">
-        ${orden !== undefined ? orden : ""}
+        ${orden !== undefined ? orden : ''}
       </div>
     `,
     iconSize: [28, 28],
@@ -100,7 +100,7 @@ export const OpenStreetMapViewer: React.FC<OpenStreetMapViewerProps> = ({
   markers,
   center = [10.9685, -74.7813], // Default Barranquilla
   zoom = 12,
-  height = "380px",
+  height = '380px',
   showPolyline = true,
   legendTitle,
   onMarkerClick,
@@ -163,7 +163,7 @@ export const OpenStreetMapViewer: React.FC<OpenStreetMapViewerProps> = ({
       <MapContainer
         center={mapCenter}
         zoom={zoom}
-        style={{ width: "100%", height: "100%" }}
+        style={{ width: '100%', height: '100%' }}
         scrollWheelZoom={false}
       >
         <MapRecenter center={mapCenter} zoom={zoom} />
@@ -177,10 +177,10 @@ export const OpenStreetMapViewer: React.FC<OpenStreetMapViewerProps> = ({
           <Polyline
             positions={polylinePositions}
             pathOptions={{
-              color: "#0F172A",
+              color: '#0F172A',
               weight: 3.5,
               opacity: 0.85,
-              dashArray: "2, 6",
+              dashArray: '2, 6',
             }}
           />
         )}
@@ -205,8 +205,8 @@ export const OpenStreetMapViewer: React.FC<OpenStreetMapViewerProps> = ({
                   <span className="text-xs font-bold text-slate-800">
                     #{item.orden} {item.title}
                   </span>
-                  <Badge variant={item.estado || "pendiente"}>
-                    {item.estado || "Pendiente"}
+                  <Badge variant={item.estado || 'pendiente'}>
+                    {item.estado || 'Pendiente'}
                   </Badge>
                 </div>
                 {item.direccion && (

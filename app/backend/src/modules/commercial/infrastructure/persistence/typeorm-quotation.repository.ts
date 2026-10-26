@@ -7,6 +7,10 @@ import type {
 } from '../../../../domain-contracts/index.js';
 import type { Quotation } from '../../domain/entities/quotation.entity.js';
 import type { IQuotationRepository } from '../../domain/repositories/quotation-repository.port.js';
+import type {
+  CommercialPage,
+  CommercialPageFilter,
+} from '../../domain/repositories/commercial-page.js';
 import { QuotationOrmEntity } from './entities/quotation.orm-entity.js';
 import { QuotationMapper } from './mappers/quotation.mapper.js';
 
@@ -49,6 +53,18 @@ export class TypeOrmQuotationRepository
       order: { date: 'DESC' },
     });
     return list.map((item) => QuotationMapper.toDomain(item));
+  }
+
+  async findPage(
+    filter: CommercialPageFilter,
+  ): Promise<CommercialPage<Quotation>> {
+    const [list, total] = await this.repository.findAndCount({
+      where: filter.advisorId === null ? {} : { advisorId: filter.advisorId },
+      order: { date: 'DESC', id: 'DESC' },
+      skip: (filter.page - 1) * filter.limit,
+      take: filter.limit,
+    });
+    return { items: list.map((item) => QuotationMapper.toDomain(item)), total };
   }
 
   async findAll(): Promise<Quotation[]> {

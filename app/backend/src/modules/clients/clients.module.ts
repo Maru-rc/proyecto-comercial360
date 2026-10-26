@@ -31,6 +31,7 @@ import { GetClientByIdUseCase } from './application/use-cases/get-client-by-id.u
 import { GetCatalogsUseCase } from './application/use-cases/get-catalogs.use-case.js';
 import { ImportClientsUseCase } from './application/use-cases/import-clients.use-case.js';
 import { GetClientHistoryUseCase } from './application/use-cases/get-client-history.use-case.js';
+import { UpdateClientUseCase } from './application/use-cases/update-client.use-case.js';
 
 import { ClientsController } from './clients.controller.js';
 import { CatalogsController } from './catalogs.controller.js';
@@ -59,6 +60,7 @@ import { CatalogsController } from './catalogs.controller.js';
     GetCatalogsUseCase,
     ImportClientsUseCase,
     GetClientHistoryUseCase,
+    UpdateClientUseCase,
     TypeOrmClientRepository,
     TypeOrmCatalogRepository,
     NominatimGeocodingAdapter,

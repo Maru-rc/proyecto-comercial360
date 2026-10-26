@@ -22,7 +22,12 @@ export interface ISeguimientoFila {
   municipio: string;
   tipo_cliente: string;
   potencial: 'Alto' | 'Medio' | 'Bajo';
-  estado_visita: 'Pendiente' | 'Visitado' | 'Reprogramado' | 'Sin visitar' | 'Pedido cerrado';
+  estado_visita:
+    | 'Pendiente'
+    | 'Visitado'
+    | 'Reprogramado'
+    | 'Sin visitar'
+    | 'Pedido cerrado';
   resultado: string;
   cotizacion: string;
   valor_cotizacion: number;

@@ -38,7 +38,8 @@ export class ErrorBoundary extends Component<Props, State> {
             </h2>
 
             <p className="text-xs text-slate-500 leading-relaxed font-mono bg-slate-50 p-3 rounded-lg border border-slate-200 text-left overflow-auto max-h-32">
-              {this.state.error?.message || 'Error desconocido en el renderizado'}
+              {this.state.error?.message ||
+                'Error desconocido en el renderizado'}
             </p>
 
             <button

@@ -16,10 +16,12 @@ export const ConfiguracionPage: React.FC = () => {
   const { user } = useAuthStore();
   const { limpiarRuta } = useRouteDraftStore();
 
-  const [activeTab, setActiveTab] = useState<'perfil' | 'rutas' | 'notificaciones' | 'sistema'>('perfil');
+  const [activeTab, setActiveTab] = useState<
+    'perfil' | 'rutas' | 'notificaciones' | 'sistema'
+  >('perfil');
 
   // Perfil form
-  const [nombre, setNombre] = useState(user?.nombre || 'Juan Pérez');
+  const [nombre, setNombre] = useState(user?.nombre || '');
   const [email, setEmail] = useState(user?.email || 'jperez@comercial360.com');
   const [telefono, setTelefono] = useState('300 123 4567');
   const [cargo, setCargo] = useState(user?.cargo || 'Asesor Comercial Senior');
@@ -48,9 +50,12 @@ export const ConfiguracionPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200/90 shadow-xs">
         <div>
-          <h1 className="text-lg font-extrabold text-[#0F172A]">Configuración de Comercial 360</h1>
+          <h1 className="text-lg font-extrabold text-[#0F172A]">
+            Configuración de Comercial 360
+          </h1>
           <p className="text-xs text-slate-500">
-            Administre su cuenta, parámetros de optimización de rutas y reglas de notificación.
+            Administre su cuenta, parámetros de optimización de rutas y reglas
+            de notificación.
           </p>
         </div>
 
@@ -124,18 +129,25 @@ export const ConfiguracionPage: React.FC = () => {
         <div className="bg-white rounded-xl border border-slate-200/90 p-5 shadow-xs space-y-5">
           <div className="flex items-center gap-4">
             <img
-              src={user?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'}
+              src={
+                user?.avatarUrl ||
+                'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'
+              }
               alt={user?.nombre}
               className="h-16 w-16 rounded-full object-cover ring-4 ring-orange-100"
             />
             <div>
-              <h2 className="text-base font-extrabold text-slate-900">{user?.nombre}</h2>
+              <h2 className="text-base font-extrabold text-slate-900">
+                {user?.nombre}
+              </h2>
               <p className="text-xs text-slate-500">{user?.email}</p>
               <div className="flex items-center gap-2 mt-1.5">
                 <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange-100 text-[#EA580C]">
                   {user?.rol}
                 </span>
-                <span className="text-xs text-slate-400">• Territorio Atlántico</span>
+                <span className="text-xs text-slate-400">
+                  • Territorio Atlántico
+                </span>
               </div>
             </div>
           </div>
@@ -176,7 +188,8 @@ export const ConfiguracionPage: React.FC = () => {
               Cálculo y Algoritmo de Rutas Comerciales
             </h2>
             <p className="text-xs text-slate-500">
-              Estos valores determinan la optimización automática del orden de paradas y tiempos estimados.
+              Estos valores determinan la optimización automática del orden de
+              paradas y tiempos estimados.
             </p>
           </div>
 
@@ -216,7 +229,8 @@ export const ConfiguracionPage: React.FC = () => {
               Alertas y Notificaciones de Campo
             </h2>
             <p className="text-xs text-slate-500">
-              Configure las condiciones para el envío de alertas automáticas al asesor y director.
+              Configure las condiciones para el envío de alertas automáticas al
+              asesor y director.
             </p>
           </div>
 
@@ -227,7 +241,8 @@ export const ConfiguracionPage: React.FC = () => {
                   Alertar visitas pendientes con retraso &gt; 2 horas
                 </span>
                 <span className="text-[11px] text-slate-500">
-                  Notifica si la visita programada en agenda no ha cambiado de estado.
+                  Notifica si la visita programada en agenda no ha cambiado de
+                  estado.
                 </span>
               </div>
               <input
@@ -244,7 +259,8 @@ export const ConfiguracionPage: React.FC = () => {
                   Enviar resumen de ruta matutino
                 </span>
                 <span className="text-[11px] text-slate-500">
-                  Envía correo a las 07:30 AM con la lista de clientes a visitar hoy.
+                  Envía correo a las 07:30 AM con la lista de clientes a visitar
+                  hoy.
                 </span>
               </div>
               <input
@@ -261,7 +277,8 @@ export const ConfiguracionPage: React.FC = () => {
                   Alerta de cliente sin visitar &gt; 15 días
                 </span>
                 <span className="text-[11px] text-slate-500">
-                  Muestra insignia en el mapa cuando una cuenta prioritaria vence frecuencia.
+                  Muestra insignia en el mapa cuando una cuenta prioritaria
+                  vence frecuencia.
                 </span>
               </div>
               <input
@@ -278,7 +295,8 @@ export const ConfiguracionPage: React.FC = () => {
                   Aviso de cotizaciones próximas a vencer (3 días)
                 </span>
                 <span className="text-[11px] text-slate-500">
-                  Recordatorio para contactar al cliente antes de expirar la vigencia de precios.
+                  Recordatorio para contactar al cliente antes de expirar la
+                  vigencia de precios.
                 </span>
               </div>
               <input
@@ -300,27 +318,46 @@ export const ConfiguracionPage: React.FC = () => {
               Estado de Servicios y Caché Local
             </h2>
             <p className="text-xs text-slate-500">
-              Verifique la conectividad con el backend y gestione el almacenamiento temporal.
+              Verifique la conectividad con el backend y gestione el
+              almacenamiento temporal.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-              <span className="text-[10px] text-slate-400 block font-semibold">API Base URL</span>
-              <span className="font-mono text-xs font-bold text-slate-800">/api (Vite Proxy)</span>
-              <span className="text-[10px] text-emerald-600 block mt-1 font-semibold">Activo</span>
+              <span className="text-[10px] text-slate-400 block font-semibold">
+                API Base URL
+              </span>
+              <span className="font-mono text-xs font-bold text-slate-800">
+                /api (Vite Proxy)
+              </span>
+              <span className="text-[10px] text-emerald-600 block mt-1 font-semibold">
+                Activo
+              </span>
             </div>
 
             <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-              <span className="text-[10px] text-slate-400 block font-semibold">Mapas Cartográficos</span>
-              <span className="font-mono text-xs font-bold text-slate-800">OpenStreetMap + Leaflet</span>
-              <span className="text-[10px] text-emerald-600 block mt-1 font-semibold">Conectado</span>
+              <span className="text-[10px] text-slate-400 block font-semibold">
+                Mapas Cartográficos
+              </span>
+              <span className="font-mono text-xs font-bold text-slate-800">
+                OpenStreetMap + Leaflet
+              </span>
+              <span className="text-[10px] text-emerald-600 block mt-1 font-semibold">
+                Conectado
+              </span>
             </div>
 
             <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-              <span className="text-[10px] text-slate-400 block font-semibold">Almacenamiento S3</span>
-              <span className="font-mono text-xs font-bold text-slate-800">Mock S3 Gateway</span>
-              <span className="text-[10px] text-emerald-600 block mt-1 font-semibold">Operativo</span>
+              <span className="text-[10px] text-slate-400 block font-semibold">
+                Almacenamiento S3
+              </span>
+              <span className="font-mono text-xs font-bold text-slate-800">
+                Mock S3 Gateway
+              </span>
+              <span className="text-[10px] text-emerald-600 block mt-1 font-semibold">
+                Operativo
+              </span>
             </div>
           </div>
 
@@ -330,7 +367,8 @@ export const ConfiguracionPage: React.FC = () => {
                 Restablecer borrador de rutas
               </span>
               <span className="text-[11px] text-slate-500">
-                Limpia las paradas temporales cargadas en el planificador de rutas.
+                Limpia las paradas temporales cargadas en el planificador de
+                rutas.
               </span>
             </div>
             <button

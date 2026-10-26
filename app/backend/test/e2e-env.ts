@@ -33,6 +33,10 @@ export function applyE2eEnv(): void {
     'test_secret_test_secret_test_secret_12345';
   process.env.BETTER_AUTH_URL = 'http://localhost:3001';
   process.env.FRONTEND_URL = 'http://localhost:5173';
+  // Presigned S3 URLs are signed locally, but the AWS SDK still needs
+  // credentials to sign them: without these the storage tests get a 500 in CI.
+  process.env.AWS_ACCESS_KEY_ID ??= 'test';
+  process.env.AWS_SECRET_ACCESS_KEY ??= 'test';
 }
 
 /** Safety check: e2e tests must only connect to test databases. */

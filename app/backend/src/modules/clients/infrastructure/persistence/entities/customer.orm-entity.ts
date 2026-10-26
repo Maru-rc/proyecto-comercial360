@@ -6,6 +6,7 @@ import {
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
+  type Relation,
 } from 'typeorm';
 import { ZoneOrmEntity } from './zone.orm-entity.js';
 import { CustomerTypeOrmEntity } from './customer-type.orm-entity.js';
@@ -95,38 +96,38 @@ export class CustomerOrmEntity {
 
   @ManyToOne(() => ZoneOrmEntity, { nullable: true })
   @JoinColumn({ name: 'zone_id' })
-  zone: ZoneOrmEntity | null;
+  zone: Relation<ZoneOrmEntity> | null;
 
   @Column({ name: 'zone_id', type: 'int', nullable: true })
   zoneId: number | null;
 
   @ManyToOne(() => CustomerTypeOrmEntity, { nullable: true })
   @JoinColumn({ name: 'customer_type_id' })
-  customerType: CustomerTypeOrmEntity | null;
+  customerType: Relation<CustomerTypeOrmEntity> | null;
 
   @Column({ name: 'customer_type_id', type: 'int', nullable: true })
   customerTypeId: number | null;
 
   @ManyToOne(() => PotentialOrmEntity, { nullable: true })
   @JoinColumn({ name: 'potential_id' })
-  customerPotential: PotentialOrmEntity | null;
+  customerPotential: Relation<PotentialOrmEntity> | null;
 
   @Column({ name: 'potential_id', type: 'int', nullable: true })
   potentialId: number | null;
 
   @ManyToOne(() => CustomerStatusOrmEntity, { nullable: true })
   @JoinColumn({ name: 'customer_status_id' })
-  customerStatus: CustomerStatusOrmEntity | null;
+  customerStatus: Relation<CustomerStatusOrmEntity> | null;
 
   @Column({ name: 'customer_status_id', type: 'int', nullable: true })
   customerStatusId: number | null;
 
   @OneToMany(() => CustomerContactOrmEntity, (contact) => contact.customer)
-  contacts: CustomerContactOrmEntity[];
+  contacts: Relation<CustomerContactOrmEntity[]>;
 
   @OneToMany(
     () => CustomerPortfolioOrmEntity,
     (customerPortfolio) => customerPortfolio.customer,
   )
-  portfolios: CustomerPortfolioOrmEntity[];
+  portfolios: Relation<CustomerPortfolioOrmEntity[]>;
 }

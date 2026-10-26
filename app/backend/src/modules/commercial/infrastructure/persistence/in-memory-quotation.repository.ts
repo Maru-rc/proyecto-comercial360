@@ -4,6 +4,10 @@ import type {
 } from '../../../../domain-contracts/index.js';
 import { Quotation } from '../../domain/entities/quotation.entity.js';
 import type { IQuotationRepository } from '../../domain/repositories/quotation-repository.port.js';
+import type {
+  CommercialPage,
+  CommercialPageFilter,
+} from '../../domain/repositories/commercial-page.js';
 import { QuotationMapper } from './mappers/quotation.mapper.js';
 
 export class InMemoryQuotationRepository
@@ -54,6 +58,22 @@ export class InMemoryQuotationRepository
 
   async findByVisit(visitId: number): Promise<Quotation[]> {
     return this.quotations.filter((q) => q.visitId === visitId);
+  }
+
+  async findPage(
+    filter: CommercialPageFilter,
+  ): Promise<CommercialPage<Quotation>> {
+    const matching = this.quotations
+      .filter(
+        (item) =>
+          filter.advisorId === null || item.advisorId === filter.advisorId,
+      )
+      .sort((a, b) => (b.id ?? 0) - (a.id ?? 0));
+    const start = (filter.page - 1) * filter.limit;
+    return {
+      items: matching.slice(start, start + filter.limit),
+      total: matching.length,
+    };
   }
 
   async findAll(): Promise<Quotation[]> {

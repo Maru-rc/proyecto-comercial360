@@ -35,9 +35,13 @@ export const VisitDetailForm: React.FC<VisitDetailFormProps> = ({
             {...register('objetivo_visita')}
             className="w-full rounded-lg border border-slate-300 bg-white py-2 px-3 text-xs text-slate-800 focus:border-[#EA580C] focus:outline-none focus:ring-1 focus:ring-[#EA580C] cursor-pointer"
           >
-            <option value="Presentación de nueva línea">Presentación de nueva línea</option>
+            <option value="Presentación de nueva línea">
+              Presentación de nueva línea
+            </option>
             <option value="Cierre de cotización">Cierre de cotización</option>
-            <option value="Seguimiento de entregas">Seguimiento de entregas</option>
+            <option value="Seguimiento de entregas">
+              Seguimiento de entregas
+            </option>
             <option value="Cobranza y cartera">Cobranza y cartera</option>
             <option value="Prospección inicial">Prospección inicial</option>
           </select>
@@ -53,7 +57,9 @@ export const VisitDetailForm: React.FC<VisitDetailFormProps> = ({
             className="w-full rounded-lg border border-slate-300 bg-white py-2 px-3 text-xs text-slate-800 focus:border-[#EA580C] focus:outline-none focus:ring-1 focus:ring-[#EA580C] cursor-pointer"
           >
             <option value="Desarrollo de cliente">Desarrollo de cliente</option>
-            <option value="Mantenimiento de cuenta">Mantenimiento de cuenta</option>
+            <option value="Mantenimiento de cuenta">
+              Mantenimiento de cuenta
+            </option>
             <option value="Recuperación">Recuperación</option>
             <option value="Visita técnica">Visita técnica</option>
           </select>
@@ -110,7 +116,8 @@ export const VisitDetailForm: React.FC<VisitDetailFormProps> = ({
         {/* Interés en nuestros productos */}
         <div className="space-y-1">
           <label className="block text-xs font-semibold text-slate-700">
-            Interés en nuestros productos <span className="text-rose-500">*</span>
+            Interés en nuestros productos{' '}
+            <span className="text-rose-500">*</span>
           </label>
           <select
             {...register('interes_productos')}

@@ -1,13 +1,25 @@
 import React from 'react';
 import { UseFormRegister, FieldErrors } from 'react-hook-form';
+import { useQuery } from '@tanstack/react-query';
 import { IVisitaRegistroFormData } from '../../types/visita';
+import { useRutas } from '../../hooks/useRutas';
+import { getCatalogosClientes } from '../../api/clientes';
 
 interface VisitGeneralFormProps {
   register: UseFormRegister<IVisitaRegistroFormData>;
   errors: FieldErrors<IVisitaRegistroFormData>;
 }
 
-export const VisitGeneralForm: React.FC<VisitGeneralFormProps> = ({ register }) => {
+export const VisitGeneralForm: React.FC<VisitGeneralFormProps> = ({
+  register,
+}) => {
+  const { rutas } = useRutas();
+  const { data: catalogos } = useQuery({
+    queryKey: ['clientes', 'catalogos'],
+    queryFn: getCatalogosClientes,
+    staleTime: 1000 * 60 * 30,
+  });
+
   return (
     <div className="bg-white rounded-xl border border-slate-200/90 p-5 shadow-xs space-y-4">
       <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
@@ -41,9 +53,8 @@ export const VisitGeneralForm: React.FC<VisitGeneralFormProps> = ({ register }) 
           </label>
           <div className="relative">
             <input
-              type="text"
+              type="time"
               {...register('hora_inicio')}
-              placeholder="10:15 AM"
               className="w-full rounded-lg border border-slate-300 py-2 px-3 text-xs text-slate-800 focus:border-[#EA580C] focus:outline-none focus:ring-1 focus:ring-[#EA580C]"
             />
           </div>
@@ -56,9 +67,8 @@ export const VisitGeneralForm: React.FC<VisitGeneralFormProps> = ({ register }) 
           </label>
           <div className="relative">
             <input
-              type="text"
+              type="time"
               {...register('hora_fin')}
-              placeholder="11:30 AM"
               className="w-full rounded-lg border border-slate-300 py-2 px-3 text-xs text-slate-800 focus:border-[#EA580C] focus:outline-none focus:ring-1 focus:ring-[#EA580C]"
             />
           </div>
@@ -67,31 +77,36 @@ export const VisitGeneralForm: React.FC<VisitGeneralFormProps> = ({ register }) 
         {/* Ruta */}
         <div className="space-y-1">
           <label className="block text-xs font-semibold text-slate-700">
-            Ruta <span className="text-rose-500">*</span>
+            Ruta
           </label>
           <select
             {...register('id_ruta')}
             className="w-full rounded-lg border border-slate-300 bg-white py-2 px-3 text-xs text-slate-800 focus:border-[#EA580C] focus:outline-none focus:ring-1 focus:ring-[#EA580C] cursor-pointer"
           >
-            <option value="RUT-002">RUT-002 (Atlántico)</option>
-            <option value="RUT-ATL-001">RUT-ATL-001</option>
-            <option value="RUT-003">RUT-003</option>
+            <option value="">Sin ruta (visita no planeada)</option>
+            {rutas.map((ruta) => (
+              <option key={ruta.id_ruta} value={ruta.id_ruta}>
+                {ruta.codigo} · {ruta.nombre}
+              </option>
+            ))}
           </select>
         </div>
 
         {/* Territorio */}
         <div className="space-y-1">
           <label className="block text-xs font-semibold text-slate-700">
-            Territorio <span className="text-rose-500">*</span>
+            Territorio
           </label>
           <select
             {...register('territorio')}
             className="w-full rounded-lg border border-slate-300 bg-white py-2 px-3 text-xs text-slate-800 focus:border-[#EA580C] focus:outline-none focus:ring-1 focus:ring-[#EA580C] cursor-pointer"
           >
-            <option value="NORTE">NORTE</option>
-            <option value="SUR">SUR</option>
-            <option value="CENTRO">CENTRO</option>
-            <option value="ORIENTE">ORIENTE</option>
+            <option value="">Sin territorio</option>
+            {catalogos?.zonas.map((zona) => (
+              <option key={zona.id} value={zona.nombre}>
+                {zona.nombre}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -100,14 +115,12 @@ export const VisitGeneralForm: React.FC<VisitGeneralFormProps> = ({ register }) 
           <label className="block text-xs font-semibold text-slate-700">
             Semana <span className="text-rose-500">*</span>
           </label>
-          <select
+          <input
+            type="number"
+            readOnly
             {...register('semana', { valueAsNumber: true })}
-            className="w-full rounded-lg border border-slate-300 bg-white py-2 px-3 text-xs text-slate-800 focus:border-[#EA580C] focus:outline-none focus:ring-1 focus:ring-[#EA580C] cursor-pointer"
-          >
-            <option value={21}>21 (20 - 26 May 2024)</option>
-            <option value={22}>22 (27 May - 02 Jun 2024)</option>
-            <option value={20}>20 (13 - 19 May 2024)</option>
-          </select>
+            className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 px-3 text-xs text-slate-800 focus:outline-none"
+          />
         </div>
 
         {/* Día */}
@@ -115,16 +128,12 @@ export const VisitGeneralForm: React.FC<VisitGeneralFormProps> = ({ register }) 
           <label className="block text-xs font-semibold text-slate-700">
             Día <span className="text-rose-500">*</span>
           </label>
-          <select
+          <input
+            type="text"
+            readOnly
             {...register('dia')}
-            className="w-full rounded-lg border border-slate-300 bg-white py-2 px-3 text-xs text-slate-800 focus:border-[#EA580C] focus:outline-none focus:ring-1 focus:ring-[#EA580C] cursor-pointer"
-          >
-            <option value="Martes">Martes</option>
-            <option value="Lunes">Lunes</option>
-            <option value="Miércoles">Miércoles</option>
-            <option value="Jueves">Jueves</option>
-            <option value="Viernes">Viernes</option>
-          </select>
+            className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 px-3 text-xs text-slate-800 focus:outline-none"
+          />
         </div>
 
         {/* Asesor */}
@@ -132,14 +141,12 @@ export const VisitGeneralForm: React.FC<VisitGeneralFormProps> = ({ register }) 
           <label className="block text-xs font-semibold text-slate-700">
             Asesor <span className="text-rose-500">*</span>
           </label>
-          <select
+          {/* The advisor always comes from the session (HU-10) */}
+          <input
             {...register('asesor_nombre')}
-            className="w-full rounded-lg border border-slate-300 bg-white py-2 px-3 text-xs text-slate-800 focus:border-[#EA580C] focus:outline-none focus:ring-1 focus:ring-[#EA580C] cursor-pointer"
-          >
-            <option value="Juan Pérez">Juan Pérez</option>
-            <option value="Carlos Gómez">Carlos Gómez</option>
-            <option value="Laura Restrepo">Laura Restrepo</option>
-          </select>
+            readOnly
+            className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 px-3 text-xs text-slate-800 focus:outline-none"
+          />
         </div>
       </div>
     </div>

@@ -1,17 +1,28 @@
-@import "tailwindcss";
-@import "leaflet/dist/leaflet.css";
+@import 'tailwindcss';
+@import 'leaflet/dist/leaflet.css';
 
 :root {
-  --navy: #0F172A;
-  --orange: #EA580C;
-  --green: #16A34A;
-  --bg-main: #F8FAFC;
+  --navy: #0f172a;
+  --orange: #ea580c;
+  --green: #16a34a;
+  --bg-main: #f8fafc;
 }
 
 body {
   background-color: var(--bg-main);
-  color: #1E293B;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  color: #1e293b;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    'Open Sans',
+    'Helvetica Neue',
+    sans-serif;
   margin: 0;
   padding: 0;
   min-height: 100vh;

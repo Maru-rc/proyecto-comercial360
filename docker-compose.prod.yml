@@ -1,40 +1,35 @@
 # ==============================================================================
-# DOCKER COMPOSE - ENTORNO DE PRODUCCIÓN (AWS EC2 + JENKINS)
+# DOCKER COMPOSE - PRODUCCIÓN (lo ejecuta el pipeline de Jenkins, HU-21)
 # ==============================================================================
-# Uso: docker compose -f docker-compose.prod.yml up -d --build
-# Propósito: Despliegue automatizado por Jenkins en la instancia de AWS EC2.
-# 
-# NOTA CRÍTICA DE ARQUITECTURA:
-# - En producción, la base de datos es el clúster gestionado Amazon Aurora PostgreSQL (RDS).
-# - El almacenamiento de documentos y evidencias es Amazon S3 con URLs prefirmadas.
-# - Por lo tanto, ni PostgreSQL ni MinIO corren en esta máquina; la app se conecta
-#   directamente a los servicios administrados de AWS definidos en el archivo .env de la EC2.
+# Uso:
+#   IMAGE_TAG=<sha> docker compose -f docker-compose.prod.yml build
+#   IMAGE_TAG=<sha> docker compose -f docker-compose.prod.yml up -d
+#
+# La base de datos (PostgreSQL / RDS) y el almacenamiento (S3) son servicios
+# externos: se configuran en el archivo de entorno (ENV_FILE, por defecto .env).
+# TLS y dominio los resuelve el proxy inverso que esté delante (por ejemplo
+# Nginx Proxy Manager), apuntando a FRONTEND_PORT y enviando X-Forwarded-Proto.
 # ==============================================================================
 
 name: comercial360-prod
 
 services:
 
-  # ==========================================================
-  # 1. API BACKEND NESTJS (MODO PRODUCCIÓN COMPILADO)
-  # ==========================================================
   backend:
     build:
-      context: ./app/backend
-      dockerfile: Dockerfile
-    image: comercial360-backend:latest
-    container_name: comercial360-prod-backend
+      context: .
+      dockerfile: app/backend/Dockerfile
+    image: ${IMAGE_REGISTRY:-}comercial360-backend:${IMAGE_TAG:-latest}
     restart: unless-stopped
     env_file:
-      - path: .env
-        required: false
+      - path: ${ENV_FILE:-.env}
+        required: true
     environment:
-      APP_ENV: production
       NODE_ENV: production
       PORT: 3000
-      # Las migraciones las ejecuta el pipeline de Jenkins; se deja false por defecto
+      # Jenkins ejecuta las migraciones como un paso aparte del pipeline
       RUN_MIGRATIONS: ${RUN_MIGRATIONS:-false}
-      RUN_SEED: ${RUN_SEED:-false}
+      RUN_BOOTSTRAP: ${RUN_BOOTSTRAP:-false}
     expose:
       - "3000"
     networks:
@@ -45,23 +40,17 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  # ==========================================================
-  # 2. FRONTEND REACT (SERVIDO POR NGINX EN PUERTO 80)
-  # ==========================================================
   frontend:
     build:
-      context: ./app/frontend
-      dockerfile: Dockerfile
-      args:
-        VITE_API_URL: ${VITE_API_URL:-/api}
-        VITE_ASSETS_URL: ${VITE_ASSETS_URL:-}
-    image: comercial360-frontend:latest
-    container_name: comercial360-prod-frontend
+      context: .
+      dockerfile: app/frontend/Dockerfile
+    image: ${IMAGE_REGISTRY:-}comercial360-frontend:${IMAGE_TAG:-latest}
     restart: unless-stopped
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     ports:
-      - "80:80"
+      - "${FRONTEND_BIND:-0.0.0.0}:${FRONTEND_PORT:-8081}:80"
     networks:
       - prod-network
     logging:
@@ -70,9 +59,6 @@ services:
         max-size: "10m"
         max-file: "3"
 
-# ==========================================================
-# RED PRIVADA DE PRODUCCIÓN
-# ==========================================================
 networks:
   prod-network:
     driver: bridge

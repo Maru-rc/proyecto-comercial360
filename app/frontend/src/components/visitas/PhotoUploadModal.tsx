@@ -20,7 +20,9 @@ export const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadedResult, setUploadedResult] = useState<IS3UploadResponse | null>(null);
+  const [uploadError, setUploadError] = useState('');
+  const [uploadedResult, setUploadedResult] =
+    useState<IS3UploadResponse | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isPhoto = mode === 'photo';
@@ -40,12 +42,9 @@ export const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({
   const handleUpload = async () => {
     if (!selectedFile) return;
     setIsUploading(true);
+    setUploadError('');
     try {
-      const res = await uploadFileToS3(
-        selectedFile,
-        'visitas',
-        'vis-001'
-      );
+      const res = await uploadFileToS3(selectedFile);
       setUploadedResult(res);
       onUploadSuccess(res);
       setTimeout(() => {
@@ -53,6 +52,9 @@ export const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({
         handleClose();
       }, 1000);
     } catch {
+      setUploadError(
+        'No se pudo subir el archivo. Verifica el tipo (JPG, PNG, WEBP, PDF) y que pese menos de 15 MB.',
+      );
       setIsUploading(false);
     }
   };
@@ -61,6 +63,7 @@ export const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({
     setSelectedFile(null);
     setPreviewUrl(null);
     setUploadedResult(null);
+    setUploadError('');
     setIsUploading(false);
     onClose();
   };
@@ -98,7 +101,11 @@ export const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({
           <input
             ref={fileInputRef}
             type="file"
-            accept={isPhoto ? 'image/*' : '.pdf,.doc,.docx,.xls,.xlsx'}
+            accept={
+              isPhoto
+                ? 'image/jpeg,image/png,image/webp'
+                : '.pdf,.xls,.xlsx,.csv'
+            }
             onChange={handleFileChange}
             className="hidden"
           />
@@ -110,7 +117,9 @@ export const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({
                 alt="Vista previa"
                 className="mx-auto h-40 max-w-full rounded-lg object-cover shadow-sm"
               />
-              <p className="text-xs font-bold text-slate-700">{selectedFile?.name}</p>
+              <p className="text-xs font-bold text-slate-700">
+                {selectedFile?.name}
+              </p>
               <p className="text-[10px] text-slate-500">
                 Clic para cambiar de fotografía
               </p>
@@ -118,7 +127,9 @@ export const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({
           ) : selectedFile ? (
             <div className="space-y-2 py-4">
               <FileText className="mx-auto h-12 w-12 text-[#EA580C]" />
-              <p className="text-xs font-bold text-slate-800">{selectedFile.name}</p>
+              <p className="text-xs font-bold text-slate-800">
+                {selectedFile.name}
+              </p>
               <p className="text-[10px] text-slate-500">
                 {(selectedFile.size / 1024).toFixed(1)} KB
               </p>
@@ -136,13 +147,20 @@ export const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({
                   : 'Haz clic para seleccionar documento'}
               </p>
               <p className="text-[10px] text-slate-400">
-                {isPhoto ? 'PNG, JPG, WEBP hasta 10MB' : 'PDF, DOCX, XLSX hasta 25MB'}
+                {isPhoto
+                  ? 'PNG, JPG, WEBP hasta 10MB'
+                  : 'PDF, DOCX, XLSX hasta 25MB'}
               </p>
             </div>
           )}
         </div>
 
         {/* Uploaded key indicator */}
+        {uploadError && (
+          <p className="rounded-lg bg-red-50 p-2 text-xs text-red-700">
+            {uploadError}
+          </p>
+        )}
         {uploadedResult && (
           <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs">
             <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />

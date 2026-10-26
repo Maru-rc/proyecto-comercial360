@@ -1,6 +1,8 @@
+import { Logger } from '@nestjs/common';
 import { betterAuth } from 'better-auth';
 import type { Pool } from 'pg';
 import { USER_ROLES } from '../../domain/role.js';
+import type { PasswordResetRequest } from '../../application/use-cases/send-password-reset-email.use-case.js';
 
 export const AUTH = Symbol('AUTH');
 
@@ -10,7 +12,20 @@ export const SESSION_WITHOUT_REMEMBER_SECONDS = 60 * 60 * 24;
 
 export const SESSION_UPDATE_AGE_SECONDS = 60 * 60 * 24;
 
-export function createAuth(pool: Pool, env: NodeJS.ProcessEnv = process.env) {
+export const RESET_PASSWORD_TOKEN_SECONDS = 60 * 60;
+
+export interface AuthHooks {
+  /** HU-22: delivers the recovery link (email adapter behind a port). */
+  readonly sendPasswordReset?: (request: PasswordResetRequest) => Promise<void>;
+}
+
+const logger = new Logger('BetterAuth');
+
+export function createAuth(
+  pool: Pool,
+  env: NodeJS.ProcessEnv = process.env,
+  hooks: AuthHooks = {},
+) {
   const secret = env.BETTER_AUTH_SECRET;
   if (!secret || secret.length < 32) {
     throw new Error(
@@ -34,6 +49,20 @@ export function createAuth(pool: Pool, env: NodeJS.ProcessEnv = process.env) {
     emailAndPassword: {
       enabled: true,
       disableSignUp: true,
+      resetPasswordTokenExpiresIn: RESET_PASSWORD_TOKEN_SECONDS,
+      // A reset closes every open session of the account
+      revokeSessionsOnPasswordReset: true,
+      sendResetPassword: async ({ user, url }) => {
+        if (!hooks.sendPasswordReset) return;
+        // Not awaited: the response time must not reveal whether the email exists
+        void hooks
+          .sendPasswordReset({ email: user.email, name: user.name, url })
+          .catch((error: unknown) =>
+            logger.error(
+              `Password reset email failed: ${error instanceof Error ? error.message : String(error)}`,
+            ),
+          );
+      },
     },
     session: {
       expiresIn: REMEMBER_ME_SESSION_SECONDS,

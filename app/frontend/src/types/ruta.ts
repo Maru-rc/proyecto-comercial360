@@ -8,7 +8,13 @@ export interface IParadaRuta {
   cliente: ICliente;
   orden: number;
   hora_sugerida: string;
-  estado_visita?: 'VISITADO' | 'PENDIENTE' | 'REPROGRAMADO' | 'SIN_VISITAR' | 'NO_ASIGNADO' | 'PEDIDO_CERRADO';
+  estado_visita?:
+    | 'VISITADO'
+    | 'PENDIENTE'
+    | 'REPROGRAMADO'
+    | 'SIN_VISITAR'
+    | 'NO_ASIGNADO'
+    | 'PEDIDO_CERRADO';
 }
 
 export interface IRuta {

@@ -1,11 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Download,
-  Filter,
-  Eye,
-  Edit2,
-} from 'lucide-react';
+import { Download, Filter, Eye, Edit2 } from 'lucide-react';
 import { ISeguimientoFila } from '../../types/kpi';
 import { Badge } from '../common/Badge';
 import { Pagination } from '../common/Pagination';
@@ -32,7 +27,7 @@ export const VisitsTable: React.FC<VisitsTableProps> = ({ filas }) => {
 
   const paginatedFilas = filteredFilas.slice(
     (currentPage - 1) * pageSize,
-    currentPage * pageSize
+    currentPage * pageSize,
   );
 
   const formatCurrency = (val: number) => {
@@ -41,7 +36,7 @@ export const VisitsTable: React.FC<VisitsTableProps> = ({ filas }) => {
   };
 
   const handleExport = () => {
-    downloadCsvReport(territorio, semanaNumero);
+    void downloadCsvReport(territorio, `Semana${semanaNumero}`);
   };
 
   return (
@@ -75,7 +70,13 @@ export const VisitsTable: React.FC<VisitsTableProps> = ({ filas }) => {
 
             {showFilterMenu && (
               <div className="absolute right-0 mt-1 w-40 rounded-xl bg-white p-1.5 shadow-xl border border-slate-200 z-30 text-xs">
-                {['Todos', 'Visitado', 'Pendiente', 'Reprogramado', 'Sin visitar'].map((est) => (
+                {[
+                  'Todos',
+                  'Visitado',
+                  'Pendiente',
+                  'Reprogramado',
+                  'Sin visitar',
+                ].map((est) => (
                   <button
                     key={est}
                     type="button"
@@ -134,12 +135,17 @@ export const VisitsTable: React.FC<VisitsTableProps> = ({ filas }) => {
           </thead>
           <tbody className="divide-y divide-slate-100 text-slate-700">
             {paginatedFilas.map((row) => (
-              <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
+              <tr
+                key={row.id}
+                className="hover:bg-slate-50/70 transition-colors"
+              >
                 <td className="py-2.5 px-3 whitespace-nowrap">{row.fecha}</td>
                 <td className="py-2.5 px-3 whitespace-nowrap font-medium text-slate-900">
                   {row.asesor}
                 </td>
-                <td className="py-2.5 px-3 whitespace-nowrap">{row.territorio}</td>
+                <td className="py-2.5 px-3 whitespace-nowrap">
+                  {row.territorio}
+                </td>
                 <td className="py-2.5 px-3 whitespace-nowrap">{row.semana}</td>
                 <td className="py-2.5 px-3 whitespace-nowrap">{row.dia}</td>
                 <td className="py-2.5 px-3 whitespace-nowrap font-mono text-[11px]">
@@ -148,15 +154,21 @@ export const VisitsTable: React.FC<VisitsTableProps> = ({ filas }) => {
                 <td className="py-2.5 px-3 whitespace-nowrap font-bold text-slate-900">
                   {row.cliente}
                 </td>
-                <td className="py-2.5 px-3 whitespace-nowrap">{row.municipio}</td>
-                <td className="py-2.5 px-3 whitespace-nowrap">{row.tipo_cliente}</td>
+                <td className="py-2.5 px-3 whitespace-nowrap">
+                  {row.municipio}
+                </td>
+                <td className="py-2.5 px-3 whitespace-nowrap">
+                  {row.tipo_cliente}
+                </td>
                 <td className="py-2.5 px-3 whitespace-nowrap">
                   <Badge variant={row.potencial}>{row.potencial}</Badge>
                 </td>
                 <td className="py-2.5 px-3 whitespace-nowrap">
                   <Badge variant={row.estado_visita}>{row.estado_visita}</Badge>
                 </td>
-                <td className="py-2.5 px-3 whitespace-nowrap">{row.resultado}</td>
+                <td className="py-2.5 px-3 whitespace-nowrap">
+                  {row.resultado}
+                </td>
                 <td className="py-2.5 px-3 whitespace-nowrap font-mono text-[11px]">
                   {row.cotizacion}
                 </td>
@@ -177,8 +189,8 @@ export const VisitsTable: React.FC<VisitsTableProps> = ({ filas }) => {
                       onClick={() =>
                         navigate(
                           `/visitas/registrar?cliente=${encodeURIComponent(
-                            row.cliente
-                          )}`
+                            row.cliente,
+                          )}&visita=${row.id}&modo=ver`,
                         )
                       }
                       className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md cursor-pointer transition-colors"
@@ -191,8 +203,8 @@ export const VisitsTable: React.FC<VisitsTableProps> = ({ filas }) => {
                       onClick={() =>
                         navigate(
                           `/visitas/registrar?cliente=${encodeURIComponent(
-                            row.cliente
-                          )}`
+                            row.cliente,
+                          )}&visita=${row.id}`,
                         )
                       }
                       className="p-1 text-slate-400 hover:text-[#EA580C] hover:bg-orange-50 rounded-md cursor-pointer transition-colors"

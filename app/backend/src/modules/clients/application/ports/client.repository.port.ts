@@ -56,6 +56,14 @@ export interface ClientHistoryRecord {
   descripcion: string | null;
 }
 
+export interface ClientListFilter {
+  search?: string;
+  tipo?: string;
+  zona?: string;
+  municipio?: string;
+  potencial?: string;
+}
+
 export interface ClientRepository {
   findByTaxId(taxId: string): Promise<ClientSummaryRecord | null>;
   findById(id: number): Promise<ClientSummaryRecord | null>;
@@ -63,17 +71,18 @@ export interface ClientRepository {
     clientId: number,
     limit?: number,
   ): Promise<ClientHistoryRecord[]>;
-  findAll(filter?: {
-    search?: string;
-    tipo?: string;
-    zona?: string;
-  }): Promise<ClientSummaryRecord[]>;
+  findAll(filter?: ClientListFilter): Promise<ClientSummaryRecord[]>;
   saveWithRelations(
     data: SaveClientTransactionData,
   ): Promise<ClientSummaryRecord>;
   upsertWithRelations(
     data: SaveClientTransactionData,
   ): Promise<'created' | 'updated'>;
+  /** Replaces the client's data, primary contact and portfolios atomically. */
+  updateWithRelations(
+    id: number,
+    data: SaveClientTransactionData,
+  ): Promise<ClientSummaryRecord>;
 }
 
 export const CLIENT_REPOSITORY = Symbol('CLIENT_REPOSITORY');

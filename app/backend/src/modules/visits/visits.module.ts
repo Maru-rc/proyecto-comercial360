@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthModule } from '../auth/auth.module.js';
 import { VISIT_READER } from '../../domain-contracts/visits/visit-reader.token.js';
+import { AuthorizeVisitAccessUseCase } from './application/authorize-visit-access/authorize-visit-access.use-case.js';
+import { ADVISOR_SCOPE_RESOLVER } from './application/ports/advisor-scope-resolver.port.js';
 import { GetMapUseCase } from './application/get-map/get-map.use-case.js';
 import { GetVisitUseCase } from './application/get-visit/get-visit.use-case.js';
 import { ListAgendaUseCase } from './application/list-agenda/list-agenda.use-case.js';
@@ -13,9 +16,15 @@ import { VisitOrmEntity } from './infrastructure/persistence/entities/visit.orm-
 import { TypeOrmVisitRepository } from './infrastructure/persistence/typeorm-visit.repository.js';
 import { TypeOrmVisitUnitOfWork } from './infrastructure/persistence/typeorm-visit-unit-of-work.js';
 import { VisitsController } from './interfaces/http/visits.controller.js';
+import { ClientsModule } from '../clients/clients.module.js';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([VisitOrmEntity, VisitOutcomeOrmEntity])],
+  imports: [
+    AuthModule,
+    // CLIENT_READER: agenda and map show the client's name, address and pin
+    ClientsModule,
+    TypeOrmModule.forFeature([VisitOrmEntity, VisitOutcomeOrmEntity]),
+  ],
   controllers: [VisitsController],
   providers: [
     TypeOrmVisitRepository,
@@ -32,6 +41,13 @@ import { VisitsController } from './interfaces/http/visits.controller.js';
       provide: VISIT_UNIT_OF_WORK,
       useExisting: TypeOrmVisitUnitOfWork,
     },
+    // The advisor scope is resolved by the auth module (user.email = advisor.email)
+    {
+      provide: ADVISOR_SCOPE_RESOLVER,
+      useFactory: (resolver: unknown) => resolver,
+      inject: ['ResolveAdvisorScopeUseCase'],
+    },
+    AuthorizeVisitAccessUseCase,
     ListAgendaUseCase,
     GetMapUseCase,
     RecordVisitUseCase,

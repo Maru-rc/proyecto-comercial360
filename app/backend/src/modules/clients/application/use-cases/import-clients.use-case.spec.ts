@@ -64,6 +64,9 @@ class InMemoryClientRepository implements ClientRepository {
   async findHistoryByClientId(): Promise<ClientHistoryRecord[]> {
     return [];
   }
+  async updateWithRelations(): Promise<ClientSummaryRecord> {
+    throw new Error('Not used by the import use case');
+  }
   async recordHistoryEvent(): Promise<ClientHistoryRecord> {
     return {} as ClientHistoryRecord;
   }

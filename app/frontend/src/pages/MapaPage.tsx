@@ -1,61 +1,64 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Search, Play } from "lucide-react";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Search, Play } from 'lucide-react';
 import {
   OpenStreetMapViewer,
   IMapMarkerItem,
-} from "../components/maps/OpenStreetMapViewer";
-import { Badge } from "../components/common/Badge";
-import { useVisitasMap } from "../hooks/useVisitasMap";
+} from '../components/maps/OpenStreetMapViewer';
+import { Badge } from '../components/common/Badge';
+import { useVisitasMap } from '../hooks/useVisitasMap';
 
 export const MapaPage: React.FC = () => {
   const navigate = useNavigate();
-  const [search, setSearch] = useState("");
-  const [estadoFilter, setEstadoFilter] = useState("Todos");
+  const [search, setSearch] = useState('');
+  const [estadoFilter, setEstadoFilter] = useState('Todos');
   const [selectedItem, setSelectedItem] = useState<IMapMarkerItem | null>(null);
 
   const { mapStops, isLoading } = useVisitasMap();
 
-  const allMarkers: IMapMarkerItem[] = mapStops.map((stop, idx) => ({
-    id: String(stop.id || stop.clientId || idx + 1),
-    lat: stop.latitude ?? 10.9685,
-    lng: stop.longitude ?? -74.7813,
-    title: stop.clientName,
-    subtitle: stop.address || `Parada #${stop.order || idx + 1}`,
-    orden: stop.order ?? idx + 1,
-    estado: stop.pinStatus,
-    colorHex: stop.colorHex,
-    direccion: stop.address || "",
-  }));
+  // Stops without geocoding are listed in the agenda, never placed on a guess
+  const allMarkers: IMapMarkerItem[] = mapStops
+    .filter((stop) => stop.latitude !== null && stop.longitude !== null)
+    .map((stop, idx) => ({
+      id: String(stop.id || stop.clientId || idx + 1),
+      lat: Number(stop.latitude),
+      lng: Number(stop.longitude),
+      title: stop.clientName,
+      subtitle: stop.address || `Parada #${stop.order || idx + 1}`,
+      orden: stop.order ?? idx + 1,
+      estado: stop.pinStatus,
+      colorHex: stop.colorHex,
+      direccion: stop.address || '',
+    }));
 
   const filteredMarkers = allMarkers.filter((m) => {
     const matchesSearch =
       m.title.toLowerCase().includes(search.toLowerCase()) ||
       (m.direccion && m.direccion.toLowerCase().includes(search.toLowerCase()));
 
-    const estadoUpper = m.estado?.toUpperCase() || "";
+    const estadoUpper = m.estado?.toUpperCase() || '';
     const filterUpper = estadoFilter.toUpperCase();
 
     const matchesEstado =
-      estadoFilter === "Todos" ||
+      estadoFilter === 'Todos' ||
       estadoUpper === filterUpper ||
-      (filterUpper === "VISITADO" && estadoUpper === "VISITED") ||
-      (filterUpper === "PENDIENTE" && estadoUpper === "PENDING") ||
-      (filterUpper === "PEDIDO_CERRADO" && estadoUpper === "ORDER_CLOSED") ||
-      (filterUpper === "SIN_VISITAR" && estadoUpper === "NOT_VISITED") ||
-      (filterUpper === "REPROGRAMADO" && estadoUpper === "RESCHEDULED");
+      (filterUpper === 'VISITADO' && estadoUpper === 'VISITED') ||
+      (filterUpper === 'PENDIENTE' && estadoUpper === 'PENDING') ||
+      (filterUpper === 'PEDIDO_CERRADO' && estadoUpper === 'ORDER_CLOSED') ||
+      (filterUpper === 'SIN_VISITAR' && estadoUpper === 'NOT_VISITED') ||
+      (filterUpper === 'REPROGRAMADO' && estadoUpper === 'RESCHEDULED');
 
     return matchesSearch && matchesEstado;
   });
 
   const visitados = allMarkers.filter(
-    (m) => m.estado === "VISITED" || m.estado === "VISITADO",
+    (m) => m.estado === 'VISITED' || m.estado === 'VISITADO',
   ).length;
   const pendientes = allMarkers.filter(
-    (m) => m.estado === "PENDING" || m.estado === "PENDIENTE",
+    (m) => m.estado === 'PENDING' || m.estado === 'PENDIENTE',
   ).length;
   const pedidos = allMarkers.filter(
-    (m) => m.estado === "ORDER_CLOSED" || m.estado === "PEDIDO_CERRADO",
+    (m) => m.estado === 'ORDER_CLOSED' || m.estado === 'PEDIDO_CERRADO',
   ).length;
 
   return (
@@ -135,6 +138,14 @@ export const MapaPage: React.FC = () => {
           </div>
 
           <div className="flex-1 overflow-y-auto divide-y divide-slate-100 pr-1 space-y-1">
+            {isLoading && (
+              <p className="p-3 text-xs text-slate-500">Cargando mapa...</p>
+            )}
+            {!isLoading && filteredMarkers.length === 0 && (
+              <p className="p-3 text-xs text-slate-500">
+                No hay paradas georreferenciadas para hoy.
+              </p>
+            )}
             {filteredMarkers.map((marker) => {
               const isSelected = selectedItem?.id === marker.id;
               return (
@@ -143,15 +154,15 @@ export const MapaPage: React.FC = () => {
                   onClick={() => setSelectedItem(marker)}
                   className={`p-2.5 rounded-lg cursor-pointer transition-colors ${
                     isSelected
-                      ? "bg-orange-50 border border-orange-200"
-                      : "hover:bg-slate-50"
+                      ? 'bg-orange-50 border border-orange-200'
+                      : 'hover:bg-slate-50'
                   }`}
                 >
                   <div className="flex items-center justify-between gap-1.5 mb-1">
                     <span className="font-bold text-slate-900 text-xs truncate">
                       #{marker.orden} {marker.title}
                     </span>
-                    <Badge variant={marker.estado?.toLowerCase() || "default"}>
+                    <Badge variant={marker.estado?.toLowerCase() || 'default'}>
                       {marker.estado}
                     </Badge>
                   </div>

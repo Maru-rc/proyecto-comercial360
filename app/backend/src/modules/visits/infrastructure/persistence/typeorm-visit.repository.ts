@@ -32,7 +32,16 @@ export class TypeOrmVisitRepository extends BaseVisitRepository {
 
   async findById(id: number): Promise<Visit | null> {
     const entity = await this.visitRepo.findOne({ where: { id } });
-    return entity ? VisitMapper.toDomain(entity) : null;
+    if (!entity) return null;
+    // The observation lives in the latest recorded result (HU-24 detail view)
+    const latest = await this.outcomeRepo.findOne({
+      where: { visitId: id },
+      order: { id: 'DESC' },
+    });
+    if (latest?.observations && !entity.observation) {
+      entity.observation = latest.observations;
+    }
+    return VisitMapper.toDomain(entity);
   }
 
   async findByAdvisorAndDate(
@@ -47,7 +56,7 @@ export class TypeOrmVisitRepository extends BaseVisitRepository {
         advisorId,
         scheduledDate: Between(start, end),
       },
-      order: { visitOrder: 'ASC' },
+      order: { scheduledDate: 'ASC', id: 'ASC' },
     });
     return list.map((item) => VisitMapper.toDomain(item));
   }
@@ -60,7 +69,7 @@ export class TypeOrmVisitRepository extends BaseVisitRepository {
       where: {
         scheduledDate: Between(start, end),
       },
-      order: { visitOrder: 'ASC' },
+      order: { scheduledDate: 'ASC', id: 'ASC' },
     });
     return list.map((item) => VisitMapper.toDomain(item));
   }

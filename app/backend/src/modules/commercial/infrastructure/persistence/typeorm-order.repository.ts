@@ -7,6 +7,10 @@ import type {
 } from '../../../../domain-contracts/index.js';
 import type { Order } from '../../domain/entities/order.entity.js';
 import type { IOrderRepository } from '../../domain/repositories/order-repository.port.js';
+import type {
+  CommercialPage,
+  CommercialPageFilter,
+} from '../../domain/repositories/commercial-page.js';
 import { OrderOrmEntity } from './entities/order.orm-entity.js';
 import { OrderMapper } from './mappers/order.mapper.js';
 
@@ -47,6 +51,16 @@ export class TypeOrmOrderRepository implements IOrderRepository, OrderReader {
       order: { date: 'DESC' },
     });
     return list.map((item) => OrderMapper.toDomain(item));
+  }
+
+  async findPage(filter: CommercialPageFilter): Promise<CommercialPage<Order>> {
+    const [list, total] = await this.repository.findAndCount({
+      where: filter.advisorId === null ? {} : { advisorId: filter.advisorId },
+      order: { date: 'DESC', id: 'DESC' },
+      skip: (filter.page - 1) * filter.limit,
+      take: filter.limit,
+    });
+    return { items: list.map((item) => OrderMapper.toDomain(item)), total };
   }
 
   async findAll(): Promise<Order[]> {

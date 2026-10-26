@@ -10,11 +10,14 @@ import {
   Post,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Auth } from '../../../../domain-contracts/index.js';
 import { CompleteFollowUpUseCase } from '../../application/complete-follow-up/complete-follow-up.use-case.js';
 import { CreateFollowUpUseCase } from '../../application/create-follow-up/create-follow-up.use-case.js';
 import { ListPendingFollowUpsUseCase } from '../../application/list-pending-follow-ups/list-pending-follow-ups.use-case.js';
 import { CreateFollowUpDto } from './dto/create-follow-up.dto.js';
 
+// HU-10: requires a valid session (401 without a session)
+@Auth()
 @ApiTags('FollowUps')
 @Controller('follow-ups')
 export class FollowUpsController {

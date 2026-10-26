@@ -1,18 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Check,
-  Sparkles,
-  Plus,
-  RotateCcw,
-  Save,
-} from 'lucide-react';
+import { Check, Sparkles, Plus, RotateCcw, Save } from 'lucide-react';
 import { RouteStepper } from '../components/rutas/RouteStepper';
 import { GeneralInfoForm } from '../components/rutas/GeneralInfoForm';
 import { SortableStopTable } from '../components/rutas/SortableStopTable';
 import { CustomerPicker } from '../components/rutas/CustomerPicker';
 import { RouteSummary } from '../components/rutas/RouteSummary';
-import { OpenStreetMapViewer, IMapMarkerItem } from '../components/maps/OpenStreetMapViewer';
+import {
+  OpenStreetMapViewer,
+  IMapMarkerItem,
+} from '../components/maps/OpenStreetMapViewer';
 import { useRouteDraftStore } from '../store/useRouteDraftStore';
 import { useRutas } from '../hooks/useRutas';
 
@@ -61,9 +58,12 @@ export const RutasPage: React.FC = () => {
       {/* Top Bar with Title and Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200/90 shadow-xs">
         <div>
-          <h1 className="text-lg font-extrabold text-[#0F172A]">Creación de rutas</h1>
+          <h1 className="text-lg font-extrabold text-[#0F172A]">
+            Creación de rutas
+          </h1>
           <p className="text-xs text-slate-500">
-            Diseña la ruta comercial ordenando las visitas para máxima eficiencia.
+            Diseña la ruta comercial ordenando las visitas para máxima
+            eficiencia.
           </p>
         </div>
 
@@ -140,7 +140,9 @@ export const RutasPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => {
-                  const picker = document.getElementById('customer-picker-input');
+                  const picker = document.getElementById(
+                    'customer-picker-input',
+                  );
                   picker?.focus();
                 }}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-[#EA580C] text-[#EA580C] hover:bg-orange-50/50 bg-white px-3.5 py-1.5 text-xs font-bold cursor-pointer transition-colors shadow-2xs"

@@ -1,9 +1,9 @@
 import React from 'react';
 
-export const Spinner: React.FC<{ size?: 'sm' | 'md' | 'lg'; className?: string }> = ({
-  size = 'md',
-  className = '',
-}) => {
+export const Spinner: React.FC<{
+  size?: 'sm' | 'md' | 'lg';
+  className?: string;
+}> = ({ size = 'md', className = '' }) => {
   const sizeClasses = {
     sm: 'w-4 h-4',
     md: 'w-6 h-6',

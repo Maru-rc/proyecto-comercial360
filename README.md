@@ -79,9 +79,9 @@ proyecto-comercial360/
 El proyecto cuenta con **3 perfiles de Docker Compose**, cada uno diseñado para un caso de uso específico:
 
 ### 3.1. Entorno de Prueba Rápida / Demo Integrada (`docker-compose.yml`)
-Levanta todos los servicios compilados localmente con base de datos y almacenamiento emulado:
+Levanta todos los servicios compilados localmente con base de datos y almacenamiento emulado. Necesita un secreto propio para las sesiones:
 ```bash
-docker compose up --build
+BETTER_AUTH_SECRET=$(openssl rand -hex 32) docker compose up --build
 ```
 * **Frontend:** [http://localhost:3021](http://localhost:3021)
 * **Backend API:** [http://localhost:3020](http://localhost:3020)
@@ -89,9 +89,9 @@ docker compose up --build
 * **MinIO Console (S3 Web):** [http://localhost:9001](http://localhost:9001) (`minioadmin` / `minioadmin`)
 
 ### 3.2. Entorno de Desarrollo Activo con Hot-Reload (`docker-compose.dev.yml`)
-Enlaza el código fuente local a los contenedores para recarga en vivo (**HMR**) sin reconstruir imágenes:
+Monta el workspace en contenedores `node:22-alpine`: el servicio `deps` instala dependencias una vez y luego el backend corre `nest start --watch` (con migraciones) y el frontend `vite` con HMR, sin reconstruir imágenes:
 ```bash
-docker compose -f docker-compose.dev.yml up --build
+docker compose -f docker-compose.dev.yml up
 ```
 * **Frontend Vite Dev:** [http://localhost:5173](http://localhost:5173)
 * **Backend NestJS:** [http://localhost:3000](http://localhost:3000)

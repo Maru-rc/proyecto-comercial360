@@ -1,19 +1,27 @@
 import { Controller, Get, Query, Req, UseGuards } from '@nestjs/common';
 import {
   ApiCookieAuth,
+  ApiForbiddenResponse,
+  ApiUnauthorizedResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
-import { AuthGuard } from '../auth/presentation/auth.guard.js';
-import type { RequestWithUser } from '../auth/presentation/auth.guard.js';
-import { RolesGuard } from '../auth/presentation/roles.guard.js';
+import {
+  AuthGuard,
+  RolesGuard,
+  type RequestWithUser,
+} from '../../domain-contracts/index.js';
 import { GetVisitTrackingUseCase } from './application/use-cases/get-visit-tracking.use-case.js';
 import { VisitTrackingQueryDto } from './application/dtos/visit-tracking-query.dto.js';
 import { VisitTrackingResponseDto } from './application/dtos/visit-tracking-response.dto.js';
 
 @ApiTags('visitas')
 @ApiCookieAuth()
+@ApiUnauthorizedResponse({ description: 'No valid session found' })
+@ApiForbiddenResponse({
+  description: 'Advisor requesting another advisor, or advisor without record',
+})
 @UseGuards(AuthGuard, RolesGuard)
 @Controller('visitas')
 export class VisitTrackingController {

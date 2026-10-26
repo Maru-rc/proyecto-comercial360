@@ -1,13 +1,16 @@
 import { Pool } from 'pg';
+import { resolvePostgresConnection } from '../../../../domain-contracts/common/index.js';
 
+/** Better Auth's pool: same database and TLS settings as TypeORM. */
 export function createPgPool(env: NodeJS.ProcessEnv = process.env): Pool {
+  const connection = resolvePostgresConnection(env);
   return new Pool({
-    host: env.DATABASE_HOST ?? 'localhost',
-    port: Number(env.DATABASE_PORT ?? 5432),
-    user: env.DATABASE_USER,
-    password: env.DATABASE_PASSWORD,
-    database: env.DATABASE_NAME,
-    ssl: env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : false,
+    host: connection.host,
+    port: connection.port,
+    user: connection.user,
+    password: connection.password,
+    database: connection.database,
+    ssl: connection.ssl,
     max: 10,
   });
 }

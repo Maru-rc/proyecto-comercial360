@@ -1,0 +1,23 @@
+# Jenkins del proyecto. Uso, en el servidor donde corre la aplicación:
+#   DOCKER_GID=$(getent group docker | cut -d: -f3) docker compose -f infra/jenkins/docker-compose.yml up -d --build
+# Publica la interfaz en JENKINS_BIND:JENKINS_PORT; el proxy inverso (Nginx Proxy
+# Manager u otro) le da dominio y TLS, y por ahí entra el webhook de GitHub.
+name: comercial360-jenkins
+
+services:
+  jenkins:
+    build: .
+    image: comercial360-jenkins:lts
+    restart: unless-stopped
+    group_add:
+      - "${DOCKER_GID:?Define DOCKER_GID con: getent group docker | cut -d: -f3}"
+    environment:
+      JAVA_OPTS: "-Djenkins.install.runSetupWizard=true"
+    ports:
+      - "${JENKINS_BIND:-127.0.0.1}:${JENKINS_PORT:-8080}:8080"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+
+volumes:
+  jenkins_home:

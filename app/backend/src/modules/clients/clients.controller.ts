@@ -8,6 +8,7 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Put,
   Query,
   Res,
   UploadedFile,
@@ -27,6 +28,8 @@ import { GetClientByIdUseCase } from './application/use-cases/get-client-by-id.u
 import { GetCatalogsUseCase } from './application/use-cases/get-catalogs.use-case.js';
 import { ImportClientsUseCase } from './application/use-cases/import-clients.use-case.js';
 import { GetClientHistoryUseCase } from './application/use-cases/get-client-history.use-case.js';
+import { UpdateClientUseCase } from './application/use-cases/update-client.use-case.js';
+import type { ClientFormCommand } from './application/services/client-aggregate.builder.js';
 import { CreateClientDto } from './presentation/dto/create-client.dto.js';
 import { ListClientsDto } from './presentation/dto/list-clients.dto.js';
 
@@ -52,6 +55,29 @@ function extractPrimaryContact(dto: CreateClientDto) {
   };
 }
 
+function toClientFormCommand(dto: CreateClientDto): ClientFormCommand {
+  return {
+    nit: dto.nit,
+    razon_social: dto.razon_social,
+    nombre_comercial: dto.nombre_comercial,
+    direccion: dto.direccion,
+    departamento: dto.departamento,
+    municipio: dto.municipio,
+    barrio: dto.barrio,
+    telefono: dto.telefono,
+    email: dto.email,
+    zona: dto.zona,
+    tipo_cliente: dto.tipo_cliente,
+    potencial: dto.potencial,
+    estado_cliente: dto.estado_cliente,
+    frecuencia_visita_dias: dto.frecuencia_visita_dias,
+    portafolios: dto.portafolios,
+    latitud: dto.latitud,
+    longitud: dto.longitud,
+    ...extractPrimaryContact(dto),
+  };
+}
+
 @Controller('clientes')
 export class ClientsController {
   constructor(
@@ -61,6 +87,7 @@ export class ClientsController {
     private readonly getCatalogsUseCase: GetCatalogsUseCase,
     private readonly importClientsUseCase: ImportClientsUseCase,
     private readonly getClientHistoryUseCase: GetClientHistoryUseCase,
+    private readonly updateClientUseCase: UpdateClientUseCase,
   ) {}
 
   @Post()
@@ -70,31 +97,18 @@ export class ClientsController {
     @Body() dto: CreateClientDto,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    const contact = extractPrimaryContact(dto);
+    return this.createClientUseCase.execute(toClientFormCommand(dto), user);
+  }
 
-    return this.createClientUseCase.execute(
-      {
-        nit: dto.nit,
-        razon_social: dto.razon_social,
-        nombre_comercial: dto.nombre_comercial,
-        direccion: dto.direccion,
-        departamento: dto.departamento,
-        municipio: dto.municipio,
-        barrio: dto.barrio,
-        telefono: dto.telefono,
-        email: dto.email,
-        zona: dto.zona,
-        tipo_cliente: dto.tipo_cliente,
-        potencial: dto.potencial,
-        estado_cliente: dto.estado_cliente,
-        frecuencia_visita_dias: dto.frecuencia_visita_dias,
-        portafolios: dto.portafolios,
-        latitud: dto.latitud,
-        longitud: dto.longitud,
-        ...contact,
-      },
-      user,
-    );
+  // HU-23: same payload as creation; logs "Cliente actualizado" in the history
+  @Put(':id')
+  @Auth('DIRECTOR')
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: CreateClientDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.updateClientUseCase.execute(id, toClientFormCommand(dto), user);
   }
 
   @Get('catalogos')

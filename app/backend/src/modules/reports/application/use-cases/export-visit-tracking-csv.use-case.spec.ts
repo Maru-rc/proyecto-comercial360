@@ -6,9 +6,10 @@ import {
   makeTrackingRepo,
   type VisitTrackingFilter,
 } from './visit-tracking-test.helpers.js';
+import type { VisitTrackingRow } from '../ports/visit-tracking.port.js';
 
 function makeUseCase(
-  rows: any[],
+  rows: VisitTrackingRow[],
   advisorId: number | null,
 ): {
   useCase: ExportVisitTrackingCsvUseCase;

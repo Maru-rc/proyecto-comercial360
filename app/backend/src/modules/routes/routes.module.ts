@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { RouteOrmEntity } from './infrastructure/persistence/entities/route.orm-entity.js';
 import { RouteStopOrmEntity } from './infrastructure/persistence/entities/route-stop.orm-entity.js';
 import { ROUTE_REPOSITORY } from './application/ports/route.repository.port.js';
+import { ROUTES_ADVISOR_SCOPE } from './application/ports/advisor-scope-resolver.port.js';
 import { ROUTE_VISIT_GENERATOR } from './application/ports/route-visit-generator.port.js';
 import { ROUTE_READER, ADVISOR_READER } from '../../domain-contracts/index.js';
 import { TypeOrmRouteRepository } from './infrastructure/persistence/typeorm-route.repository.js';
@@ -34,6 +35,11 @@ import { AuthModule } from '../auth/auth.module.js';
     TypeOrmRouteRepository,
     TypeOrmRouteVisitGeneratorAdapter,
     TypeOrmAdvisorLookupAdapter,
+    {
+      provide: ROUTES_ADVISOR_SCOPE,
+      useFactory: (resolver: unknown) => resolver,
+      inject: ['ResolveAdvisorScopeUseCase'],
+    },
     {
       provide: ROUTE_REPOSITORY,
       useExisting: TypeOrmRouteRepository,

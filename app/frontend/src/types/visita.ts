@@ -1,15 +1,15 @@
-import { ICliente } from "./cliente";
+import { ICliente } from './cliente';
 
 export type EstadoVisita =
-  | "VISITADO"
-  | "PENDIENTE"
-  | "SIN_VISITAR"
-  | "PEDIDO_CERRADO"
-  | "REPROGRAMADO"
-  | "PROGRAMADA";
+  | 'VISITADO'
+  | 'PENDIENTE'
+  | 'SIN_VISITAR'
+  | 'PEDIDO_CERRADO'
+  | 'REPROGRAMADO'
+  | 'PROGRAMADA';
 
 export type MapPinStatus =
-  "VISITED" | "PENDING" | "NOT_VISITED" | "ORDER_CLOSED" | "RESCHEDULED";
+  'VISITED' | 'PENDING' | 'NOT_VISITED' | 'ORDER_CLOSED' | 'RESCHEDULED';
 
 export interface IVisitAgendaItemContract {
   id: number;
@@ -51,12 +51,12 @@ export interface IVisitMapStopContract {
 }
 
 export type ResultadoVisita =
-  | "Interesado"
-  | "Pedido"
-  | "Programada"
-  | "No visitado"
-  | "Cotización enviada"
-  | "No interesado";
+  | 'Interesado'
+  | 'Pedido'
+  | 'Programada'
+  | 'No visitado'
+  | 'Cotización enviada'
+  | 'No interesado';
 
 export interface ISeguimiento {
   id_seguimiento?: string;
@@ -81,12 +81,12 @@ export interface ICotizacion {
   valor: number;
   moneda?: string;
   estado?:
-    | "BORRADOR"
-    | "ENVIADA"
-    | "APROBADA"
-    | "EN_NEGOCIACION"
-    | "RECHAZADA"
-    | "VENCIDA"
+    | 'BORRADOR'
+    | 'ENVIADA'
+    | 'APROBADA'
+    | 'EN_NEGOCIACION'
+    | 'RECHAZADA'
+    | 'VENCIDA'
     | string;
   descripcion?: string;
   s3_document_key?: string;
@@ -102,11 +102,11 @@ export interface IPedido {
   valor: number;
   fecha_entrega?: string;
   estado?:
-    | "PENDIENTE"
-    | "EN_PREPARACION"
-    | "DESPACHADO"
-    | "ENTREGADO"
-    | "CANCELADO"
+    | 'PENDIENTE'
+    | 'EN_PREPARACION'
+    | 'DESPACHADO'
+    | 'ENTREGADO'
+    | 'CANCELADO'
     | string;
   asesor_nombre?: string;
   items_count?: number;
@@ -132,7 +132,7 @@ export interface IVisita {
   resultado?: ResultadoVisita;
   objetivo_visita?: string;
   tipo_visita?: string;
-  interes_productos?: "Alto" | "Medio" | "Bajo";
+  interes_productos?: 'Alto' | 'Medio' | 'Bajo';
   modulo_interes?: string;
   competencia_mencionada?: string;
   observaciones?: string;

@@ -26,7 +26,7 @@ export class CustomerPortfolioOrmEntity {
 
   @ManyToOne(() => PortfolioOrmEntity)
   @JoinColumn({ name: 'portfolio_id' })
-  portfolio: PortfolioOrmEntity;
+  portfolio: Relation<PortfolioOrmEntity>;
 
   @Column({ name: 'portfolio_id', type: 'int', nullable: true })
   portfolioId: number | null;

@@ -49,8 +49,8 @@ export const RouteStepper: React.FC<RouteStepperProps> = ({
                   isActive
                     ? 'bg-[#0F172A] text-white ring-2 ring-[#0F172A]/20'
                     : isPassed
-                    ? 'bg-[#16A34A] text-white'
-                    : 'bg-slate-200 text-slate-700'
+                      ? 'bg-[#16A34A] text-white'
+                      : 'bg-slate-200 text-slate-700'
                 }`}
               >
                 {s.number}

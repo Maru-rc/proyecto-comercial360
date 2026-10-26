@@ -2,14 +2,11 @@ import { Inject, Injectable } from '@nestjs/common';
 import {
   CLIENT_REPOSITORY,
   type ClientRepository,
+  type ClientListFilter,
   type ClientSummaryRecord,
 } from '../ports/client.repository.port.js';
 
-export interface ListClientsFilter {
-  search?: string;
-  tipo?: string;
-  zona?: string;
-}
+export type ListClientsFilter = ClientListFilter;
 
 @Injectable()
 export class ListClientsUseCase {
@@ -19,6 +16,15 @@ export class ListClientsUseCase {
   ) {}
 
   async execute(filter?: ListClientsFilter): Promise<ClientSummaryRecord[]> {
-    return this.clientRepo.findAll(filter);
+    if (!filter) return this.clientRepo.findAll();
+    // Only the filters travel to the repository, never the raw query object
+    const { search, tipo, zona, municipio, potencial } = filter;
+    return this.clientRepo.findAll({
+      search,
+      tipo,
+      zona,
+      municipio,
+      potencial,
+    });
   }
 }
