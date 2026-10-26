@@ -1,5 +1,6 @@
 import { apiClient } from './client';
 import { IRuta, IParadaRuta, IRutaFormData } from '../types/ruta';
+import { toLocalIsoDate } from '../lib/fecha';
 
 interface BackendRouteRecord {
   id: number;
@@ -55,7 +56,7 @@ function mapBackendRouteToIRuta(
     paradas,
     distancia_km_aprox: Number((paradas.length * 9.8).toFixed(1)),
     tiempo_estimado_min: paradas.length * 70,
-    fecha_creacion: new Date().toISOString().split('T')[0],
+    fecha_creacion: toLocalIsoDate(),
   };
 }
 
@@ -152,8 +153,8 @@ export const crearRuta = async (
 
     await apiClient.post(`/rutas/${routeId}/asignar`, {
       id_asesor: toNumericId(formData.id_asesor, 'Asesor'),
-      fecha_inicio: start.toISOString().split('T')[0],
-      fecha_fin: end.toISOString().split('T')[0],
+      fecha_inicio: toLocalIsoDate(start),
+      fecha_fin: toLocalIsoDate(end),
     });
   }
 

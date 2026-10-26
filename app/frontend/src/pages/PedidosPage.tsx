@@ -9,6 +9,8 @@ import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import { Pagination } from '../components/common/Pagination';
 import { notifyError, notifyFormErrors, notifySuccess } from '../lib/alerts';
+import { usePageReset } from '../hooks/usePageReset';
+import { toLocalIsoDate } from '../lib/fecha';
 
 export const PedidosPage: React.FC = () => {
   const [pedidos, setPedidos] = useState<IPedido[]>([]);
@@ -16,7 +18,6 @@ export const PedidosPage: React.FC = () => {
   const [estadoFilter, setEstadoFilter] = useState('Todos');
   const [selectedPedido, setSelectedPedido] = useState<IPedido | null>(null);
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
   // Form state
@@ -53,7 +54,7 @@ export const PedidosPage: React.FC = () => {
         numero: generarNumeroDocumento('PED'),
         id_cliente: clienteId,
         valor: monto,
-        fecha: new Date().toISOString().slice(0, 10),
+        fecha: toLocalIsoDate(),
         fecha_entrega: fechaEntrega || undefined,
         observaciones,
         estado: 'PENDIENTE',
@@ -73,6 +74,12 @@ export const PedidosPage: React.FC = () => {
 
   const totalFacturado = pedidos.reduce((acc, p) => acc + (p.valor || 0), 0);
   const entregados = pedidos.filter((p) => p.estado === 'ENTREGADO').length;
+
+  const [currentPage, setCurrentPage] = usePageReset([
+    search,
+    estadoFilter,
+    pageSize,
+  ]);
 
   return (
     <div className="space-y-5 pb-16">

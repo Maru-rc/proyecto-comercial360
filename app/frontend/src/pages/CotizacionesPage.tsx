@@ -9,6 +9,8 @@ import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import { Pagination } from '../components/common/Pagination';
 import { notifyError, notifyFormErrors, notifySuccess } from '../lib/alerts';
+import { usePageReset } from '../hooks/usePageReset';
+import { toLocalIsoDate } from '../lib/fecha';
 
 export const CotizacionesPage: React.FC = () => {
   const [cotizaciones, setCotizaciones] = useState<ICotizacion[]>([]);
@@ -16,7 +18,6 @@ export const CotizacionesPage: React.FC = () => {
   const [estadoFilter, setEstadoFilter] = useState('Todos');
   const [selectedCot, setSelectedCot] = useState<ICotizacion | null>(null);
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
   // Form State
@@ -53,7 +54,7 @@ export const CotizacionesPage: React.FC = () => {
         numero: generarNumeroDocumento('COT'),
         id_cliente: clienteId,
         valor: monto,
-        fecha: new Date().toISOString().slice(0, 10),
+        fecha: toLocalIsoDate(),
         descripcion,
         validez,
         estado: 'ENVIADA',
@@ -73,6 +74,12 @@ export const CotizacionesPage: React.FC = () => {
 
   const totalValor = cotizaciones.reduce((acc, c) => acc + (c.valor || 0), 0);
   const aprobadas = cotizaciones.filter((c) => c.estado === 'APROBADA').length;
+
+  const [currentPage, setCurrentPage] = usePageReset([
+    search,
+    estadoFilter,
+    pageSize,
+  ]);
 
   return (
     <div className="space-y-5 pb-16">

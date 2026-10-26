@@ -11,6 +11,7 @@ import { Badge } from '../components/common/Badge';
 import { Modal } from '../components/common/Modal';
 import { Button } from '../components/common/Button';
 import { Pagination } from '../components/common/Pagination';
+import { usePageReset } from '../hooks/usePageReset';
 
 export const VisitasListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -20,7 +21,6 @@ export const VisitasListPage: React.FC = () => {
   const [selectedVisita, setSelectedVisita] = useState<ISeguimientoFila | null>(
     null,
   );
-  const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
@@ -42,6 +42,12 @@ export const VisitasListPage: React.FC = () => {
   });
 
   const resumen = resumirSeguimiento(visitas);
+
+  const [currentPage, setCurrentPage] = usePageReset([
+    search,
+    estadoFilter,
+    pageSize,
+  ]);
 
   return (
     <div className="space-y-5 pb-16">

@@ -7,6 +7,8 @@ import { getPedidos } from '../api/pedidos';
 import { getClientes, getCatalogosClientes } from '../api/clientes';
 import { Badge } from '../components/common/Badge';
 import { Pagination } from '../components/common/Pagination';
+import { usePageReset } from '../hooks/usePageReset';
+import { toLocalIsoDate } from '../lib/fecha';
 
 /** Quotes a CSV cell and neutralises spreadsheet formulas (CSV injection). */
 const toCsvCell = (value: unknown): string => {
@@ -45,15 +47,12 @@ export const ReportesPage: React.FC = () => {
     'visitas' | 'cotizaciones' | 'pedidos' | 'clientes'
   >('visitas');
   const [fechaDesde, setFechaDesde] = useState(
-    () => `${new Date().toISOString().slice(0, 8)}01`,
+    () => `${toLocalIsoDate().slice(0, 8)}01`,
   );
-  const [fechaHasta, setFechaHasta] = useState(() =>
-    new Date().toISOString().slice(0, 10),
-  );
+  const [fechaHasta, setFechaHasta] = useState(() => toLocalIsoDate());
   const [territorio, setTerritorio] = useState('Todos');
   const [downloadSuccess, setDownloadSuccess] = useState(false);
   const [downloadError, setDownloadError] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
   const seguimientoQuery = useQuery({
@@ -221,6 +220,14 @@ export const ReportesPage: React.FC = () => {
     setDownloadSuccess(true);
     setTimeout(() => setDownloadSuccess(false), 3000);
   };
+
+  const [currentPage, setCurrentPage] = usePageReset([
+    tipoReporte,
+    fechaDesde,
+    fechaHasta,
+    territorio,
+    pageSize,
+  ]);
 
   return (
     <div className="space-y-5 pb-16">

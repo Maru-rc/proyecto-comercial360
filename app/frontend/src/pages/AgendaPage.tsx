@@ -20,11 +20,7 @@ import { useVisitasAgenda } from '../hooks/useVisitasAgenda';
 import { useClientes } from '../hooks/useClientes';
 import { useAuthStore } from '../store/useAuthStore';
 import { notifyError, notifyFormErrors } from '../lib/alerts';
-
-const toIsoDate = (d: Date) => {
-  const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
-  return local.toISOString().slice(0, 10);
-};
+import { toLocalIsoDate } from '../lib/fecha';
 
 const toEstado = (status?: string) =>
   status === 'COMPLETED'
@@ -39,8 +35,8 @@ export const AgendaPage: React.FC = () => {
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [fecha, setFecha] = useState(() => new Date());
-  const fechaIso = toIsoDate(fecha);
-  const [hoyIso] = useState(() => toIsoDate(new Date()));
+  const fechaIso = toLocalIsoDate(fecha);
+  const [hoyIso] = useState(() => toLocalIsoDate(new Date()));
   const esHoy = fechaIso === hoyIso;
   const user = useAuthStore((state) => state.user);
   const { clientes } = useClientes();

@@ -32,6 +32,7 @@ import { Input } from '../components/common/Input';
 import { Pagination } from '../components/common/Pagination';
 import { useAuthStore } from '../store/useAuthStore';
 import { notifyError, notifyFormErrors, notifySuccess } from '../lib/alerts';
+import { usePageReset } from '../hooks/usePageReset';
 
 interface ClienteForm {
   razon_social: string;
@@ -97,7 +98,6 @@ export const ClientesPage: React.FC = () => {
   const [tipo, setTipo] = useState('Todos');
   const [selectedCliente, setSelectedCliente] = useState<ICliente | null>(null);
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
   // New Client form state
@@ -227,6 +227,21 @@ export const ClientesPage: React.FC = () => {
         },
       ],
     };
+    // Same address: keep the stored coordinates instead of geocoding it again,
+    // which would move a pin that was placed precisely
+    const original = editingId
+      ? clientes.find((c) => String(c.id_cliente) === editingId)
+      : undefined;
+    if (
+      original?.latitud != null &&
+      original.longitud != null &&
+      original.direccion === datos.direccion &&
+      original.municipio === datos.municipio &&
+      original.departamento === datos.departamento
+    ) {
+      datos.latitud = original.latitud;
+      datos.longitud = original.longitud;
+    }
     try {
       const saved = editingId
         ? await actualizarCliente(editingId, datos)
@@ -253,6 +268,14 @@ export const ClientesPage: React.FC = () => {
       setIsSubmitting(false);
     }
   };
+
+  const [currentPage, setCurrentPage] = usePageReset([
+    search,
+    tipo,
+    zona,
+    municipio,
+    pageSize,
+  ]);
 
   return (
     <div className="space-y-5 pb-16">
@@ -512,14 +535,19 @@ export const ClientesPage: React.FC = () => {
                   {selectedCliente.departamento}
                 </span>
               </div>
-              <div className="flex items-center gap-2 text-slate-600">
-                <Phone className="h-4 w-4 text-[#EA580C]" />
-                <span>{selectedCliente.telefono}</span>
-              </div>
-              <div className="flex items-center gap-2 text-slate-600">
-                <Mail className="h-4 w-4 text-[#EA580C]" />
-                <span>{selectedCliente.email}</span>
-              </div>
+              {/* Without phone or email the row would be an icon with no text */}
+              {selectedCliente.telefono && (
+                <div className="flex items-center gap-2 text-slate-600">
+                  <Phone className="h-4 w-4 text-[#EA580C]" />
+                  <span>{selectedCliente.telefono}</span>
+                </div>
+              )}
+              {selectedCliente.email && (
+                <div className="flex items-center gap-2 text-slate-600">
+                  <Mail className="h-4 w-4 text-[#EA580C]" />
+                  <span>{selectedCliente.email}</span>
+                </div>
+              )}
             </div>
           </div>
         </Modal>

@@ -26,6 +26,7 @@ import { Badge } from '../components/common/Badge';
 import { Modal } from '../components/common/Modal';
 import { Button } from '../components/common/Button';
 import { Pagination } from '../components/common/Pagination';
+import { usePageReset } from '../hooks/usePageReset';
 
 const hhmm = (hora: string) => (hora ? hora.slice(0, 5) : '—');
 
@@ -44,7 +45,6 @@ export const RutasAsignadasPage: React.FC = () => {
   const [diaFiltro, setDiaFiltro] = useState('Todos');
   const [estadoFiltro, setEstadoFiltro] = useState('Todos');
   const [selectedRuta, setSelectedRuta] = useState<IRuta | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(6);
 
   const { data: asesores = [] } = useQuery({
@@ -117,6 +117,13 @@ export const RutasAsignadasPage: React.FC = () => {
   // The API sends the client id as a number although the type says string
   const clienteDe = (idCliente: string) =>
     clientes.find((c) => String(c.id_cliente) === idCliente);
+
+  const [currentPage, setCurrentPage] = usePageReset([
+    search,
+    diaFiltro,
+    estadoFiltro,
+    pageSize,
+  ]);
 
   return (
     <div className="space-y-5 pb-16">

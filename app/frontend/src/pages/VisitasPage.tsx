@@ -22,6 +22,7 @@ import { DIAS_SEMANA as DIAS, isoWeek } from '../lib/semana';
 import { IS3UploadResponse } from '../api/storage';
 import { visitaSchema } from '../lib/visita-schema';
 import { notifyError, notifyFormErrors, notifySuccess } from '../lib/alerts';
+import { toLocalIsoDate, toLocalTime } from '../lib/fecha';
 
 const findCliente = (
   clientes: ICliente[],
@@ -72,8 +73,9 @@ export const VisitasPage: React.FC = () => {
   } = useForm<IVisitaRegistroFormData>({
     resolver: zodResolver(visitaSchema) as any,
     defaultValues: {
-      fecha_visita: hoy.toISOString().slice(0, 10),
-      hora_inicio: horaParam,
+      fecha_visita: toLocalIsoDate(hoy),
+      // Starting a visit with no scheduled time: it starts now
+      hora_inicio: horaParam || (soloLectura ? '' : toLocalTime(hoy)),
       hora_fin: '',
       id_ruta: '',
       territorio: user?.territorio ?? '',
