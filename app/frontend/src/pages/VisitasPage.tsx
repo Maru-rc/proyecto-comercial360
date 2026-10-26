@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useForm, useWatch } from 'react-hook-form';
+import { useForm, useWatch, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Check, ClipboardCheck } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { VisitGeneralForm } from '../components/visitas/VisitGeneralForm';
 import { VisitCustomerForm } from '../components/visitas/VisitCustomerForm';
 import { VisitDetailForm } from '../components/visitas/VisitDetailForm';
@@ -21,6 +21,7 @@ import { ICliente } from '../types/cliente';
 import { DIAS_SEMANA as DIAS, isoWeek } from '../lib/semana';
 import { IS3UploadResponse } from '../api/storage';
 import { visitaSchema } from '../lib/visita-schema';
+import { notifyError, notifyFormErrors, notifySuccess } from '../lib/alerts';
 
 const findCliente = (
   clientes: ICliente[],
@@ -46,8 +47,6 @@ export const VisitasPage: React.FC = () => {
   const user = useAuthStore((state) => state.user);
   const [s3Fotos, setS3Fotos] = useState<string[]>([]);
   const [s3Docs, setS3Docs] = useState<string[]>([]);
-  const [successToast, setSuccessToast] = useState(false);
-  const [submitError, setSubmitError] = useState('');
 
   // Read query params if arriving from "Iniciar visita"
   const searchParams = new URLSearchParams(location.search);
@@ -173,9 +172,18 @@ export const VisitasPage: React.FC = () => {
       ? 'Registrar resultado de visita'
       : 'Registrar visita';
 
+  // Lists every missing field in one alert instead of a red banner
+  const onInvalid = (formErrors: FieldErrors<IVisitaRegistroFormData>) => {
+    const messages = Object.values(formErrors)
+      .map((fieldError) => fieldError?.message)
+      .filter((message): message is string => Boolean(message));
+    notifyFormErrors(
+      messages.length ? messages : ['Revisa los campos marcados con *'],
+    );
+  };
+
   const onSubmit = async (data: IVisitaRegistroFormData) => {
     if (soloLectura) return;
-    setSubmitError('');
     try {
       await registrarVisita({
         data,
@@ -183,15 +191,13 @@ export const VisitasPage: React.FC = () => {
         docs: s3Docs,
         visitId: visitaId,
       });
-      setSuccessToast(true);
-      setTimeout(() => {
-        setSuccessToast(false);
-        navigate('/');
-      }, 1500);
+      notifySuccess('Visita registrada', 'Volviendo al inicio…');
+      navigate('/');
     } catch (error) {
       const status = (error as { response?: { status?: number } }).response
         ?.status;
-      setSubmitError(
+      notifyError(
+        'No se pudo guardar la visita',
         status === 409
           ? 'El número de cotización o pedido ya existe. Genera uno nuevo.'
           : status === 403
@@ -210,7 +216,10 @@ export const VisitasPage: React.FC = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 pb-16">
+    <form
+      onSubmit={handleSubmit(onSubmit, onInvalid)}
+      className="space-y-5 pb-16"
+    >
       {/* Header bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200/90 shadow-xs">
         <div>
@@ -272,18 +281,6 @@ export const VisitasPage: React.FC = () => {
           No se pudo cargar la visita: no existe o pertenece a otro asesor.
         </p>
       )}
-      {(submitError || Object.keys(errors).length > 0) && (
-        <p
-          role="alert"
-          className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-700"
-        >
-          {submitError ||
-            Object.values(errors)
-              .map((e) => e?.message)
-              .filter(Boolean)
-              .join(' · ')}
-        </p>
-      )}
 
       {/* Grid: 5 Blocks Form (8 cols) & Side Summary (4 cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
@@ -330,16 +327,6 @@ export const VisitasPage: React.FC = () => {
           )}
         </div>
       </div>
-
-      {/* Success Notification */}
-      {successToast && (
-        <div className="fixed bottom-8 right-8 z-50 flex items-center gap-3 bg-emerald-600 text-white px-5 py-3.5 rounded-xl shadow-2xl animate-in fade-in slide-in-from-bottom-5">
-          <ClipboardCheck className="h-5 w-5" />
-          <span className="text-xs font-bold">
-            ¡Visita registrada exitosamente en Comercial 360! Redirigiendo...
-          </span>
-        </div>
-      )}
     </form>
   );
 };

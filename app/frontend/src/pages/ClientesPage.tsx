@@ -11,7 +11,6 @@ import {
   Eye,
   Pencil,
   Play,
-  Check,
   Upload,
   Download,
   AlertCircle,
@@ -32,6 +31,7 @@ import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import { Pagination } from '../components/common/Pagination';
 import { useAuthStore } from '../store/useAuthStore';
+import { notifyError, notifyFormErrors, notifySuccess } from '../lib/alerts';
 
 interface ClienteForm {
   razon_social: string;
@@ -97,14 +97,12 @@ export const ClientesPage: React.FC = () => {
   const [tipo, setTipo] = useState('Todos');
   const [selectedCliente, setSelectedCliente] = useState<ICliente | null>(null);
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
   // New Client form state
   const [form, setForm] = useState<ClienteForm>(EMPTY_FORM);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [formError, setFormError] = useState('');
   const [zona, setZona] = useState('Todas');
   const [municipio, setMunicipio] = useState('');
   const isDirector = useAuthStore((state) => state.user?.rol) !== 'ASESOR';
@@ -146,8 +144,10 @@ export const ClientesPage: React.FC = () => {
       const blob = await descargarPlantilla();
       triggerBlobDownload(blob, 'plantilla_clientes.csv');
     } catch {
-      setToastMessage('No se pudo descargar la plantilla.');
-      setTimeout(() => setToastMessage(''), 3000);
+      notifyError(
+        'No se pudo descargar la plantilla',
+        'Revisa tu conexión e intenta de nuevo.',
+      );
     }
   };
 
@@ -158,16 +158,16 @@ export const ClientesPage: React.FC = () => {
     try {
       const res = await importarClientes(importFile);
       setImportResult(res);
-      setToastMessage(
-        `Importación completada: ${res.creados} creados, ${res.actualizados} actualizados.`,
+      notifySuccess(
+        'Importación completada',
+        `${res.creados} creados, ${res.actualizados} actualizados.`,
       );
-      setTimeout(() => setToastMessage(''), 4000);
       fetchClientes();
     } catch (err: any) {
-      setToastMessage(
-        'Error al importar: ' + (err.response?.data?.message || err.message),
+      notifyError(
+        'No se pudo importar el archivo',
+        err.response?.data?.message || err.message,
       );
-      setTimeout(() => setToastMessage(''), 4000);
     } finally {
       setIsImporting(false);
     }
@@ -176,14 +176,12 @@ export const ClientesPage: React.FC = () => {
   const openNewClient = () => {
     setEditingId(null);
     setForm(EMPTY_FORM);
-    setFormError('');
     setIsNewModalOpen(true);
   };
 
   const openEditClient = (cliente: ICliente) => {
     setEditingId(String(cliente.id_cliente));
     setForm(toForm(cliente));
-    setFormError('');
     setIsNewModalOpen(true);
   };
 
@@ -201,10 +199,9 @@ export const ClientesPage: React.FC = () => {
       'contacto',
     ];
     if (required.some((field) => !form[field].trim())) {
-      setFormError('Completa los campos obligatorios (*).');
+      notifyFormErrors(['Completa los campos obligatorios (*).']);
       return;
     }
-    setFormError('');
     setIsSubmitting(true);
     const datos: Partial<ICliente> = {
       razon_social: form.razon_social.trim(),
@@ -235,17 +232,17 @@ export const ClientesPage: React.FC = () => {
         ? await actualizarCliente(editingId, datos)
         : await crearCliente(datos);
       setIsNewModalOpen(false);
-      setToastMessage(
-        `Cliente ${saved.nombre_comercial} ${editingId ? 'actualizado' : 'registrado'} con éxito.`,
+      notifySuccess(
+        `Cliente ${saved.nombre_comercial} ${editingId ? 'actualizado' : 'registrado'}`,
       );
-      setTimeout(() => setToastMessage(''), 3000);
       setForm(EMPTY_FORM);
       setEditingId(null);
       fetchClientes();
     } catch (err) {
       const status = (err as { response?: { status?: number } }).response
         ?.status;
-      setFormError(
+      notifyError(
+        'No se pudo guardar el cliente',
         status === 409
           ? 'Ya existe otro cliente con ese NIT.'
           : status === 403
@@ -565,11 +562,6 @@ export const ClientesPage: React.FC = () => {
           }
         >
           <form onSubmit={handleCreateClient} className="space-y-4 text-xs">
-            {formError && (
-              <p className="rounded-lg bg-red-50 p-2 text-red-700">
-                {formError}
-              </p>
-            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <Input
                 label="Razón social *"
@@ -805,14 +797,6 @@ export const ClientesPage: React.FC = () => {
             </form>
           </div>
         </Modal>
-      )}
-
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div className="fixed bottom-8 right-8 z-50 flex items-center gap-3 bg-emerald-600 text-white px-5 py-3.5 rounded-xl shadow-2xl animate-in fade-in slide-in-from-bottom-5">
-          <Check className="h-5 w-5" />
-          <span className="text-xs font-bold">{toastMessage}</span>
-        </div>
       )}
     </div>
   );

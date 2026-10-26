@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Search, Printer, Eye, Check } from 'lucide-react';
+import { Plus, Search, Printer, Eye } from 'lucide-react';
 import { ICotizacion } from '../types/visita';
 import { getCotizaciones, crearCotizacionApi } from '../api/cotizaciones';
 import { generarNumeroDocumento } from '../api/document-number';
@@ -8,6 +8,7 @@ import { Modal } from '../components/common/Modal';
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import { Pagination } from '../components/common/Pagination';
+import { notifyError, notifyFormErrors, notifySuccess } from '../lib/alerts';
 
 export const CotizacionesPage: React.FC = () => {
   const [cotizaciones, setCotizaciones] = useState<ICotizacion[]>([]);
@@ -15,7 +16,6 @@ export const CotizacionesPage: React.FC = () => {
   const [estadoFilter, setEstadoFilter] = useState('Todos');
   const [selectedCot, setSelectedCot] = useState<ICotizacion | null>(null);
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -26,7 +26,6 @@ export const CotizacionesPage: React.FC = () => {
   const [descripcion, setDescripcion] = useState('');
   const [validez, setValidez] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formError, setFormError] = useState('');
 
   const fetchCotizaciones = useCallback(() => {
     getCotizaciones({ search, estado: estadoFilter })
@@ -42,10 +41,12 @@ export const CotizacionesPage: React.FC = () => {
     e.preventDefault();
     const monto = parseFloat(valor);
     if (!clienteId || !(monto > 0)) {
-      setFormError('Selecciona un cliente e ingresa un valor mayor a cero.');
+      notifyFormErrors([
+        'Selecciona un cliente',
+        'Ingresa un valor mayor a cero',
+      ]);
       return;
     }
-    setFormError('');
     setIsSubmitting(true);
     try {
       const created = await crearCotizacionApi({
@@ -58,11 +59,13 @@ export const CotizacionesPage: React.FC = () => {
         estado: 'ENVIADA',
       });
       setIsNewModalOpen(false);
-      setToastMessage(`Cotización ${created.numero} generada exitosamente.`);
-      setTimeout(() => setToastMessage(''), 3000);
+      notifySuccess(`Cotización ${created.numero} generada`);
       fetchCotizaciones();
     } catch {
-      setFormError('No se pudo emitir la cotización. Intenta de nuevo.');
+      notifyError(
+        'No se pudo emitir la cotización',
+        'Revisa tu conexión e intenta de nuevo.',
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -402,11 +405,6 @@ export const CotizacionesPage: React.FC = () => {
           }
         >
           <form onSubmit={handleCreateCotizacion} className="space-y-3 text-xs">
-            {formError && (
-              <p className="rounded-lg bg-red-50 p-2 text-red-700">
-                {formError}
-              </p>
-            )}
             <div className="space-y-1">
               <label className="block text-xs font-semibold text-slate-700">
                 Cliente Destinatario
@@ -457,14 +455,6 @@ export const CotizacionesPage: React.FC = () => {
             </div>
           </form>
         </Modal>
-      )}
-
-      {/* Toast */}
-      {toastMessage && (
-        <div className="fixed bottom-8 right-8 z-50 flex items-center gap-3 bg-emerald-600 text-white px-5 py-3.5 rounded-xl shadow-2xl animate-in fade-in slide-in-from-bottom-5">
-          <Check className="h-5 w-5" />
-          <span className="text-xs font-bold">{toastMessage}</span>
-        </div>
       )}
     </div>
   );

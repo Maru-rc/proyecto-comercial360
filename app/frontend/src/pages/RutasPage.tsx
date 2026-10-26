@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertCircle, Check, Sparkles, Plus, RotateCcw } from 'lucide-react';
+import { Check, Sparkles, Plus, RotateCcw } from 'lucide-react';
 import { RouteStepper } from '../components/rutas/RouteStepper';
 import { GeneralInfoForm } from '../components/rutas/GeneralInfoForm';
 import { SortableStopTable } from '../components/rutas/SortableStopTable';
@@ -13,6 +13,7 @@ import {
 import { useRouteDraftStore } from '../store/useRouteDraftStore';
 import { useRutas } from '../hooks/useRutas';
 import { apiErrorMessage } from '../api/client';
+import { notifyError, notifyFormErrors, notifySuccess } from '../lib/alerts';
 
 export const RutasPage: React.FC = () => {
   const navigate = useNavigate();
@@ -26,13 +27,6 @@ export const RutasPage: React.FC = () => {
     resetDraft,
   } = useRouteDraftStore();
   const { crearRuta, isCreating } = useRutas();
-  const [successToast, setSuccessToast] = useState('');
-  const [errorToast, setErrorToast] = useState('');
-
-  const mostrarError = (mensaje: string) => {
-    setErrorToast(mensaje);
-    setTimeout(() => setErrorToast(''), 6000);
-  };
 
   // Map markers from draft paradas
   const markers: IMapMarkerItem[] = (paradas || []).map((p) => ({
@@ -48,11 +42,11 @@ export const RutasPage: React.FC = () => {
 
   const handleSaveAndAssign = async () => {
     if (!formData.nombre.trim()) {
-      mostrarError('Escribe el nombre de la ruta.');
+      notifyFormErrors(['Escribe el nombre de la ruta.']);
       return;
     }
     if (!formData.territorio_zona) {
-      mostrarError('Selecciona la zona de la ruta.');
+      notifyFormErrors(['Selecciona la zona de la ruta.']);
       return;
     }
     // crearRuta only assigns (and generates visits) with an advisor and stops
@@ -61,18 +55,15 @@ export const RutasPage: React.FC = () => {
       await crearRuta({ formData, paradas });
       // The next route starts empty instead of reusing this one's data
       resetDraft();
-      setSuccessToast(
-        seAsigna
-          ? '¡Ruta asignada y programada con éxito!'
-          : 'Ruta guardada como borrador: falta asesor o paradas para asignarla.',
+      notifySuccess(
+        seAsigna ? 'Ruta asignada y programada' : 'Ruta guardada como borrador',
+        seAsigna ? undefined : 'Falta asesor o paradas para asignarla.',
       );
-      setTimeout(() => {
-        setSuccessToast('');
-        navigate('/rutas/asignadas');
-      }, 1500);
+      navigate('/rutas/asignadas');
     } catch (error) {
       // Nada se guarda en local: se muestra lo que respondió el backend
-      mostrarError(
+      notifyError(
+        'No se pudo guardar la ruta',
         apiErrorMessage(
           error,
           'No se pudo guardar la ruta. Revisa los datos e intenta de nuevo.',
@@ -189,25 +180,6 @@ export const RutasPage: React.FC = () => {
           <RouteSummary />
         </div>
       </div>
-
-      {/* Success Toast */}
-      {successToast && (
-        <div className="fixed bottom-8 right-8 z-50 flex items-center gap-3 bg-emerald-600 text-white px-5 py-3.5 rounded-xl shadow-2xl animate-in fade-in slide-in-from-bottom-5">
-          <Check className="h-5 w-5" />
-          <span className="text-xs font-bold">{successToast}</span>
-        </div>
-      )}
-
-      {/* Error Toast */}
-      {errorToast && (
-        <div
-          role="alert"
-          className="fixed bottom-8 right-8 z-50 flex max-w-md items-center gap-3 bg-rose-600 text-white px-5 py-3.5 rounded-xl shadow-2xl animate-in fade-in slide-in-from-bottom-5"
-        >
-          <AlertCircle className="h-5 w-5 shrink-0" />
-          <span className="text-xs font-bold">{errorToast}</span>
-        </div>
-      )}
     </div>
   );
 };

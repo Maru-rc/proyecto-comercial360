@@ -19,6 +19,7 @@ import { agendarVisita } from '../api/visitas';
 import { useVisitasAgenda } from '../hooks/useVisitasAgenda';
 import { useClientes } from '../hooks/useClientes';
 import { useAuthStore } from '../store/useAuthStore';
+import { notifyError, notifyFormErrors } from '../lib/alerts';
 
 const toIsoDate = (d: Date) => {
   const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
@@ -78,15 +79,13 @@ export const AgendaPage: React.FC = () => {
   const [newObjetivo, setNewObjetivo] = useState('');
   const [newDireccion, setNewDireccion] = useState('');
   const [isScheduling, setIsScheduling] = useState(false);
-  const [scheduleError, setScheduleError] = useState('');
 
   const handleCreateAgendaItem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newClienteId) {
-      setScheduleError('Selecciona un cliente.');
+      notifyFormErrors(['Selecciona un cliente.']);
       return;
     }
-    setScheduleError('');
     setIsScheduling(true);
     try {
       await agendarVisita({
@@ -103,8 +102,9 @@ export const AgendaPage: React.FC = () => {
       setNewDireccion('');
       await refetch();
     } catch {
-      setScheduleError(
-        'No se pudo agendar la visita. Si eres director, agenda desde la asignación de rutas.',
+      notifyError(
+        'No se pudo agendar la visita',
+        'Si eres director, agenda desde la asignación de rutas.',
       );
     } finally {
       setIsScheduling(false);
@@ -439,11 +439,6 @@ export const AgendaPage: React.FC = () => {
           }
         >
           <form onSubmit={handleCreateAgendaItem} className="space-y-3 text-xs">
-            {scheduleError && (
-              <p className="rounded-lg bg-red-50 p-2 text-red-700">
-                {scheduleError}
-              </p>
-            )}
             <div className="space-y-1">
               <label className="block text-xs font-semibold text-slate-700">
                 Cliente
