@@ -1,0 +1,139 @@
+services:
+
+  # ==========================================================
+  # BASE DE DATOS POSTGRESQL (RED INTERNA - SIN EXPOSICIÓN AL HOST)
+  # ==========================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: comercial360-postgres
+    restart: unless-stopped
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker:/docker-entrypoint-initdb.d:ro
+    environment:
+      POSTGRES_USER: ${DB_USER:-${DB_USERNAME:-postgres}}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-comercial360_db}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-${DB_USERNAME:-postgres}} -d ${DB_NAME:-comercial360_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - backend
+
+  # ==========================================================
+  # ALMACENAMIENTO DE ARCHIVOS S3 (MINIO LOCAL)
+  # ==========================================================
+  minio:
+    image: minio/minio:latest
+    container_name: comercial360-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-minioadmin}
+    ports:
+      - "${MINIO_PORT:-9000}:9000"   # S3 API
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"   # Consola Web
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - backend
+
+  # Inicializador automático del bucket privado en MinIO
+  minio-init:
+    image: minio/mc:latest
+    container_name: comercial360-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 ${S3_ACCESS_KEY:-minioadmin} ${S3_SECRET_KEY:-minioadmin} &&
+      mc mb --ignore-existing local/${S3_BUCKET:-comercial360-files} &&
+      echo 'Bucket ready'
+      "
+    networks:
+      - backend
+
+  # ==========================================================
+  # API BACKEND NESTJS (PUERTO 3020:3000)
+  # ==========================================================
+  api:
+    build:
+      context: .
+      dockerfile: app/backend/Dockerfile
+    image: ${APP_IMAGE:-comercial360-nest:latest}
+    container_name: comercial360-api
+    restart: unless-stopped
+    ports:
+      - "${API_PORT:-3020}:${INTERNAL_PORT:-3000}"
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=${INTERNAL_PORT:-3000}
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=${DB_USER:-${DB_USERNAME:-postgres}}
+      - DB_USERNAME=${DB_USER:-${DB_USERNAME:-postgres}}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - DB_NAME=${DB_NAME:-comercial360_db}
+      - DB_SYNCHRONIZE=${DB_SYNCHRONIZE:-true}
+      - DATABASE_HOST=postgres
+      - DATABASE_PORT=5432
+      - DATABASE_USER=${DB_USER:-${DB_USERNAME:-postgres}}
+      - DATABASE_PASSWORD=${DB_PASSWORD:-postgres}
+      - DATABASE_NAME=${DB_NAME:-comercial360_db}
+      - DATABASE_SSL=false
+      # Sin valor por defecto: un secreto conocido permitiría falsificar sesiones
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET:?Define BETTER_AUTH_SECRET (openssl rand -hex 32)}
+      - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://localhost:${API_PORT:-3020}}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_ACCESS_KEY_ID=${S3_ACCESS_KEY:-minioadmin}
+      - AWS_SECRET_ACCESS_KEY=${S3_SECRET_KEY:-minioadmin}
+      - AWS_S3_BUCKET_NAME=${S3_BUCKET:-comercial360-files}
+      - S3_BUCKET=${S3_BUCKET:-comercial360-files}
+      - S3_ENDPOINT=http://minio:9000
+      - S3_FORCE_PATH_STYLE=true
+      - S3_ACCESS_KEY=${S3_ACCESS_KEY:-minioadmin}
+      - S3_SECRET_KEY=${S3_SECRET_KEY:-minioadmin}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    networks:
+      backend:
+        # nginx.conf proxies /api to backend:3000
+        aliases:
+          - backend
+
+  # ==========================================================
+  # FRONTEND REACT (PUERTO 3021:80)
+  # ==========================================================
+  frontend:
+    build:
+      context: .
+      dockerfile: app/frontend/Dockerfile
+    image: ${FRONTEND_IMAGE:-comercial360-frontend:latest}
+    container_name: comercial360-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-3021}:80"
+    depends_on:
+      - api
+    networks:
+      - backend
+
+volumes:
+  pgdata:
+  miniodata:
+
+networks:
+  backend:
+    driver: bridge

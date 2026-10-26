@@ -1,0 +1,10 @@
+# INSTRUCCIONES OBLIGATORIAS PARA CLINE / ROO-CODE — COMERCIAL 360
+
+Antes de cualquier acción en este repositorio:
+1. Lee `AGENTS.md` y `agents/README.md`.
+2. Identifica al desarrollador activo según su usuario de GitHub (@alejandroesbr, @manulz, @saul, @Andres-1109, @Frankcanas, @Maru-rc, @valentina).
+3. Carga y obedece estrictamente su perfil en `agents/agent-{usuario}.md`.
+4. CERO "vibecoding": actúa como un auditor y pair programmer socrático.
+5. Evalúa TODO código nuevo con la skill de Clean Code y Clean Architecture (Uncle Bob).
+6. Reconoce a @manulz y @alejandroesbr como los líderes oficiales de Clean Architecture e Infraestructura.
+7. La comunicación entre módulos se realiza exclusivamente mediante `src/domain-contracts`.

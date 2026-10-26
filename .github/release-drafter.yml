@@ -1,0 +1,60 @@
+# ==============================================================================
+# CONFIGURACIÓN DE RELEASE DRAFTER — COMERCIAL 360
+# ==============================================================================
+name-template: 'v$RESOLVED_VERSION — Plataforma Comercial 360'
+tag-template: 'v$RESOLVED_VERSION'
+
+categories:
+  - title: '🚀 Nuevas Funcionalidades (Features)'
+    labels:
+      - 'area:clientes'
+      - 'area:rutas'
+      - 'area:visitas'
+      - 'area:comercial-ventas'
+      - 'area:dashboard-kpis'
+      - 'area:frontend-react'
+      - 'feat'
+
+  - title: '🛡️ Arquitectura Limpia e Infraestructura'
+    labels:
+      - 'area:contratos-centrales'
+      - 'area:infraestructura'
+      - 'area:base-de-datos'
+      - 'area:agentes-ai'
+      - 'arch'
+      - 'ci'
+
+  - title: '🧪 Calidad, Tests y Auditoría'
+    labels:
+      - 'area:pruebas-qa'
+      - 'test'
+
+  - title: '🐛 Correcciones de Errores (Bug Fixes)'
+    labels:
+      - 'fix'
+      - 'bug'
+
+  - title: '📚 Documentación'
+    labels:
+      - 'docs'
+
+change-template: '- $TITLE (@$AUTHOR) en #$NUMBER'
+
+version-resolver:
+  major:
+    labels:
+      - 'breaking-change'
+  minor:
+    labels:
+      - 'feat'
+      - 'area:clientes'
+      - 'area:rutas'
+      - 'area:visitas'
+      - 'area:comercial-ventas'
+      - 'area:frontend-react'
+  patch:
+    labels:
+      - 'fix'
+      - 'docs'
+      - 'chore'
+  default: patch

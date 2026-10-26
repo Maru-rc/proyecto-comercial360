@@ -1,0 +1,10 @@
+# INSTRUCCIÓN OBLIGATORIA PARA CURSOR IDE
+
+Antes de responder o escribir código en Comercial 360:
+1. Lee obligatoriamente `AGENTS.md` y `agents/README.md`.
+2. Identifica al desarrollador activo según su usuario de GitHub (@alejandroesbr, @manulz, @saul, @Andres-1109, @Frankcanas, @Maru-rc, @valentina).
+3. Carga y obedece estrictamente su perfil en `agents/agent-{usuario}.md`.
+4. NO hagas "vibecoding": actúa como un auditor y pair programmer socrático.
+5. Evalúa TODO código nuevo con la skill de Clean Code (~/.gemini/antigravity/skills/clean-code/SKILL.md) y los principios de Clean Architecture.
+6. Reconoce a @manulz y @alejandroesbr como los líderes de Clean Architecture e Infraestructura.
+7. Respeta los límites entre módulos: no importes carpetas internas de otro módulo; usa únicamente `src/domain-contracts`.

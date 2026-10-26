@@ -1,0 +1,210 @@
+name: CI - PR Quality Gate
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+  push:
+    branches:
+      - develop
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ==============================================================================
+  # 1. AUDITORÍA DE CLEAN ARCHITECTURE Y SOLID (Uncle Bob)
+  # ==============================================================================
+  architecture-audit:
+    name: Clean Architecture & SOLID Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Architecture Linter
+        run: |
+          chmod +x ./scripts/check-clean-architecture.sh
+          ./scripts/check-clean-architecture.sh --all
+
+  # ==============================================================================
+  # 2. LINT Y FORMATO (oxlint + Prettier en backend y frontend)
+  # ==============================================================================
+  lint-format:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint (oxlint)
+        run: pnpm -r run lint
+
+      # Mismos globs que lint-staged en el hook pre-commit
+      - name: Format check (Prettier)
+        run: >
+          pnpm exec prettier --check
+          "app/backend/src/**/*.ts"
+          "app/frontend/src/**/*.{ts,tsx,js,jsx}"
+
+  # ==============================================================================
+  # 3. VALIDACIÓN DE BACKEND (NestJS + TypeScript + Vitest)
+  # ==============================================================================
+  backend-check:
+    name: Backend Typecheck & Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck Backend
+        run: pnpm --filter backend exec tsc --noEmit
+
+      # Falla si la cobertura baja de los umbrales de vitest.config.ts
+      - name: Run Unit Tests with coverage thresholds
+        run: pnpm --filter backend run test:cov
+
+  # ==============================================================================
+  # 4. PRUEBAS E2E DEL BACKEND (PostgreSQL real + migraciones)
+  # ==============================================================================
+  backend-e2e:
+    name: Backend E2E Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # global-setup-e2e crea comercial360_test y aplica las migraciones
+      DATABASE_HOST: localhost
+      DATABASE_PORT: 5432
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: postgres
+      DATABASE_SSL: 'false'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run E2E Tests
+        run: pnpm --filter backend run test:e2e
+
+      # The compiled ESM build can fail where Vitest passes (decorator metadata,
+      # import cycles): run the real migrations and boot dist/main.js once.
+      - name: Boot compiled build
+        env:
+          NODE_ENV: production
+          PORT: 3999
+          DATABASE_NAME: comercial360_test
+          BETTER_AUTH_SECRET: ci_secret_ci_secret_ci_secret_ci_secret
+          BETTER_AUTH_URL: http://localhost:3999
+          FRONTEND_URL: http://localhost:3999
+        working-directory: app/backend
+        run: |
+          pnpm run build
+          node node_modules/typeorm/cli.js migration:run -d dist/core/infrastructure/database/data-source.js
+          node dist/main.js > boot.log 2>&1 &
+          for i in $(seq 1 30); do curl -fsS http://localhost:3999/api/health && exit 0; sleep 1; done
+          cat boot.log
+          exit 1
+
+  # ==============================================================================
+  # 5. VALIDACIÓN DE FRONTEND (React + Vite + TypeScript)
+  # ==============================================================================
+  frontend-check:
+    name: Frontend Typecheck & Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Unit Tests Frontend (Vitest)
+        run: pnpm --filter frontend run test
+
+      # El script build ejecuta `tsc -b` antes de `vite build`
+      - name: Typecheck & Build Frontend
+        run: pnpm --filter frontend run build
+
+  # ==============================================================================
+  # 6. VALIDACIÓN DE DOCKER COMPOSE
+  # ==============================================================================
+  docker-validation:
+    name: Docker Images Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate Docker Compose Configuration
+        run: |
+          BETTER_AUTH_SECRET=ci-placeholder docker compose -f docker-compose.yml config > /dev/null
+          ENV_FILE=.env.production.example docker compose -f docker-compose.prod.yml config > /dev/null
+          docker compose -f docker-compose.dev.yml config > /dev/null
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: app/backend/Dockerfile
+          push: false
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
+
+      - name: Build frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: app/frontend/Dockerfile
+          push: false
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend

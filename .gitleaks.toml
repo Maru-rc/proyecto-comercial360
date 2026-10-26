@@ -1,0 +1,11 @@
+# Gitleaks Configuration
+# Reference: https://github.com/gitleaks/gitleaks
+
+[allowlist]
+description = "Global allowlist for documentation artifacts, board exports and lockfiles"
+paths = [
+  '''docs/.*\.json$''',
+  '''docs/.*\.docx$''',
+  '''pnpm-lock\.yaml$''',
+  '''package-lock\.json$'''
+]

@@ -1,0 +1,36 @@
+{
+  "name": "proyecto-comercial360",
+  "version": "1.0.0",
+  "packageManager": "pnpm@10.28.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "audit:architecture": "./scripts/check-clean-architecture.sh --all",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "app/backend/src/**/*.{ts,js}": [
+      "prettier --write"
+    ],
+    "app/frontend/src/**/*.{ts,tsx,js,jsx}": [
+      "prettier --write"
+    ]
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.4",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.6.0",
+    "prettier": "^3.4.2"
+  },
+  "pnpm": {
+    "overrides": {
+      "multer@<2.5.0": "^2.5.0",
+      "body-parser@<2.4.0": "^2.4.0"
+    }
+  }
+}

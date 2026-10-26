@@ -1,0 +1,64 @@
+# ==============================================================================
+# DOCKER COMPOSE - PRODUCCIÓN (lo ejecuta el pipeline de Jenkins, HU-21)
+# ==============================================================================
+# Uso:
+#   IMAGE_TAG=<sha> docker compose -f docker-compose.prod.yml build
+#   IMAGE_TAG=<sha> docker compose -f docker-compose.prod.yml up -d
+#
+# La base de datos (PostgreSQL / RDS) y el almacenamiento (S3) son servicios
+# externos: se configuran en el archivo de entorno (ENV_FILE, por defecto .env).
+# TLS y dominio los resuelve el proxy inverso que esté delante (por ejemplo
+# Nginx Proxy Manager), apuntando a FRONTEND_PORT y enviando X-Forwarded-Proto.
+# ==============================================================================
+
+name: comercial360-prod
+
+services:
+
+  backend:
+    build:
+      context: .
+      dockerfile: app/backend/Dockerfile
+    image: ${IMAGE_REGISTRY:-}comercial360-backend:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    env_file:
+      - path: ${ENV_FILE:-.env}
+        required: true
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      # Jenkins ejecuta las migraciones como un paso aparte del pipeline
+      RUN_MIGRATIONS: ${RUN_MIGRATIONS:-false}
+      RUN_BOOTSTRAP: ${RUN_BOOTSTRAP:-false}
+    expose:
+      - "3000"
+    networks:
+      - prod-network
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: app/frontend/Dockerfile
+    image: ${IMAGE_REGISTRY:-}comercial360-frontend:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_BIND:-0.0.0.0}:${FRONTEND_PORT:-8081}:80"
+    networks:
+      - prod-network
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  prod-network:
+    driver: bridge
