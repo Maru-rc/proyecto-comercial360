@@ -16,16 +16,16 @@ export const RESET_PASSWORD_TOKEN_SECONDS = 60 * 60;
 
 /**
  * Proxies between the client and the backend (host nginx, frontend container,
- * Docker network). Without them a two-hop X-Forwarded-For is not resolved and
- * every client shares one rate-limit bucket on sign-in.
+ * Docker network), from TRUSTED_PROXY_CIDRS (comma separated). Without them a
+ * two-hop X-Forwarded-For is not resolved and every client shares one
+ * rate-limit bucket on sign-in.
  */
-export const TRUSTED_PROXY_CIDRS = [
-  '127.0.0.0/8',
-  '10.0.0.0/8',
-  '172.16.0.0/12',
-  '192.168.0.0/16',
-  '::1/128',
-];
+export function trustedProxies(env: NodeJS.ProcessEnv = process.env): string[] {
+  return (env.TRUSTED_PROXY_CIDRS ?? '')
+    .split(',')
+    .map((cidr) => cidr.trim())
+    .filter(Boolean);
+}
 
 export interface AuthHooks {
   /** HU-22: delivers the recovery link (email adapter behind a port). */
@@ -95,7 +95,7 @@ export function createAuth(
       useSecureCookies: env.NODE_ENV === 'production',
       defaultCookieAttributes: { httpOnly: true, sameSite: 'lax' },
       disableOriginCheck: false,
-      ipAddress: { trustedProxies: TRUSTED_PROXY_CIDRS },
+      ipAddress: { trustedProxies: trustedProxies(env) },
     },
   });
 }
