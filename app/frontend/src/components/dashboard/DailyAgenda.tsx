@@ -10,13 +10,10 @@ interface DailyAgendaProps {
 
 export const DailyAgenda: React.FC<DailyAgendaProps> = ({
   items,
-  fechaTexto = 'Martes, 21 de mayo',
+  fechaTexto = '',
 }) => {
   const navigate = useNavigate();
-  // By default, open item #3 (ConstruInnova) to match mockup diseno_02.png
-  const [selectedId, setSelectedId] = useState<string>(
-    items[2]?.id || items[0]?.id || '',
-  );
+  const [selectedId, setSelectedId] = useState<string>(items[0]?.id || '');
 
   return (
     <div className="flex flex-col h-full bg-white rounded-xl border border-slate-200/90 shadow-xs p-4">
@@ -127,7 +124,7 @@ export const DailyAgenda: React.FC<DailyAgendaProps> = ({
                       navigate(
                         `/visitas/registrar?cliente=${encodeURIComponent(
                           item.cliente,
-                        )}&visita=${item.id}&hora=${encodeURIComponent(item.hora)}`,
+                        )}&visita=${item.id}${item.hora !== '—' ? `&hora=${encodeURIComponent(item.hora)}` : ''}`,
                       );
                     }}
                     className="w-full flex items-center justify-center gap-2 rounded-lg bg-[#EA580C] hover:bg-[#D9480F] text-white py-2 px-4 text-xs font-bold shadow-xs cursor-pointer transition-colors"

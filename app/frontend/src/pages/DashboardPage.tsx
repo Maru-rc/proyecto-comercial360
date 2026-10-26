@@ -11,6 +11,12 @@ import { VisitsTable } from '../components/dashboard/VisitsTable';
 import { useDashboardKpis } from '../hooks/useDashboardKpis';
 import { useRouteDraftStore } from '../store/useRouteDraftStore';
 
+const HOY_TEXTO = new Date().toLocaleDateString('es-CO', {
+  weekday: 'long',
+  day: 'numeric',
+  month: 'long',
+});
+
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { kpis, filasSeguimiento, agendaItems, isLoadingKpis } =
@@ -82,7 +88,7 @@ export const DashboardPage: React.FC = () => {
 
         {/* Right Column (4 cols in 12-grid ~ 33%) */}
         <div className="lg:col-span-4">
-          <DailyAgenda items={agendaItems} fechaTexto="Martes, 21 de mayo" />
+          <DailyAgenda items={agendaItems} fechaTexto={HOY_TEXTO} />
         </div>
       </div>
 

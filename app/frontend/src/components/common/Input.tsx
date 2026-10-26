@@ -46,6 +46,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           <input
             ref={ref}
             id={inputId}
+            required={required}
             className={`block w-full rounded-lg border text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-[#EA580C] focus:border-[#EA580C] disabled:bg-slate-50 disabled:text-slate-500 py-2 ${
               icon ? 'pl-10' : 'pl-3'
             } ${rightElement ? 'pr-10' : 'pr-3'} ${

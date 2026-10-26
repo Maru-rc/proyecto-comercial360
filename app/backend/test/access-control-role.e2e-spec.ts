@@ -796,6 +796,24 @@ describe('HU-10: role-based access control (e2e, real endpoints)', () => {
       expect(created.status).toBe(201);
       const visitId = created.body.data.id as number;
 
+      // The agenda shows the real client and the scheduled time
+      const agenda = await api(
+        'get',
+        `/visits/agenda?date=${DATE}`,
+        cookies.advisorA,
+      );
+      const item = (
+        agenda.body.data as Array<{
+          id: number;
+          clientName: string;
+          suggestedTime: string | null;
+        }>
+      ).find((v) => v.id === visitId);
+      expect(item).toMatchObject({
+        clientName: 'HU10 Customer',
+        suggestedTime: '10:15',
+      });
+
       const closed = await api('put', `/visits/${visitId}`, cookies.advisorA, {
         outcome: 'SUCCESSFUL',
         observations: 'Cliente interesado',
@@ -810,6 +828,13 @@ describe('HU-10: role-based access control (e2e, real endpoints)', () => {
       });
       expect(closed.status).toBe(200);
       expect(closed.body.data.quotationId).toEqual(expect.any(Number));
+
+      // HU-24: the detail view shows what was recorded
+      const detail = await api('get', `/visits/${visitId}`, cookies.advisorA);
+      expect(detail.body.data).toMatchObject({
+        visitStatus: 'COMPLETED',
+        observation: 'Cliente interesado',
+      });
       expect(closed.body.data.orderId).toEqual(expect.any(Number));
 
       const quotations = await api(

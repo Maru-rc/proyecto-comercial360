@@ -311,7 +311,7 @@ export const AgendaPage: React.FC = () => {
                         navigate(
                           `/visitas/registrar?cliente=${encodeURIComponent(
                             item.cliente,
-                          )}&clienteId=${item.clienteId}&visita=${item.id}&hora=${encodeURIComponent(item.hora)}`,
+                          )}&clienteId=${item.clienteId}&visita=${item.id}${item.hora !== '—' ? `&hora=${encodeURIComponent(item.hora)}` : ''}`,
                         )
                       }
                       className="inline-flex items-center gap-1.5 rounded-lg bg-[#EA580C] hover:bg-[#D9480F] text-white px-3.5 py-1.5 text-xs font-bold cursor-pointer shadow-xs transition-colors"

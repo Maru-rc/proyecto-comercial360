@@ -19,6 +19,11 @@ import {
 } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
+import { useQuery } from '@tanstack/react-query';
+import { getDashboardKpis } from '../../api/kpis';
+import { getAsesores } from '../../api/rutas';
+import { useRutas } from '../../hooks/useRutas';
+import { useClientes } from '../../hooks/useClientes';
 
 interface SidebarProps {
   isMobileOpen?: boolean;
@@ -57,6 +62,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const showRutasSubmenu = rutasExpanded || isRutasRoute;
 
   const isDirector = user?.rol === 'DIRECTOR_REGIONAL';
+  const { data: kpis } = useQuery({
+    queryKey: ['kpis', 'sidebar'],
+    queryFn: () => getDashboardKpis(),
+    enabled: !isDirector,
+    staleTime: 1000 * 60 * 5,
+  });
+  const { data: asesores = [] } = useQuery({
+    queryKey: ['asesores'],
+    queryFn: getAsesores,
+    enabled: isDirector,
+  });
+  const { rutas } = useRutas();
+  const { clientes } = useClientes();
+  const cumplimiento = Math.min(kpis?.porcentajeCumplimiento ?? 0, 100);
+  const resumenAsesor = kpis
+    ? `Objetivo semanal: ${kpis.porcentajeCumplimiento}% cumplimiento (${kpis.completadasVisitas}/${kpis.metaVisitas} visitas)`
+    : 'Objetivo semanal';
 
   const navItems = [
     { name: 'Dashboard', icon: LayoutDashboard, path: '/' },
@@ -283,13 +305,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
               className="flex flex-col items-center justify-center rounded-xl bg-slate-800/60 p-2.5 border border-slate-700/50 w-full hover:bg-slate-800 cursor-pointer transition-colors"
               title={
                 isDirector
-                  ? 'Resumen regional: 24 rutas activas, 12 asesores'
-                  : 'Objetivo semanal: 78% cumplimiento (19/24 visitas)'
+                  ? `Resumen regional: ${rutas.length} rutas, ${asesores.length} asesores`
+                  : resumenAsesor
               }
             >
               <Target className="h-5 w-5 text-orange-400" />
               <span className="text-[10px] font-extrabold text-white mt-1">
-                78%
+                {isDirector ? rutas.length : `${cumplimiento}%`}
               </span>
             </div>
           ) : isDirector ? (
@@ -302,16 +324,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
               <div className="space-y-1.5">
                 <div className="flex justify-between text-xs">
-                  <span className="text-slate-400">Rutas activas:</span>
-                  <span className="font-bold text-white">24</span>
+                  <span className="text-slate-400">Rutas:</span>
+                  <span className="font-bold text-white">{rutas.length}</span>
                 </div>
                 <div className="flex justify-between text-xs">
                   <span className="text-slate-400">Asesores activos:</span>
-                  <span className="font-bold text-white">12</span>
+                  <span className="font-bold text-white">
+                    {asesores.length}
+                  </span>
                 </div>
                 <div className="flex justify-between text-xs">
                   <span className="text-slate-400">Clientes región:</span>
-                  <span className="font-bold text-white">1.285</span>
+                  <span className="font-bold text-white">
+                    {clientes.length.toLocaleString('es-CO')}
+                  </span>
                 </div>
               </div>
             </div>
@@ -324,18 +350,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </span>
               </div>
               <div className="flex items-baseline gap-1.5 my-1">
-                <span className="text-xl font-extrabold text-white">78%</span>
+                <span className="text-xl font-extrabold text-white">
+                  {kpis ? `${kpis.porcentajeCumplimiento}%` : '—'}
+                </span>
                 <span className="text-[11px] text-slate-400">
                   de cumplimiento
                 </span>
               </div>
               {/* Progress Bar */}
               <div className="w-full bg-slate-700 h-2 rounded-full overflow-hidden my-2">
-                <div className="bg-[#EA580C] h-full rounded-full w-[78%]"></div>
+                <div
+                  className="bg-[#EA580C] h-full rounded-full"
+                  style={{ width: `${cumplimiento}%` }}
+                />
               </div>
               <div className="text-[10px] text-slate-400 flex justify-between">
-                <span>Meta: 24 visitas</span>
-                <span>Completadas: 19</span>
+                <span>Meta: {kpis?.metaVisitas ?? '—'} visitas</span>
+                <span>Completadas: {kpis?.completadasVisitas ?? '—'}</span>
               </div>
             </div>
           )}

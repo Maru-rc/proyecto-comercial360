@@ -19,28 +19,8 @@ import { getVisita } from '../api/visitas';
 import { useClientes } from '../hooks/useClientes';
 import { useAuthStore } from '../store/useAuthStore';
 import { ICliente } from '../types/cliente';
+import { DIAS_SEMANA as DIAS, isoWeek } from '../lib/semana';
 import { IS3UploadResponse } from '../api/storage';
-
-const DIAS = [
-  'Domingo',
-  'Lunes',
-  'Martes',
-  'Miércoles',
-  'Jueves',
-  'Viernes',
-  'Sábado',
-];
-
-/** ISO-8601 week number of a date. */
-const isoWeek = (date: Date): number => {
-  const d = new Date(
-    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
-  );
-  const day = d.getUTCDay() || 7;
-  d.setUTCDate(d.getUTCDate() + 4 - day);
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
-};
 
 const findCliente = (
   clientes: ICliente[],
@@ -209,6 +189,15 @@ export const VisitasPage: React.FC = () => {
     [clientes, clienteIdVisita, clienteIdParam, clienteNombre],
   );
 
+  // Week and weekday follow the visit date
+  const fechaVisita = useWatch({ control, name: 'fecha_visita' });
+  useEffect(() => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(fechaVisita ?? '')) return;
+    const fecha = new Date(`${fechaVisita}T12:00:00`);
+    setValue('semana', isoWeek(fecha));
+    setValue('dia', DIAS[fecha.getDay()]);
+  }, [fechaVisita, setValue]);
+
   // HU-24: an existing visit opens with its stored data
   useEffect(() => {
     const visita = visitaQuery.data;
@@ -229,15 +218,16 @@ export const VisitasPage: React.FC = () => {
     const match = activeCliente;
     setValue('id_cliente', match ? String(match.id_cliente) : '');
     if (!match) return;
-    setValue('codigo_cliente', match.codigo);
-    setValue('municipio', match.municipio);
-    setValue('tipo_cliente', match.tipo_cliente_nombre);
+    if (!clienteNombre) setValue('cliente_nombre', match.nombre_comercial);
+    setValue('codigo_cliente', match.codigo ?? '');
+    setValue('municipio', match.municipio ?? '');
+    setValue('tipo_cliente', match.tipo_cliente_nombre ?? '');
     if (match.contactos && match.contactos[0]) {
-      setValue('contacto', match.contactos[0].nombre);
-      setValue('cargo', match.contactos[0].cargo);
-      setValue('telefono', match.contactos[0].telefono);
+      setValue('contacto', match.contactos[0].nombre ?? '');
+      setValue('cargo', match.contactos[0].cargo ?? '');
+      setValue('telefono', match.contactos[0].telefono ?? '');
     }
-  }, [activeCliente, setValue]);
+  }, [activeCliente, clienteNombre, setValue]);
 
   const titulo = soloLectura
     ? 'Detalle de visita'
@@ -344,9 +334,16 @@ export const VisitasPage: React.FC = () => {
           No se pudo cargar la visita: no existe o pertenece a otro asesor.
         </p>
       )}
-      {(submitError || errors.id_cliente) && (
-        <p className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-700">
-          {submitError || errors.id_cliente?.message}
+      {(submitError || Object.keys(errors).length > 0) && (
+        <p
+          role="alert"
+          className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs font-semibold text-red-700"
+        >
+          {submitError ||
+            Object.values(errors)
+              .map((e) => e?.message)
+              .filter(Boolean)
+              .join(' · ')}
         </p>
       )}
 

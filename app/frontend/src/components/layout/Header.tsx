@@ -12,6 +12,9 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { useFilterStore } from '../../store/useFilterStore';
 import { useNavigate } from 'react-router-dom';
 import { useVisitasAgenda } from '../../hooks/useVisitasAgenda';
+import { useQuery } from '@tanstack/react-query';
+import { getCatalogosClientes } from '../../api/clientes';
+import { semanasRecientes } from '../../lib/semana';
 
 interface HeaderProps {
   onToggleSidebar?: () => void;
@@ -29,8 +32,8 @@ export const Header: React.FC<HeaderProps> = ({
   const {
     territorio,
     setTerritorio,
-    semana,
-    setSemana,
+    semanaNumero,
+    setSemanaNumero,
     regional,
     setRegional,
     searchQuery,
@@ -39,6 +42,12 @@ export const Header: React.FC<HeaderProps> = ({
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [notifMenuOpen, setNotifMenuOpen] = useState(false);
   const [readIds, setReadIds] = useState<string[]>([]);
+  const [semanas] = useState(() => semanasRecientes(6));
+  const { data: catalogos } = useQuery({
+    queryKey: ['clientes', 'catalogos'],
+    queryFn: getCatalogosClientes,
+    staleTime: 1000 * 60 * 30,
+  });
   const { agenda } = useVisitasAgenda();
 
   // Field notifications: today's visits still pending for the session
@@ -180,10 +189,12 @@ export const Header: React.FC<HeaderProps> = ({
                 onChange={(e) => setTerritorio(e.target.value)}
                 className="bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer pr-1"
               >
-                <option value="NORTE">NORTE</option>
-                <option value="SUR">SUR</option>
-                <option value="CENTRO">CENTRO</option>
-                <option value="ORIENTE">ORIENTE</option>
+                <option value="Todos">Todos</option>
+                {catalogos?.zonas.map((z) => (
+                  <option key={z.id} value={z.nombre}>
+                    {z.nombre}
+                  </option>
+                ))}
               </select>
               <ChevronDown className="h-3 w-3 text-slate-400" />
             </div>
@@ -198,13 +209,15 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="flex items-center gap-1.5">
             <Calendar className="h-3.5 w-3.5 text-slate-400" />
             <select
-              value={semana}
-              onChange={(e) => setSemana(e.target.value)}
+              value={semanaNumero}
+              onChange={(e) => setSemanaNumero(Number(e.target.value))}
               className="bg-transparent text-xs font-semibold text-slate-800 focus:outline-none cursor-pointer"
             >
-              <option value="20 - 26 May 2024">20 - 26 May 2024</option>
-              <option value="27 May - 02 Jun 2024">27 May - 02 Jun 2024</option>
-              <option value="13 - 19 May 2024">13 - 19 May 2024</option>
+              {semanas.map((s) => (
+                <option key={s.numero} value={s.numero}>
+                  {s.etiqueta}
+                </option>
+              ))}
             </select>
           </div>
         </div>

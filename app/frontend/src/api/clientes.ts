@@ -24,6 +24,9 @@ export const getClienteById = async (id: string): Promise<ICliente> => {
   return res.data;
 };
 
+/** Empty form fields travel as absent: the backend validates any sent value. */
+const optional = (value?: string | null) => value?.trim() || undefined;
+
 const toClientePayload = (nuevo: Partial<ICliente>) => {
   const primaryContact = nuevo.contactos?.[0];
   return {
@@ -33,8 +36,8 @@ const toClientePayload = (nuevo: Partial<ICliente>) => {
     direccion: nuevo.direccion,
     departamento: nuevo.departamento,
     municipio: nuevo.municipio,
-    telefono: nuevo.telefono,
-    email: nuevo.email,
+    telefono: optional(nuevo.telefono),
+    email: optional(nuevo.email),
     zona: nuevo.zona_nombre,
     tipo_cliente: nuevo.tipo_cliente_nombre,
     potencial: nuevo.potencial_nombre,
@@ -42,9 +45,9 @@ const toClientePayload = (nuevo: Partial<ICliente>) => {
     latitud: nuevo.latitud,
     longitud: nuevo.longitud,
     contacto_nombre: primaryContact?.nombre,
-    contacto_cargo: primaryContact?.cargo,
-    contacto_telefono: primaryContact?.telefono,
-    contacto_email: primaryContact?.email,
+    contacto_cargo: optional(primaryContact?.cargo),
+    contacto_telefono: optional(primaryContact?.telefono),
+    contacto_email: optional(primaryContact?.email),
   };
 };
 

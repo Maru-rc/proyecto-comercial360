@@ -24,6 +24,13 @@ function parseTimeToDate(time?: string | null, baseDate?: Date): Date | null {
   return null;
 }
 
+/** "HH:mm" of a scheduled timestamp; null for a date-only (midnight) visit. */
+function timeOfDay(date: Date | null | undefined): string | null {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return null;
+  if (date.getHours() === 0 && date.getMinutes() === 0) return null;
+  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+}
+
 export class VisitMapper {
   static toDomain(orm: VisitOrmEntity): Visit {
     return Visit.create({
@@ -33,7 +40,7 @@ export class VisitMapper {
       routeId: orm.routeId,
       scheduledDate: orm.scheduledDate,
       visitOrder: orm.visitOrder,
-      startTime: orm.startTime,
+      startTime: orm.startTime ?? timeOfDay(orm.scheduledDate),
       endTime: orm.endTime
         ? orm.endTime instanceof Date
           ? orm.endTime.toISOString()

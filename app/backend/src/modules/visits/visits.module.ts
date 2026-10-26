@@ -16,10 +16,13 @@ import { VisitOrmEntity } from './infrastructure/persistence/entities/visit.orm-
 import { TypeOrmVisitRepository } from './infrastructure/persistence/typeorm-visit.repository.js';
 import { TypeOrmVisitUnitOfWork } from './infrastructure/persistence/typeorm-visit-unit-of-work.js';
 import { VisitsController } from './interfaces/http/visits.controller.js';
+import { ClientsModule } from '../clients/clients.module.js';
 
 @Module({
   imports: [
     AuthModule,
+    // CLIENT_READER: agenda and map show the client's name, address and pin
+    ClientsModule,
     TypeOrmModule.forFeature([VisitOrmEntity, VisitOutcomeOrmEntity]),
   ],
   controllers: [VisitsController],

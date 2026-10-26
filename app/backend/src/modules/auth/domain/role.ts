@@ -5,4 +5,4 @@ export {
   type Role,
   isUserRole,
   isRole,
-} from '../../../domain-contracts/auth/index.js';
+} from '../../../domain-contracts/auth/roles.js';
