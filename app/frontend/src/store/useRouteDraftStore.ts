@@ -56,7 +56,8 @@ export const useRouteDraftStore = create<RouteDraftState>((set, get) => ({
       id_cliente: cliente.id_cliente,
       cliente,
       orden: nextOrden,
-      hora_sugerida: `0${Math.min(8 + nextOrden, 17)}:00 ${nextOrden > 4 ? 'PM' : 'AM'}`,
+      // HH:mm de 24 horas, el formato que valida el backend (una hora por parada)
+      hora_sugerida: `${String(Math.min(8 + nextOrden, 17)).padStart(2, '0')}:00`,
       estado_visita: 'NO_ASIGNADO',
     };
     const updated = [...paradas, newStop];

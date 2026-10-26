@@ -1,7 +1,16 @@
-import { describe, it, expect } from 'vitest';
-import { buildAsesoresSchedule, type IAsesor } from './rutas';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+
+vi.mock('./client', () => ({
+  apiClient: { post: vi.fn(), put: vi.fn(), get: vi.fn() },
+}));
+
+import { apiClient } from './client';
+import { buildAsesoresSchedule, crearRuta, type IAsesor } from './rutas';
 import { generarNumeroDocumento } from './document-number';
-import type { IRuta } from '../types/ruta';
+import type { IParadaRuta, IRuta, IRutaFormData } from '../types/ruta';
+
+const post = vi.mocked(apiClient.post);
+const put = vi.mocked(apiClient.put);
 
 const ruta = (overrides: Partial<IRuta>): IRuta => ({
   id_ruta: '1',
@@ -50,6 +59,63 @@ describe('buildAsesoresSchedule', () => {
     expect(ana.territorio).toBe('Norte, Sur');
     expect(beto.rutasAsignadas).toBe(0);
     expect(beto.territorio).toBe('Sin territorio');
+  });
+});
+
+describe('crearRuta (HU-07/08/09)', () => {
+  afterEach(() => vi.clearAllMocks());
+
+  const form: IRutaFormData = {
+    nombre: 'Ruta Norte',
+    territorio_zona: 'Atlántico Norte',
+    dia_ejecucion: 'Lunes',
+    frecuencia: 'Semanal',
+    hora_inicio: '08:00',
+    hora_fin: '17:00',
+    descripcion: '',
+    id_asesor: '1',
+  };
+  const parada = (id_cliente: string, orden: number, hora: string) =>
+    ({
+      id: `stop-${orden}`,
+      id_cliente,
+      orden,
+      hora_sugerida: hora,
+    }) as IParadaRuta;
+
+  it('saves the stops with orden and HH:mm, then assigns the advisor', async () => {
+    post
+      .mockResolvedValueOnce({
+        data: { id: 9, name: 'Ruta Norte', status: 'BORRADOR' },
+      })
+      .mockResolvedValueOnce({ data: {} });
+    put.mockResolvedValue({ data: {} });
+
+    await crearRuta(form, [parada('2', 1, '09:00'), parada('3', 2, '10:00')]);
+
+    // The backend whitelists `orden`: `orden_visita` was rejected with a 400
+    expect(put).toHaveBeenCalledWith('/rutas/9/paradas', {
+      paradas: [
+        { id_cliente: 2, orden: 1, hora_sugerida: '09:00' },
+        { id_cliente: 3, orden: 2, hora_sugerida: '10:00' },
+      ],
+    });
+    expect(post).toHaveBeenLastCalledWith(
+      '/rutas/9/asignar',
+      expect.objectContaining({ id_asesor: 1 }),
+    );
+  });
+
+  it('does not assign the advisor when saving the stops fails', async () => {
+    post.mockResolvedValueOnce({
+      data: { id: 9, name: 'Ruta Norte', status: 'BORRADOR' },
+    });
+    put.mockRejectedValue(new Error('400'));
+
+    await expect(crearRuta(form, [parada('2', 1, '09:00')])).rejects.toThrow(
+      '400',
+    );
+    expect(post).toHaveBeenCalledTimes(1);
   });
 });
 
