@@ -25,8 +25,11 @@ export class S3StorageAdapter implements IStorageService {
   constructor(private readonly configService: ConfigService) {
     const region = this.configService.get<string>('AWS_REGION', 'us-east-1');
     const endpoint = this.configService.get<string>('S3_ENDPOINT');
+    const rawForcePathStyle = this.configService.get<string | boolean>(
+      'S3_FORCE_PATH_STYLE',
+    );
     const forcePathStyle =
-      this.configService.get<string>('S3_FORCE_PATH_STYLE') === 'true';
+      rawForcePathStyle === true || rawForcePathStyle === 'true';
     const accessKeyId = this.configService.get<string>('AWS_ACCESS_KEY_ID');
     const secretAccessKey = this.configService.get<string>(
       'AWS_SECRET_ACCESS_KEY',
