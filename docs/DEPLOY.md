@@ -8,7 +8,7 @@ Esta guía cubre cómo se despliega la aplicación con el Jenkins del proyecto. 
 |---|---|---|
 | Imagen del backend | `app/backend/Dockerfile` | Compila NestJS con pnpm y deja un runtime con `dist/`, dependencias de producción y el certificado CA de Amazon RDS |
 | Imagen del frontend | `app/frontend/Dockerfile` | Compila la SPA con Vite y la sirve con nginx (`nginx/nginx.conf`), que redirige `/api/` al backend |
-| Entrypoint | `docker-entrypoint.sh` | `start` (por defecto), `migrate` o `bootstrap` |
+| Entrypoint | `docker-entrypoint.sh` | `start` (por defecto), `migrate`, `bootstrap` o `set-password` |
 | Orquestación | `docker-compose.prod.yml` | Backend y frontend con healthchecks; todo configurable por variables |
 | Pipeline | `Jenkinsfile` | Calidad → imágenes → migraciones → despliegue → smoke test, con rollback |
 | Jenkins del proyecto | `infra/jenkins/` | Jenkins LTS con Docker CLI, compose y Node 22 |
@@ -81,6 +81,25 @@ docker compose -f infra/jenkins/docker-compose.yml exec jenkins \
 1. Añade al `.env` de la credencial `BOOTSTRAP_DIRECTOR_EMAIL` y `BOOTSTRAP_DIRECTOR_PASSWORD` (mínimo 12 caracteres).
 2. Lanza **Build with Parameters** con `RUN_BOOTSTRAP=true`. El bootstrap es idempotente y no duplica nada si se repite.
 3. Entra con ese usuario en `https://<dominio>`. Después puedes quitar las variables `BOOTSTRAP_*` del `.env`.
+
+## Crear usuarios o cambiar una contraseña
+
+El registro público está cerrado, así que los asesores y directores se crean desde el servidor. El mismo comando cambia la contraseña de un usuario que ya existe (por ejemplo, si se olvidó y su correo no es real):
+
+```bash
+# Cambiar la contraseña
+docker compose -f docker-compose.prod.yml run --rm --no-deps \
+  -e USER_EMAIL=juan.perez@comercial360.com -e USER_PASSWORD='<mínimo 12 caracteres>' \
+  backend set-password
+
+# Crear un asesor (queda enlazado a su registro de asesor comercial)
+docker compose -f docker-compose.prod.yml run --rm --no-deps \
+  -e USER_EMAIL=laura.gomez@comercial360.com -e USER_PASSWORD='<mínimo 12 caracteres>' \
+  -e USER_NAME='Laura Gómez' -e USER_ROLE=ADVISOR -e USER_PHONE=3015550101 \
+  backend set-password
+```
+
+`USER_ROLE` puede ser `ADVISOR` (por defecto) o `DIRECTOR`.
 
 Cada push a `main` despliega de nuevo. Las imágenes se etiquetan con el commit (`comercial360-backend:<sha>`).
 
