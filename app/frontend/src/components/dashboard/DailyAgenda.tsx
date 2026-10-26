@@ -143,7 +143,7 @@ export const DailyAgenda: React.FC<DailyAgendaProps> = ({
       <div className="pt-2 border-t border-slate-100 text-center">
         <button
           type="button"
-          onClick={() => navigate('/visitas/registrar')}
+          onClick={() => navigate('/agenda')}
           className="inline-flex items-center gap-1 text-xs font-bold text-slate-700 hover:text-[#EA580C] cursor-pointer transition-colors"
         >
           Ver agenda completa <ChevronRight className="h-3.5 w-3.5" />

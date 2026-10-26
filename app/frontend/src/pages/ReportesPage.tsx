@@ -1,10 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Download, FileSpreadsheet, CheckCircle } from 'lucide-react';
-import { getSeguimientoVisitas, downloadCsvReport } from '../api/kpis';
+import { Download, CheckCircle } from 'lucide-react';
+import { getSeguimientoVisitas } from '../api/kpis';
 import { getCotizaciones } from '../api/cotizaciones';
 import { getPedidos } from '../api/pedidos';
-import { getClientes } from '../api/clientes';
+import { getClientes, getCatalogosClientes } from '../api/clientes';
 import { Badge } from '../components/common/Badge';
 import { Pagination } from '../components/common/Pagination';
 
@@ -13,6 +13,26 @@ const toCsvCell = (value: unknown): string => {
   let text = value === null || value === undefined ? '' : String(value);
   if (/^[=+\-@\t\r]/.test(text)) text = `'${text}`;
   return `"${text.replace(/"/g, '""')}"`;
+};
+
+/** Downloads rows as a UTF-8 CSV (with BOM, so Excel opens it correctly). */
+const descargarCsv = (
+  nombreArchivo: string,
+  headers: string[],
+  filas: unknown[][],
+) => {
+  const csvContent =
+    '﻿' +
+    [headers.join(','), ...filas.map((f) => f.map(toCsvCell).join(','))].join(
+      '\n',
+    );
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = nombreArchivo;
+  link.click();
+  URL.revokeObjectURL(url);
 };
 
 const enRango = (fecha: string | undefined, desde: string, hasta: string) => {
@@ -55,6 +75,11 @@ export const ReportesPage: React.FC = () => {
     queryKey: ['clientes'],
     queryFn: () => getClientes(),
     enabled: tipoReporte === 'clientes',
+  });
+  const { data: catalogos } = useQuery({
+    queryKey: ['clientes', 'catalogos'],
+    queryFn: getCatalogosClientes,
+    staleTime: 1000 * 60 * 30,
   });
 
   const seguimiento = useMemo(
@@ -101,108 +126,96 @@ export const ReportesPage: React.FC = () => {
           ? pedidos.length
           : clientes.length;
 
-  const handleDownloadReport = async (format: 'csv' | 'excel') => {
+  // Exports exactly the filtered rows shown in the preview
+  const handleDownloadReport = () => {
     setDownloadError('');
     if (tipoReporte === 'visitas') {
-      try {
-        await downloadCsvReport(territorio, fechaHasta, 'month');
-      } catch {
-        setDownloadError('No se pudo generar el reporte de seguimiento.');
-        return;
-      }
+      descargarCsv(
+        `Reporte_Visitas_Comercial360_${fechaDesde}_a_${fechaHasta}.csv`,
+        [
+          'Fecha',
+          'Asesor',
+          'Territorio',
+          'Semana',
+          'Dia',
+          'Ruta',
+          'Cliente',
+          'Municipio',
+          'Tipo_Cliente',
+          'Potencial',
+          'Estado',
+          'Resultado',
+          'Cotizacion',
+          'Valor_Cotizacion',
+          'Pedido',
+          'Proximo_Seguimiento',
+        ],
+        seguimiento.map((f) => [
+          f.fecha,
+          f.asesor,
+          f.territorio,
+          f.semana,
+          f.dia,
+          f.ruta,
+          f.cliente,
+          f.municipio,
+          f.tipo_cliente,
+          f.potencial,
+          f.estado_visita,
+          f.resultado,
+          f.cotizacion,
+          f.valor_cotizacion,
+          f.pedido,
+          f.proximo_seguimiento,
+        ]),
+      );
     } else if (tipoReporte === 'cotizaciones') {
-      const headers = [
-        'Numero',
-        'Cliente',
-        'Fecha',
-        'Validez',
-        'Asesor',
-        'Valor',
-        'Estado',
-      ];
-      const rows = cotizaciones.map((c) => [
-        c.numero,
-        c.cliente_nombre,
-        c.fecha,
-        c.validez,
-        c.asesor_nombre,
-        c.valor,
-        c.estado,
-      ]);
-      const csvContent =
-        '\uFEFF' +
-        [
-          headers.join(','),
-          ...rows.map((r) => r.map(toCsvCell).join(',')),
-        ].join('\n');
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `Reporte_Cotizaciones_Comercial360.${format === 'excel' ? 'csv' : 'csv'}`;
-      link.click();
+      descargarCsv(
+        'Reporte_Cotizaciones_Comercial360.csv',
+        ['Numero', 'Cliente', 'Fecha', 'Valor', 'Estado'],
+        cotizaciones.map((c) => [
+          c.numero,
+          c.cliente_nombre,
+          c.fecha,
+          c.valor,
+          c.estado,
+        ]),
+      );
     } else if (tipoReporte === 'pedidos') {
-      const headers = [
-        'Numero',
-        'Cliente',
-        'Fecha',
-        'Fecha_Entrega',
-        'Asesor',
-        'Valor',
-        'Estado',
-      ];
-      const rows = pedidos.map((p) => [
-        p.numero,
-        p.cliente_nombre,
-        p.fecha,
-        p.fecha_entrega,
-        p.asesor_nombre,
-        p.valor,
-        p.estado,
-      ]);
-      const csvContent =
-        '\uFEFF' +
-        [
-          headers.join(','),
-          ...rows.map((r) => r.map(toCsvCell).join(',')),
-        ].join('\n');
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `Reporte_Pedidos_Comercial360.${format === 'excel' ? 'csv' : 'csv'}`;
-      link.click();
+      descargarCsv(
+        'Reporte_Pedidos_Comercial360.csv',
+        ['Numero', 'Cliente', 'Fecha', 'Fecha_Entrega', 'Valor', 'Estado'],
+        pedidos.map((p) => [
+          p.numero,
+          p.cliente_nombre,
+          p.fecha,
+          p.fecha_entrega,
+          p.valor,
+          p.estado,
+        ]),
+      );
     } else {
-      const headers = [
-        'Codigo',
-        'Cliente',
-        'NIT',
-        'Municipio',
-        'Direccion',
-        'Tipo',
-        'Potencial',
-      ];
-      const rows = clientes.map((c) => [
-        c.codigo,
-        c.nombre_comercial,
-        c.nit,
-        c.municipio,
-        c.direccion,
-        c.tipo_cliente_nombre,
-        c.potencial_nombre,
-      ]);
-      const csvContent =
-        '\uFEFF' +
+      descargarCsv(
+        'Directorio_Clientes_Comercial360.csv',
         [
-          headers.join(','),
-          ...rows.map((r) => r.map(toCsvCell).join(',')),
-        ].join('\n');
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `Directorio_Clientes_Comercial360.${format === 'excel' ? 'csv' : 'csv'}`;
-      link.click();
+          'Codigo',
+          'Cliente',
+          'NIT',
+          'Municipio',
+          'Direccion',
+          'Tipo',
+          'Potencial',
+        ],
+        clientes.map((c) => [
+          c.codigo,
+          c.nombre_comercial,
+          c.nit,
+          c.municipio,
+          c.direccion,
+          c.tipo_cliente_nombre,
+          c.potencial_nombre,
+        ]),
+      );
     }
 
     setDownloadSuccess(true);
@@ -219,26 +232,18 @@ export const ReportesPage: React.FC = () => {
           </h1>
           <p className="text-xs text-slate-500">
             Descargue bitácoras de campo, consolidados de ventas y carteras en
-            formato CSV y Excel.
+            formato CSV (se abre directamente en Excel).
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => handleDownloadReport('csv')}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 px-3.5 py-2 text-xs font-bold cursor-pointer transition-colors shadow-2xs"
+            onClick={handleDownloadReport}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-[#EA580C] hover:bg-[#D9480F] text-white px-4 py-2 text-xs font-bold cursor-pointer shadow-sm transition-colors"
           >
             <Download className="h-4 w-4" />
             Descargar CSV
-          </button>
-          <button
-            type="button"
-            onClick={() => handleDownloadReport('excel')}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-[#EA580C] hover:bg-[#D9480F] text-white px-4 py-2 text-xs font-bold cursor-pointer shadow-sm transition-colors"
-          >
-            <FileSpreadsheet className="h-4 w-4" />
-            Exportar Excel
           </button>
         </div>
       </div>
@@ -331,9 +336,11 @@ export const ReportesPage: React.FC = () => {
             className="rounded-lg border border-slate-200 bg-slate-50 py-1 px-2 text-slate-800"
           >
             <option value="Todos">Todos</option>
-            <option value="NORTE">Atlántico Norte</option>
-            <option value="SUR">Atlántico Sur</option>
-            <option value="CENTRO">Atlántico Centro</option>
+            {catalogos?.zonas.map((zona) => (
+              <option key={zona.id} value={zona.nombre.toUpperCase()}>
+                {zona.nombre}
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -406,7 +413,6 @@ export const ReportesPage: React.FC = () => {
                   <th className="py-2.5 px-3">Número</th>
                   <th className="py-2.5 px-3">Cliente</th>
                   <th className="py-2.5 px-3">Fecha</th>
-                  <th className="py-2.5 px-3">Vigencia</th>
                   <th className="py-2.5 px-3">Valor (COP)</th>
                   <th className="py-2.5 px-3">Estado</th>
                 </tr>
@@ -423,7 +429,6 @@ export const ReportesPage: React.FC = () => {
                         {c.cliente_nombre}
                       </td>
                       <td className="py-2 px-3 font-mono">{c.fecha}</td>
-                      <td className="py-2 px-3 font-mono">{c.validez}</td>
                       <td className="py-2 px-3 font-mono font-bold">
                         $ {c.valor.toLocaleString('es-CO')}
                       </td>

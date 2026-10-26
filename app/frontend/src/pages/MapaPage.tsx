@@ -8,6 +8,15 @@ import {
 import { Badge } from '../components/common/Badge';
 import { useVisitasMap } from '../hooks/useVisitasMap';
 
+// Pin states come from the backend in English
+const ESTADO_PIN: Record<string, string> = {
+  VISITED: 'Visitado',
+  PENDING: 'Pendiente',
+  ORDER_CLOSED: 'Pedido cerrado',
+  NOT_VISITED: 'Sin visitar',
+  RESCHEDULED: 'Reprogramado',
+};
+
 export const MapaPage: React.FC = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
@@ -17,19 +26,40 @@ export const MapaPage: React.FC = () => {
   const { mapStops, isLoading } = useVisitasMap();
 
   // Stops without geocoding are listed in the agenda, never placed on a guess
-  const allMarkers: IMapMarkerItem[] = mapStops
-    .filter((stop) => stop.latitude !== null && stop.longitude !== null)
-    .map((stop, idx) => ({
-      id: String(stop.id || stop.clientId || idx + 1),
-      lat: Number(stop.latitude),
-      lng: Number(stop.longitude),
-      title: stop.clientName,
-      subtitle: stop.address || `Parada #${stop.order || idx + 1}`,
-      orden: stop.order ?? idx + 1,
-      estado: stop.pinStatus,
-      colorHex: stop.colorHex,
-      direccion: stop.address || '',
-    }));
+  const geoStops = mapStops.filter(
+    (stop) => stop.latitude !== null && stop.longitude !== null,
+  );
+  const markerId = (stop: (typeof geoStops)[number], idx: number) =>
+    String(stop.id || stop.clientId || idx + 1);
+
+  // The backend does not store the stop order (it always sends 1), but the
+  // visits come sorted by time, so the position is the real order
+  const allMarkers: IMapMarkerItem[] = geoStops.map((stop, idx) => ({
+    id: markerId(stop, idx),
+    lat: Number(stop.latitude),
+    lng: Number(stop.longitude),
+    title: stop.clientName,
+    subtitle: stop.address || `Parada #${idx + 1}`,
+    orden: idx + 1,
+    estado: stop.pinStatus,
+    colorHex: stop.colorHex,
+    direccion: stop.address || '',
+  }));
+
+  // "Visitar" opens the scheduled visit (it used to create a new one);
+  // a visit already registered opens read-only
+  const visitarParada = (marker: IMapMarkerItem) => {
+    const stop = geoStops.find((s, idx) => markerId(s, idx) === marker.id);
+    if (!stop?.id) {
+      navigate(`/visitas/registrar?clienteId=${stop?.clientId ?? ''}`);
+      return;
+    }
+    const registrada =
+      marker.estado === 'VISITED' || marker.estado === 'ORDER_CLOSED';
+    navigate(
+      `/visitas/registrar?visita=${stop.id}${registrada ? '&modo=ver' : ''}`,
+    );
+  };
 
   const filteredMarkers = allMarkers.filter((m) => {
     const matchesSearch =
@@ -163,7 +193,7 @@ export const MapaPage: React.FC = () => {
                       #{marker.orden} {marker.title}
                     </span>
                     <Badge variant={marker.estado?.toLowerCase() || 'default'}>
-                      {marker.estado}
+                      {ESTADO_PIN[marker.estado ?? ''] ?? marker.estado}
                     </Badge>
                   </div>
                   <p className="text-[11px] text-slate-500 truncate">
@@ -177,9 +207,7 @@ export const MapaPage: React.FC = () => {
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        navigate(
-                          `/visitas/registrar?cliente=${encodeURIComponent(marker.title)}`,
-                        );
+                        visitarParada(marker);
                       }}
                       className="inline-flex items-center gap-1 text-[11px] font-bold text-[#EA580C] hover:underline"
                     >

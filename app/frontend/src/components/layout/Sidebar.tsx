@@ -85,10 +85,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
     {
       name: 'Planeación de rutas',
       icon: Route,
-      path: '/rutas',
+      path: isDirector ? '/rutas' : '/rutas/asignadas',
       hasSubmenu: true,
       subItems: [
-        { name: 'Creación de rutas', path: '/rutas' },
+        // Crear rutas es solo del director (POST /rutas responde 403 al asesor)
+        ...(isDirector ? [{ name: 'Creación de rutas', path: '/rutas' }] : []),
         { name: 'Rutas asignadas', path: '/rutas/asignadas' },
         { name: 'Agenda de asesores', path: '/rutas/agenda' },
       ],

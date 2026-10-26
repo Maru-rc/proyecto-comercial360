@@ -51,7 +51,8 @@ export const AgendaPage: React.FC = () => {
       agenda.map((a, idx) => ({
         id: String(a.id ?? idx + 1),
         clienteId: String(a.clientId),
-        orden: a.order ?? a.visitOrder ?? idx + 1,
+        // The backend always sends order 1; visits come sorted by time
+        orden: idx + 1,
         hora: a.suggestedTime || a.time || '—',
         cliente: a.clientName || `Cliente #${a.clientId}`,
         estado: toEstado(a.visitStatus || a.status),

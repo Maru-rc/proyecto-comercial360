@@ -9,7 +9,8 @@ import {
 import { DailyAgenda } from '../components/dashboard/DailyAgenda';
 import { VisitsTable } from '../components/dashboard/VisitsTable';
 import { useDashboardKpis } from '../hooks/useDashboardKpis';
-import { useRouteDraftStore } from '../store/useRouteDraftStore';
+
+const ANIO_ACTUAL = new Date().getFullYear();
 
 const HOY_TEXTO = new Date().toLocaleDateString('es-CO', {
   weekday: 'long',
@@ -19,23 +20,30 @@ const HOY_TEXTO = new Date().toLocaleDateString('es-CO', {
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
-  const { kpis, filasSeguimiento, agendaItems, isLoadingKpis } =
+  const { kpis, filasSeguimiento, agendaItems, isLoadingKpis, isErrorKpis } =
     useDashboardKpis();
-  const { paradas } = useRouteDraftStore();
 
-  // Convert paradas to map markers
-  const markers: IMapMarkerItem[] = (paradas || []).map((p) => ({
-    id: p.id,
-    lat: p.cliente?.latitud ?? 10.9685,
-    lng: p.cliente?.longitud ?? -74.7813,
-    title: p.cliente?.nombre_comercial || 'Cliente',
-    subtitle: `${p.cliente?.tipo_cliente_nombre || ''} • ${p.hora_sugerida || ''}`,
-    orden: p.orden,
-    estado: p.estado_visita || 'PENDIENTE',
-    direccion: p.cliente?.direccion || '',
-  }));
+  // Today's real visits (the same ones as "Agenda del día"); those without
+  // coordinates are only listed in the agenda, never placed on a guess
+  const markers: IMapMarkerItem[] = agendaItems
+    .filter(
+      (a) =>
+        Number.isFinite(a.latitud) &&
+        Number.isFinite(a.longitud) &&
+        (a.latitud !== 0 || a.longitud !== 0),
+    )
+    .map((a) => ({
+      id: a.id,
+      lat: a.latitud,
+      lng: a.longitud,
+      title: a.cliente,
+      subtitle: a.hora,
+      orden: a.orden,
+      estado: a.estado.toUpperCase().replace(/ /g, '_'),
+      direccion: a.direccion || '',
+    }));
 
-  if (isLoadingKpis || !kpis) {
+  if (isLoadingKpis) {
     return (
       <div className="flex h-64 items-center justify-center">
         <div className="text-center space-y-2">
@@ -51,7 +59,18 @@ export const DashboardPage: React.FC = () => {
   return (
     <div className="space-y-5 pb-16 relative">
       {/* 6 KPI Cards Row */}
-      <KpiCards data={kpis} />
+      {kpis ? (
+        <KpiCards data={kpis} />
+      ) : (
+        <div
+          role="alert"
+          className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs font-semibold text-rose-700"
+        >
+          {isErrorKpis
+            ? 'No se pudieron cargar los indicadores. Recarga la página para intentar de nuevo.'
+            : 'Sin indicadores para esta semana.'}
+        </div>
+      )}
 
       {/* Main Grid: Left (Map + Table) & Right (Daily Agenda) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
@@ -61,10 +80,10 @@ export const DashboardPage: React.FC = () => {
           <div className="bg-white rounded-xl border border-slate-200/90 p-4 shadow-xs space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-bold text-[#0F172A]">
-                Mapa de ruta - Martes 21 de mayo
+                Visitas de hoy - {HOY_TEXTO}
               </h2>
               <span className="text-xs text-slate-500 font-medium">
-                {paradas.length} paradas programadas
+                {markers.length} en el mapa
               </span>
             </div>
 
@@ -75,9 +94,9 @@ export const DashboardPage: React.FC = () => {
               height="340px"
               legendTitle="Estado de visita"
               onMarkerClick={(item) => {
-                navigate(
-                  `/visitas/registrar?cliente=${encodeURIComponent(item.title)}`,
-                );
+                // Opens that visit; a registered one opens read-only
+                const modo = item.estado === 'VISITADO' ? '&modo=ver' : '';
+                navigate(`/visitas/registrar?visita=${item.id}${modo}`);
               }}
             />
           </div>
@@ -111,7 +130,7 @@ export const DashboardPage: React.FC = () => {
 
       {/* Dashboard Footer */}
       <footer className="pt-6 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 gap-2 border-t border-slate-200">
-        <p>© 2024 Comercial 360. Todos los derechos reservados.</p>
+        <p>© {ANIO_ACTUAL} Comercial 360. Todos los derechos reservados.</p>
         <div className="flex items-center gap-4">
           <a href="#ayuda" className="hover:underline">
             Ayuda

@@ -1,13 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  AlertCircle,
-  Check,
-  Sparkles,
-  Plus,
-  RotateCcw,
-  Save,
-} from 'lucide-react';
+import { AlertCircle, Check, Sparkles, Plus, RotateCcw } from 'lucide-react';
 import { RouteStepper } from '../components/rutas/RouteStepper';
 import { GeneralInfoForm } from '../components/rutas/GeneralInfoForm';
 import { SortableStopTable } from '../components/rutas/SortableStopTable';
@@ -30,11 +23,16 @@ export const RutasPage: React.FC = () => {
     formData,
     limpiarRuta,
     optimizarRuta,
+    resetDraft,
   } = useRouteDraftStore();
   const { crearRuta, isCreating } = useRutas();
-  const [successToast, setSuccessToast] = useState(false);
-  const [draftToast, setDraftToast] = useState('');
+  const [successToast, setSuccessToast] = useState('');
   const [errorToast, setErrorToast] = useState('');
+
+  const mostrarError = (mensaje: string) => {
+    setErrorToast(mensaje);
+    setTimeout(() => setErrorToast(''), 6000);
+  };
 
   // Map markers from draft paradas
   const markers: IMapMarkerItem[] = (paradas || []).map((p) => ({
@@ -49,22 +47,37 @@ export const RutasPage: React.FC = () => {
   }));
 
   const handleSaveAndAssign = async () => {
+    if (!formData.nombre.trim()) {
+      mostrarError('Escribe el nombre de la ruta.');
+      return;
+    }
+    if (!formData.territorio_zona) {
+      mostrarError('Selecciona la zona de la ruta.');
+      return;
+    }
+    // crearRuta only assigns (and generates visits) with an advisor and stops
+    const seAsigna = Boolean(formData.id_asesor) && paradas.length > 0;
     try {
       await crearRuta({ formData, paradas });
-      setSuccessToast(true);
+      // The next route starts empty instead of reusing this one's data
+      resetDraft();
+      setSuccessToast(
+        seAsigna
+          ? '¡Ruta asignada y programada con éxito!'
+          : 'Ruta guardada como borrador: falta asesor o paradas para asignarla.',
+      );
       setTimeout(() => {
-        setSuccessToast(false);
-        navigate('/');
+        setSuccessToast('');
+        navigate('/rutas/asignadas');
       }, 1500);
     } catch (error) {
       // Nada se guarda en local: se muestra lo que respondió el backend
-      setErrorToast(
+      mostrarError(
         apiErrorMessage(
           error,
           'No se pudo guardar la ruta. Revisa los datos e intenta de nuevo.',
         ),
       );
-      setTimeout(() => setErrorToast(''), 6000);
     }
   };
 
@@ -89,17 +102,6 @@ export const RutasPage: React.FC = () => {
             className="rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 cursor-pointer shadow-2xs transition-colors"
           >
             Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setDraftToast('Borrador de ruta guardado con éxito.');
-              setTimeout(() => setDraftToast(''), 3000);
-            }}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 cursor-pointer shadow-2xs transition-colors"
-          >
-            <Save className="h-3.5 w-3.5" />
-            Guardar borrador
           </button>
           <button
             type="button"
@@ -192,9 +194,7 @@ export const RutasPage: React.FC = () => {
       {successToast && (
         <div className="fixed bottom-8 right-8 z-50 flex items-center gap-3 bg-emerald-600 text-white px-5 py-3.5 rounded-xl shadow-2xl animate-in fade-in slide-in-from-bottom-5">
           <Check className="h-5 w-5" />
-          <span className="text-xs font-bold">
-            ¡Ruta asignada y programada con éxito! Redirigiendo al Dashboard...
-          </span>
+          <span className="text-xs font-bold">{successToast}</span>
         </div>
       )}
 
@@ -206,14 +206,6 @@ export const RutasPage: React.FC = () => {
         >
           <AlertCircle className="h-5 w-5 shrink-0" />
           <span className="text-xs font-bold">{errorToast}</span>
-        </div>
-      )}
-
-      {/* Draft Toast */}
-      {draftToast && (
-        <div className="fixed bottom-8 right-8 z-50 flex items-center gap-3 bg-slate-800 text-white px-5 py-3.5 rounded-xl shadow-2xl animate-in fade-in slide-in-from-bottom-5">
-          <Save className="h-5 w-5 text-orange-400" />
-          <span className="text-xs font-bold">{draftToast}</span>
         </div>
       )}
     </div>

@@ -98,11 +98,52 @@ export const getSeguimientoVisitas = async (
     potencial: toPotential(row.potential),
     estado_visita: toTrackingStatus(row.visitStatus),
     resultado: row.outcome ?? '—',
-    cotizacion: row.quoteNumber ?? '—',
+    cotizacion: row.quoteNumber ?? SIN_DOCUMENTO,
     valor_cotizacion: row.quoteAmount,
-    pedido: row.orderNumber ?? '—',
+    pedido: row.orderNumber ?? SIN_DOCUMENTO,
     proximo_seguimiento: row.nextFollowUpDate ?? '—',
   }));
+};
+
+/** Valor que muestra la bitácora cuando la visita no tiene cotización o pedido */
+export const SIN_DOCUMENTO = '—';
+
+export interface ResumenSeguimiento {
+  visitas: number;
+  visitadas: number;
+  efectividad: number;
+  cotizaciones: number;
+  valorCotizado: number;
+  pedidos: number;
+}
+
+/**
+ * Totales de las tarjetas de la bitácora a partir de las filas reales.
+ * El backend repite en cada fila la última cotización/pedido del cliente,
+ * así que se cuentan por número para no sumar dos veces el mismo documento.
+ */
+export const resumirSeguimiento = (
+  filas: ISeguimientoFila[],
+): ResumenSeguimiento => {
+  const visitadas = filas.filter((f) => f.estado_visita === 'Visitado').length;
+  const cotizaciones = new Map<string, number>();
+  const pedidos = new Set<string>();
+  for (const fila of filas) {
+    if (fila.cotizacion !== SIN_DOCUMENTO) {
+      cotizaciones.set(fila.cotizacion, Number(fila.valor_cotizacion) || 0);
+    }
+    if (fila.pedido !== SIN_DOCUMENTO) pedidos.add(fila.pedido);
+  }
+  return {
+    visitas: filas.length,
+    visitadas,
+    efectividad: filas.length
+      ? Math.round((visitadas / filas.length) * 100)
+      : 0,
+    cotizaciones: cotizaciones.size,
+    valorCotizado: [...cotizaciones.values()].reduce((a, b) => a + b, 0),
+    pedidos: pedidos.size,
+  };
 };
 
 interface AgendaItemResponse {
@@ -133,7 +174,9 @@ export const getAgendaDelDia = async (
   });
   return data.map((item, idx) => ({
     id: String(item.id),
-    orden: item.order ?? item.visitOrder ?? idx + 1,
+    // El backend no guarda el orden de la parada (siempre llega 1), pero
+    // devuelve las visitas ordenadas por hora: la posición es el orden real
+    orden: idx + 1,
     hora: item.suggestedTime || item.time || '—',
     cliente: item.clientName || `Cliente #${item.clientId}`,
     estado: toTrackingStatus(

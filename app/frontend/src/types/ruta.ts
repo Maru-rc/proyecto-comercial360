@@ -22,6 +22,7 @@ export interface IRuta {
   codigo: string;
   nombre: string;
   territorio_zona: string;
+  id_zona?: string;
   dia_ejecucion: string;
   frecuencia: 'Diaria' | 'Semanal' | 'Quincenal' | 'Mensual';
   hora_inicio_sugerida: string;

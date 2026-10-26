@@ -30,7 +30,14 @@ export const Badge: React.FC<BadgeProps> = ({
 
   let variantStyles = 'bg-slate-100 text-slate-700 border-slate-200';
 
+  // "sin_visitar"/"not_visited" also contain "visit": checked first so they
+  // are gray, not green
   if (
+    normalized.includes('sin_visitar') ||
+    normalized.includes('not_visited')
+  ) {
+    variantStyles = 'bg-slate-100 text-slate-600 border-slate-200';
+  } else if (
     normalized.includes('visit') ||
     normalized === 'activo' ||
     normalized === 'active'

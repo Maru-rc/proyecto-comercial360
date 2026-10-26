@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Search,
   Plus,
@@ -84,7 +84,16 @@ const toForm = (c: ICliente): ClienteForm => ({
 export const ClientesPage: React.FC = () => {
   const navigate = useNavigate();
   const [clientes, setClientes] = useState<ICliente[]>([]);
-  const [search, setSearch] = useState('');
+  // The header search sends ?search= (also while already on this page)
+  const [searchParams] = useSearchParams();
+  const busquedaUrl = searchParams.get('search') ?? '';
+  const [search, setSearch] = useState(busquedaUrl);
+  // A new search from the header replaces the box (adjusted during render)
+  const [busquedaAplicada, setBusquedaAplicada] = useState(busquedaUrl);
+  if (busquedaUrl !== busquedaAplicada) {
+    setBusquedaAplicada(busquedaUrl);
+    if (busquedaUrl) setSearch(busquedaUrl);
+  }
   const [tipo, setTipo] = useState('Todos');
   const [selectedCliente, setSelectedCliente] = useState<ICliente | null>(null);
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
@@ -262,24 +271,27 @@ export const ClientesPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setIsImportModalOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 px-3.5 py-2 text-xs font-bold cursor-pointer shadow-xs transition-colors"
-          >
-            <Upload className="h-4 w-4 text-[#EA580C]" />
-            Importar archivo
-          </button>
-          <button
-            type="button"
-            onClick={openNewClient}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-[#EA580C] hover:bg-[#D9480F] text-white px-4 py-2 text-xs font-bold cursor-pointer shadow-sm transition-colors"
-          >
-            <Plus className="h-4 w-4" />
-            Nuevo cliente
-          </button>
-        </div>
+        {/* Crear e importar clientes es solo del director (el backend responde 403 al asesor) */}
+        {isDirector && (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsImportModalOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 px-3.5 py-2 text-xs font-bold cursor-pointer shadow-xs transition-colors"
+            >
+              <Upload className="h-4 w-4 text-[#EA580C]" />
+              Importar archivo
+            </button>
+            <button
+              type="button"
+              onClick={openNewClient}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[#EA580C] hover:bg-[#D9480F] text-white px-4 py-2 text-xs font-bold cursor-pointer shadow-sm transition-colors"
+            >
+              <Plus className="h-4 w-4" />
+              Nuevo cliente
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Filter toolbar */}
