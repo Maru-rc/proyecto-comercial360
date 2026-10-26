@@ -42,6 +42,7 @@ function mapBackendRouteToIRuta(
     codigo: `RUT-${String(record.id).padStart(3, '0')}`,
     nombre: record.name,
     territorio_zona: record.zoneName || `Zona ${record.zoneId ?? 1}`,
+    id_zona: record.zoneId ? String(record.zoneId) : undefined,
     dia_ejecucion: record.executionDay || 'Lunes',
     frecuencia: (record.frequency as IRuta['frecuencia']) || 'Semanal',
     hora_inicio_sugerida: record.startTime || '08:00',
@@ -61,6 +62,50 @@ function mapBackendRouteToIRuta(
 export const getRutas = async (): Promise<IRuta[]> => {
   const res = await apiClient.get<BackendRouteRecord[]>('/rutas');
   return res.data.map((r) => mapBackendRouteToIRuta(r));
+};
+
+/** Parada guardada de una ruta (GET /rutas/:id solo trae el id del cliente) */
+export interface IParadaGuardada {
+  id_cliente: string;
+  orden: number;
+  hora_sugerida: string | null;
+}
+
+interface BackendRouteDetail extends BackendRouteRecord {
+  paradas?: {
+    customerId: number;
+    visitOrder: number;
+    suggestedTime: string | null;
+  }[];
+}
+
+export const getParadasRuta = async (
+  idRuta: string,
+): Promise<IParadaGuardada[]> => {
+  const { data } = await apiClient.get<BackendRouteDetail>(`/rutas/${idRuta}`);
+  return (data.paradas ?? [])
+    .map((p) => ({
+      id_cliente: String(p.customerId),
+      orden: p.visitOrder,
+      hora_sugerida: p.suggestedTime ? p.suggestedTime.slice(0, 5) : null,
+    }))
+    .sort((a, b) => a.orden - b.orden);
+};
+
+/** Etiqueta y estilo del estado de una ruta (BORRADOR no está asignada) */
+export const estadoRuta = (
+  estado: IRuta['estado'],
+): { etiqueta: string; variante: string } => {
+  switch (estado) {
+    case 'ASIGNADA':
+      return { etiqueta: 'Asignada', variante: 'activo' };
+    case 'EN_CURSO':
+      return { etiqueta: 'En curso', variante: 'pendiente' };
+    case 'COMPLETADA':
+      return { etiqueta: 'Completada', variante: 'visitado' };
+    default:
+      return { etiqueta: 'Borrador', variante: 'default' };
+  }
 };
 
 const toNumericId = (value: string | undefined, label: string): number => {

@@ -3,6 +3,7 @@ import axios from 'axios';
 import { IUser, ILoginCredentials } from '../types/auth';
 import { setUnauthorizedHandler } from '../api/client';
 import { getCurrentUser, signIn, signOut } from '../api/auth';
+import { queryClient } from '../queryClient';
 
 interface AuthState {
   user: IUser | null;
@@ -50,6 +51,8 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     try {
       const user = await getCurrentUser();
+      // Datos en caché de otro usuario en este navegador no deben mostrarse
+      queryClient.clear();
       set({ user, isAuthenticated: true, isLoading: false });
       return true;
     } catch (error) {
@@ -62,6 +65,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   logout: async () => {
     await signOut().catch(() => undefined);
+    queryClient.clear();
     set({ user: null, isAuthenticated: false, isLoading: false, error: null });
   },
 
@@ -76,7 +80,10 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  clearSession: () => set({ user: null, isAuthenticated: false }),
+  clearSession: () => {
+    queryClient.clear();
+    set({ user: null, isAuthenticated: false });
+  },
 
   setUser: (user: IUser) => set({ user }),
 }));

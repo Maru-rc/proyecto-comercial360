@@ -2,7 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Eye } from 'lucide-react';
 import { ISeguimientoFila } from '../types/kpi';
-import { getSeguimientoVisitas } from '../api/kpis';
+import {
+  getSeguimientoVisitas,
+  resumirSeguimiento,
+  SIN_DOCUMENTO,
+} from '../api/kpis';
 import { Badge } from '../components/common/Badge';
 import { Modal } from '../components/common/Modal';
 import { Button } from '../components/common/Button';
@@ -37,6 +41,8 @@ export const VisitasListPage: React.FC = () => {
     return matchesSearch && matchesEstado;
   });
 
+  const resumen = resumirSeguimiento(visitas);
+
   return (
     <div className="space-y-5 pb-16">
       {/* Header */}
@@ -68,35 +74,41 @@ export const VisitasListPage: React.FC = () => {
             Visitas Registradas
           </p>
           <p className="text-xl font-extrabold text-slate-800 mt-1">
-            {visitas.length}
+            {resumen.visitas}
           </p>
-          <span className="text-[10px] text-slate-400">
-            Total en seguimiento
-          </span>
+          <span className="text-[10px] text-slate-400">Esta semana</span>
         </div>
         <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
           <p className="text-[11px] font-semibold text-slate-500">
             Pedidos Cerrados
           </p>
-          <p className="text-xl font-extrabold text-[#EA580C] mt-1">2</p>
-          <span className="text-[10px] text-emerald-600 font-semibold">
-            $31.1M en pedidos
+          <p className="text-xl font-extrabold text-[#EA580C] mt-1">
+            {resumen.pedidos}
+          </p>
+          <span className="text-[10px] text-slate-400">
+            De los clientes visitados
           </span>
         </div>
         <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
           <p className="text-[11px] font-semibold text-slate-500">
             Cotizaciones Emitidas
           </p>
-          <p className="text-xl font-extrabold text-slate-800 mt-1">3</p>
-          <span className="text-[10px] text-slate-400">$55.9M cotizados</span>
+          <p className="text-xl font-extrabold text-slate-800 mt-1">
+            {resumen.cotizaciones}
+          </p>
+          <span className="text-[10px] text-slate-400">
+            $ {resumen.valorCotizado.toLocaleString('es-CO')} cotizados
+          </span>
         </div>
         <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
           <p className="text-[11px] font-semibold text-slate-500">
-            Tasa de Cierre
+            Efectividad
           </p>
-          <p className="text-xl font-extrabold text-emerald-600 mt-1">79%</p>
-          <span className="text-[10px] text-emerald-600 font-semibold">
-            Alto desempeño
+          <p className="text-xl font-extrabold text-emerald-600 mt-1">
+            {resumen.efectividad}%
+          </p>
+          <span className="text-[10px] text-slate-400">
+            {resumen.visitadas} de {resumen.visitas} visitas realizadas
           </span>
         </div>
       </div>
@@ -172,7 +184,7 @@ export const VisitasListPage: React.FC = () => {
                       {v.resultado}
                     </td>
                     <td className="py-2.5 px-3 font-mono text-xs">
-                      {v.cotizacion !== '-' ? (
+                      {v.cotizacion !== SIN_DOCUMENTO ? (
                         <span className="text-[#EA580C] font-bold">
                           {v.cotizacion}
                         </span>
@@ -181,7 +193,7 @@ export const VisitasListPage: React.FC = () => {
                       )}
                     </td>
                     <td className="py-2.5 px-3 font-mono text-xs">
-                      {v.pedido !== '-' ? (
+                      {v.pedido !== SIN_DOCUMENTO ? (
                         <span className="text-blue-600 font-bold">
                           {v.pedido}
                         </span>
@@ -238,11 +250,12 @@ export const VisitasListPage: React.FC = () => {
                 variant="primary"
                 size="sm"
                 onClick={() => {
-                  const cliente = selectedVisita.cliente;
+                  // Se abre la visita existente (no una nueva); si ya se
+                  // registró, en modo lectura para no duplicar su resultado
+                  const { id, estado_visita } = selectedVisita;
+                  const modo = estado_visita === 'Visitado' ? '&modo=ver' : '';
                   setSelectedVisita(null);
-                  navigate(
-                    `/visitas/registrar?cliente=${encodeURIComponent(cliente)}`,
-                  );
+                  navigate(`/visitas/registrar?visita=${id}${modo}`);
                 }}
               >
                 Abrir formulario completo

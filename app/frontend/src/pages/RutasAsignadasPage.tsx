@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import {
   Plus,
   Search,
@@ -7,20 +8,38 @@ import {
   Clock,
   MapPin,
   User,
-  ArrowRight,
   Eye,
   Navigation,
 } from 'lucide-react';
 import { IRuta } from '../types/ruta';
-import { getRutas } from '../api/rutas';
+import {
+  getRutas,
+  getAsesores,
+  getParadasRuta,
+  estadoRuta,
+  IParadaGuardada,
+} from '../api/rutas';
+import { getCatalogosClientes } from '../api/clientes';
+import { useClientes } from '../hooks/useClientes';
+import { useAuthStore } from '../store/useAuthStore';
 import { Badge } from '../components/common/Badge';
 import { Modal } from '../components/common/Modal';
 import { Button } from '../components/common/Button';
 import { Pagination } from '../components/common/Pagination';
 
+const hhmm = (hora: string) => (hora ? hora.slice(0, 5) : '—');
+
 export const RutasAsignadasPage: React.FC = () => {
   const navigate = useNavigate();
+  const esDirector = useAuthStore(
+    (state) => state.user?.rol === 'DIRECTOR_REGIONAL',
+  );
   const [rutas, setRutas] = useState<IRuta[]>([]);
+  const [errorCarga, setErrorCarga] = useState('');
+  // Stops of each route, loaded from GET /rutas/:id (the list has none)
+  const [paradasPorRuta, setParadasPorRuta] = useState<
+    Record<string, IParadaGuardada[]>
+  >({});
   const [search, setSearch] = useState('');
   const [diaFiltro, setDiaFiltro] = useState('Todos');
   const [estadoFiltro, setEstadoFiltro] = useState('Todos');
@@ -28,17 +47,56 @@ export const RutasAsignadasPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(6);
 
+  const { data: asesores = [] } = useQuery({
+    queryKey: ['asesores'],
+    queryFn: getAsesores,
+  });
+  const { data: catalogos } = useQuery({
+    queryKey: ['clientes', 'catalogos'],
+    queryFn: getCatalogosClientes,
+    staleTime: 1000 * 60 * 30,
+  });
+  const { clientes } = useClientes();
+
   useEffect(() => {
-    getRutas().then((data) => setRutas(data));
+    getRutas()
+      .then(async (data) => {
+        setRutas(data);
+        const detalles = await Promise.allSettled(
+          data.map((r) => getParadasRuta(r.id_ruta)),
+        );
+        const porRuta: Record<string, IParadaGuardada[]> = {};
+        detalles.forEach((detalle, idx) => {
+          if (detalle.status === 'fulfilled') {
+            porRuta[data[idx].id_ruta] = detalle.value;
+          }
+        });
+        setParadasPorRuta(porRuta);
+      })
+      .catch(() =>
+        setErrorCarga(
+          'No se pudieron cargar las rutas. Recarga la página para intentar de nuevo.',
+        ),
+      );
   }, []);
 
+  const nombreAsesor = (ruta: IRuta) =>
+    asesores.find((a) => String(a.id) === ruta.id_asesor)?.name ??
+    (ruta.id_asesor ? `Asesor #${ruta.id_asesor}` : 'Sin asignar');
+
+  const nombreZona = (ruta: IRuta) =>
+    catalogos?.zonas.find((z) => String(z.id) === ruta.id_zona)?.nombre ??
+    ruta.territorio_zona;
+
+  const paradasDe = (ruta: IRuta) => paradasPorRuta[ruta.id_ruta];
+
   const filteredRutas = rutas.filter((r) => {
+    const texto = search.toLowerCase();
     const matchesSearch =
-      r.codigo.toLowerCase().includes(search.toLowerCase()) ||
-      r.nombre.toLowerCase().includes(search.toLowerCase()) ||
-      (r.asesor_nombre &&
-        r.asesor_nombre.toLowerCase().includes(search.toLowerCase())) ||
-      r.territorio_zona.toLowerCase().includes(search.toLowerCase());
+      r.codigo.toLowerCase().includes(texto) ||
+      r.nombre.toLowerCase().includes(texto) ||
+      nombreAsesor(r).toLowerCase().includes(texto) ||
+      nombreZona(r).toLowerCase().includes(texto);
 
     const matchesDia = diaFiltro === 'Todos' || r.dia_ejecucion === diaFiltro;
     const matchesEstado = estadoFiltro === 'Todos' || r.estado === estadoFiltro;
@@ -46,10 +104,19 @@ export const RutasAsignadasPage: React.FC = () => {
     return matchesSearch && matchesDia && matchesEstado;
   });
 
-  const getStopsForRuta = (ruta: IRuta) => {
-    if (ruta.paradas && ruta.paradas.length > 0) return ruta.paradas;
-    return [];
-  };
+  const asignadas = rutas.filter((r) => r.estado === 'ASIGNADA').length;
+  const borradores = rutas.filter((r) => r.estado === 'BORRADOR').length;
+  const paradasTotales = Object.values(paradasPorRuta).reduce(
+    (total, paradas) => total + paradas.length,
+    0,
+  );
+  const asesoresConRuta = new Set(
+    rutas.filter((r) => r.id_asesor).map((r) => r.id_asesor),
+  ).size;
+
+  // The API sends the client id as a number although the type says string
+  const clienteDe = (idCliente: string) =>
+    clientes.find((c) => String(c.id_cliente) === idCliente);
 
   return (
     <div className="space-y-5 pb-16">
@@ -70,15 +137,26 @@ export const RutasAsignadasPage: React.FC = () => {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => navigate('/rutas')}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-[#EA580C] hover:bg-[#D9480F] text-white px-4 py-2 text-xs font-bold cursor-pointer shadow-sm transition-colors"
-        >
-          <Plus className="h-4 w-4" />
-          Nueva ruta en mapa
-        </button>
+        {esDirector && (
+          <button
+            type="button"
+            onClick={() => navigate('/rutas')}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-[#EA580C] hover:bg-[#D9480F] text-white px-4 py-2 text-xs font-bold cursor-pointer shadow-sm transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            Nueva ruta en mapa
+          </button>
+        )}
       </div>
+
+      {errorCarga && (
+        <div
+          role="alert"
+          className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs font-semibold text-rose-700"
+        >
+          {errorCarga}
+        </div>
+      )}
 
       {/* Summary KPI Mini-cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -89,35 +167,41 @@ export const RutasAsignadasPage: React.FC = () => {
           <p className="text-xl font-extrabold text-slate-800 mt-1">
             {rutas.length}
           </p>
-          <span className="text-[10px] text-emerald-600 font-semibold">
-            100% activas
+          <span className="text-[10px] text-slate-400">
+            {borradores} en borrador
           </span>
         </div>
         <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
           <p className="text-[11px] font-semibold text-slate-500">
-            En Ejecución Hoy
+            Rutas Asignadas
           </p>
           <p className="text-xl font-extrabold text-[#EA580C] mt-1">
-            {rutas.filter((r) => r.estado === 'EN_CURSO').length || 1}
+            {asignadas}
           </p>
-          <span className="text-[10px] text-slate-400">Martes (Hoy)</span>
+          <span className="text-[10px] text-slate-400">
+            Con asesor y visitas generadas
+          </span>
         </div>
         <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
           <p className="text-[11px] font-semibold text-slate-500">
             Paradas Totales
           </p>
-          <p className="text-xl font-extrabold text-slate-800 mt-1">28</p>
+          <p className="text-xl font-extrabold text-slate-800 mt-1">
+            {paradasTotales}
+          </p>
           <span className="text-[10px] text-slate-400">
             Clientes programados
           </span>
         </div>
         <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
           <p className="text-[11px] font-semibold text-slate-500">
-            Distancia Estimada
+            Asesores con Ruta
           </p>
-          <p className="text-xl font-extrabold text-slate-800 mt-1">271.9 km</p>
+          <p className="text-xl font-extrabold text-slate-800 mt-1">
+            {asesoresConRuta}
+          </p>
           <span className="text-[10px] text-slate-400">
-            Territorio Atlántico
+            De {asesores.length} activos
           </span>
         </div>
       </div>
@@ -147,6 +231,7 @@ export const RutasAsignadasPage: React.FC = () => {
             <option value="Miércoles">Miércoles</option>
             <option value="Jueves">Jueves</option>
             <option value="Viernes">Viernes</option>
+            <option value="Sábado">Sábado</option>
           </select>
 
           <select
@@ -156,7 +241,8 @@ export const RutasAsignadasPage: React.FC = () => {
           >
             <option value="Todos">Todos los estados</option>
             <option value="ASIGNADA">Asignada</option>
-            <option value="EN_CURSO">En Curso</option>
+            <option value="BORRADOR">Borrador</option>
+            <option value="EN_CURSO">En curso</option>
             <option value="COMPLETADA">Completada</option>
           </select>
         </div>
@@ -167,7 +253,8 @@ export const RutasAsignadasPage: React.FC = () => {
         {filteredRutas
           .slice((currentPage - 1) * pageSize, currentPage * pageSize)
           .map((ruta) => {
-            const stops = getStopsForRuta(ruta);
+            const estado = estadoRuta(ruta.estado);
+            const paradas = paradasDe(ruta);
             return (
               <div
                 key={ruta.id_ruta}
@@ -178,21 +265,7 @@ export const RutasAsignadasPage: React.FC = () => {
                     <span className="font-mono text-xs font-black text-[#EA580C] bg-orange-50 px-2.5 py-0.5 rounded-md border border-orange-200">
                       {ruta.codigo}
                     </span>
-                    <Badge
-                      variant={
-                        ruta.estado === 'EN_CURSO'
-                          ? 'pendiente'
-                          : ruta.estado === 'COMPLETADA'
-                            ? 'visitado'
-                            : 'activo'
-                      }
-                    >
-                      {ruta.estado === 'EN_CURSO'
-                        ? 'En Curso'
-                        : ruta.estado === 'COMPLETADA'
-                          ? 'Completada'
-                          : 'Asignada'}
-                    </Badge>
+                    <Badge variant={estado.variante}>{estado.etiqueta}</Badge>
                   </div>
 
                   <h3 className="font-bold text-slate-900 text-sm">
@@ -206,15 +279,12 @@ export const RutasAsignadasPage: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <User className="h-3.5 w-3.5 text-slate-400" />
                       <span className="font-semibold text-slate-800">
-                        {ruta.asesor_nombre ||
-                          (ruta.id_asesor
-                            ? `Asesor #${ruta.id_asesor}`
-                            : 'Sin asignar')}
+                        {nombreAsesor(ruta)}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <MapPin className="h-3.5 w-3.5 text-slate-400" />
-                      <span>{ruta.territorio_zona}</span>
+                      <span>{nombreZona(ruta)}</span>
                     </div>
                     <div className="flex items-center justify-between text-[11px] text-slate-500">
                       <span className="flex items-center gap-1.5">
@@ -223,37 +293,19 @@ export const RutasAsignadasPage: React.FC = () => {
                       </span>
                       <span className="flex items-center gap-1.5">
                         <Clock className="h-3 w-3 text-slate-400" />
-                        {ruta.hora_inicio_sugerida} - {ruta.hora_fin_sugerida}
+                        {hhmm(ruta.hora_inicio_sugerida)} -{' '}
+                        {hhmm(ruta.hora_fin_sugerida)}
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between text-xs bg-slate-50 p-2 rounded-lg text-slate-700 mb-3">
-                    <div>
-                      <span className="text-[10px] text-slate-400 block font-semibold">
-                        Paradas
-                      </span>
-                      <span className="font-bold">
-                        {stops.length || 6} clientes
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] text-slate-400 block font-semibold">
-                        Distancia
-                      </span>
-                      <span className="font-bold">
-                        {ruta.distancia_km_aprox} km
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] text-slate-400 block font-semibold">
-                        Tiempo est.
-                      </span>
-                      <span className="font-bold">
-                        {Math.floor(ruta.tiempo_estimado_min / 60)}h{' '}
-                        {ruta.tiempo_estimado_min % 60}m
-                      </span>
-                    </div>
+                  <div className="text-xs bg-slate-50 p-2 rounded-lg text-slate-700 mb-3">
+                    <span className="text-[10px] text-slate-400 block font-semibold">
+                      Paradas
+                    </span>
+                    <span className="font-bold">
+                      {paradas ? `${paradas.length} clientes` : 'Cargando...'}
+                    </span>
                   </div>
                 </div>
 
@@ -265,15 +317,6 @@ export const RutasAsignadasPage: React.FC = () => {
                   >
                     <Eye className="h-3.5 w-3.5" />
                     Ver paradas
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => navigate('/rutas')}
-                    className="inline-flex items-center justify-center gap-1 rounded-lg bg-orange-50 hover:bg-[#EA580C] text-[#EA580C] hover:text-white px-3 py-1.5 text-xs font-bold cursor-pointer transition-colors"
-                    title="Abrir en creador de rutas"
-                  >
-                    Editar
-                    <ArrowRight className="h-3 w-3" />
                   </button>
                 </div>
               </div>
@@ -297,73 +340,69 @@ export const RutasAsignadasPage: React.FC = () => {
           isOpen={!!selectedRuta}
           onClose={() => setSelectedRuta(null)}
           title={`Secuencia de paradas: ${selectedRuta.nombre}`}
-          description={`Código: ${selectedRuta.codigo} | Asesor: ${selectedRuta.asesor_nombre} | Día: ${selectedRuta.dia_ejecucion}`}
+          description={`Código: ${selectedRuta.codigo} | Asesor: ${nombreAsesor(selectedRuta)} | Día: ${selectedRuta.dia_ejecucion}`}
           maxWidth="lg"
           footer={
-            <>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setSelectedRuta(null)}
-              >
-                Cerrar
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => {
-                  setSelectedRuta(null);
-                  navigate('/rutas');
-                }}
-              >
-                Modificar en planificador
-              </Button>
-            </>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedRuta(null)}
+            >
+              Cerrar
+            </Button>
           }
         >
           <div className="space-y-3 text-xs">
             <div className="flex items-center justify-between p-2.5 bg-slate-50 rounded-lg text-slate-600">
               <span className="flex items-center gap-1.5 font-semibold text-slate-800">
                 <Navigation className="h-4 w-4 text-[#EA580C]" />
-                {selectedRuta.distancia_km_aprox} km recorridos estimados
+                {nombreZona(selectedRuta)} · {selectedRuta.frecuencia}
               </span>
               <span>
-                Horario: {selectedRuta.hora_inicio_sugerida} a{' '}
-                {selectedRuta.hora_fin_sugerida}
+                Horario: {hhmm(selectedRuta.hora_inicio_sugerida)} a{' '}
+                {hhmm(selectedRuta.hora_fin_sugerida)}
               </span>
             </div>
 
             <div className="divide-y divide-slate-100 max-h-80 overflow-y-auto">
-              {getStopsForRuta(selectedRuta).map((stop: any, idx: number) => (
-                <div
-                  key={stop.id || idx}
-                  className="py-2.5 flex items-center justify-between gap-3"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#0F172A] text-white font-bold text-[11px]">
-                      {stop.orden || idx + 1}
-                    </span>
-                    <div>
-                      <p className="font-bold text-slate-800">
-                        {stop.cliente?.nombre_comercial || 'Cliente'}
-                      </p>
-                      <p className="text-[11px] text-slate-400">
-                        {stop.cliente?.direccion || ''} •{' '}
-                        {stop.cliente?.tipo_cliente_nombre || ''}
-                      </p>
+              {(paradasDe(selectedRuta) ?? []).length === 0 && (
+                <p className="py-3 text-slate-500">
+                  {paradasDe(selectedRuta)
+                    ? 'Esta ruta no tiene paradas.'
+                    : 'Cargando paradas...'}
+                </p>
+              )}
+              {(paradasDe(selectedRuta) ?? []).map((parada, idx) => {
+                const cliente = clienteDe(parada.id_cliente);
+                return (
+                  <div
+                    key={`${parada.id_cliente}-${parada.orden}`}
+                    className="py-2.5 flex items-center justify-between gap-3"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#0F172A] text-white font-bold text-[11px]">
+                        {parada.orden || idx + 1}
+                      </span>
+                      <div>
+                        <p className="font-bold text-slate-800">
+                          {cliente?.nombre_comercial ||
+                            cliente?.razon_social ||
+                            `Cliente #${parada.id_cliente}`}
+                        </p>
+                        <p className="text-[11px] text-slate-400">
+                          {[cliente?.direccion, cliente?.municipio]
+                            .filter(Boolean)
+                            .join(' • ')}
+                        </p>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="flex items-center gap-3">
                     <span className="font-mono text-slate-600 font-semibold text-[11px]">
-                      {stop.hora_sugerida}
+                      {parada.hora_sugerida ?? '—'}
                     </span>
-                    <Badge variant={stop.estado_visita || 'pendiente'}>
-                      {stop.estado_visita || 'Pendiente'}
-                    </Badge>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </Modal>

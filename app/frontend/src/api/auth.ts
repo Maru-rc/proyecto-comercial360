@@ -19,6 +19,7 @@ const toUser = (me: IMeResponse): IUser => {
     rol: isDirector ? 'DIRECTOR_REGIONAL' : 'ASESOR',
     cargo: isDirector ? 'Director Regional' : 'Asesor Comercial',
     asesorId: me.advisor ? String(me.advisor.idAdvisor) : undefined,
+    telefono: me.advisor?.phone ?? undefined,
   };
 };
 

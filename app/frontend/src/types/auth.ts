@@ -6,6 +6,7 @@ export interface IUser {
   cargo?: string;
   avatarUrl?: string;
   asesorId?: string;
+  telefono?: string;
   territorio?: string;
 }
 

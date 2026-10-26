@@ -28,8 +28,9 @@ export class DashboardRepository implements IDashboardRepository {
     const params: unknown[] = [f.weekStart, f.weekEnd];
     let sql = `
       SELECT
-        COUNT(*)                                          AS scheduled,
-        COUNT(*) FILTER (WHERE visit_status = 'VISITADO') AS completed
+        COUNT(*) AS scheduled,
+        -- Recording a visit saves COMPLETED; VISITADO is kept for older rows
+        COUNT(*) FILTER (WHERE visit_status IN ('COMPLETED', 'VISITADO')) AS completed
       FROM visits
       WHERE scheduled_at >= $1
         AND scheduled_at <  $2
