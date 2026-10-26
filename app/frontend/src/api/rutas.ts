@@ -93,7 +93,7 @@ export const crearRuta = async (
     await apiClient.put(`/rutas/${routeId}/paradas`, {
       paradas: paradas.map((p, idx) => ({
         id_cliente: toNumericId(p.id_cliente, 'Cliente'),
-        orden_visita: p.orden || idx + 1,
+        orden: p.orden || idx + 1,
         hora_sugerida: p.hora_sugerida || undefined,
       })),
     });

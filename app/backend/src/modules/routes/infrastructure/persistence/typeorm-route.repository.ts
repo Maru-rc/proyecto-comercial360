@@ -25,6 +25,8 @@ export class TypeOrmRouteRepository implements RouteRepository, RouteReader {
 
   async save(data: Partial<RouteRecord>): Promise<RouteRecord> {
     const routeOrm = this.routeRepo.create({
+      // With an id TypeORM updates the route; without it, it inserts a new one
+      id: data.id,
       name: data.name,
       zoneId: data.zoneId,
       executionDay: data.executionDay,

@@ -90,10 +90,9 @@ export const GeneralInfoForm: React.FC = () => {
             Inicio sugerido <span className="text-rose-500">*</span>
           </label>
           <input
-            type="text"
+            type="time"
             value={formData.hora_inicio}
             onChange={(e) => updateFormData({ hora_inicio: e.target.value })}
-            placeholder="08:00 AM"
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs text-slate-800 focus:border-[#EA580C] focus:outline-none focus:ring-1 focus:ring-[#EA580C]"
           />
         </div>
@@ -102,10 +101,9 @@ export const GeneralInfoForm: React.FC = () => {
             Fin sugerido <span className="text-rose-500">*</span>
           </label>
           <input
-            type="text"
+            type="time"
             value={formData.hora_fin}
             onChange={(e) => updateFormData({ hora_fin: e.target.value })}
-            placeholder="05:00 PM"
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs text-slate-800 focus:border-[#EA580C] focus:outline-none focus:ring-1 focus:ring-[#EA580C]"
           />
         </div>
