@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, Sparkles, Plus, RotateCcw, Save } from 'lucide-react';
+import {
+  AlertCircle,
+  Check,
+  Sparkles,
+  Plus,
+  RotateCcw,
+  Save,
+} from 'lucide-react';
 import { RouteStepper } from '../components/rutas/RouteStepper';
 import { GeneralInfoForm } from '../components/rutas/GeneralInfoForm';
 import { SortableStopTable } from '../components/rutas/SortableStopTable';
@@ -12,6 +19,7 @@ import {
 } from '../components/maps/OpenStreetMapViewer';
 import { useRouteDraftStore } from '../store/useRouteDraftStore';
 import { useRutas } from '../hooks/useRutas';
+import { apiErrorMessage } from '../api/client';
 
 export const RutasPage: React.FC = () => {
   const navigate = useNavigate();
@@ -26,6 +34,7 @@ export const RutasPage: React.FC = () => {
   const { crearRuta, isCreating } = useRutas();
   const [successToast, setSuccessToast] = useState(false);
   const [draftToast, setDraftToast] = useState('');
+  const [errorToast, setErrorToast] = useState('');
 
   // Map markers from draft paradas
   const markers: IMapMarkerItem[] = (paradas || []).map((p) => ({
@@ -47,9 +56,15 @@ export const RutasPage: React.FC = () => {
         setSuccessToast(false);
         navigate('/');
       }, 1500);
-    } catch {
-      setDraftToast('Ruta guardada en almacenamiento local.');
-      setTimeout(() => setDraftToast(''), 3000);
+    } catch (error) {
+      // Nada se guarda en local: se muestra lo que respondió el backend
+      setErrorToast(
+        apiErrorMessage(
+          error,
+          'No se pudo guardar la ruta. Revisa los datos e intenta de nuevo.',
+        ),
+      );
+      setTimeout(() => setErrorToast(''), 6000);
     }
   };
 
@@ -180,6 +195,17 @@ export const RutasPage: React.FC = () => {
           <span className="text-xs font-bold">
             ¡Ruta asignada y programada con éxito! Redirigiendo al Dashboard...
           </span>
+        </div>
+      )}
+
+      {/* Error Toast */}
+      {errorToast && (
+        <div
+          role="alert"
+          className="fixed bottom-8 right-8 z-50 flex max-w-md items-center gap-3 bg-rose-600 text-white px-5 py-3.5 rounded-xl shadow-2xl animate-in fade-in slide-in-from-bottom-5"
+        >
+          <AlertCircle className="h-5 w-5 shrink-0" />
+          <span className="text-xs font-bold">{errorToast}</span>
         </div>
       )}
 

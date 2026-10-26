@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { AxiosAdapter } from 'axios';
-import { apiClient, setUnauthorizedHandler } from './client';
+import { apiClient, apiErrorMessage, setUnauthorizedHandler } from './client';
 
 const respondWith =
   (status: number, data: unknown): AxiosAdapter =>
@@ -54,5 +54,39 @@ describe('apiClient', () => {
       ),
     ).rejects.toThrow();
     expect(onUnauthorized).not.toHaveBeenCalled();
+  });
+});
+
+describe('apiErrorMessage', () => {
+  const FALLBACK = 'No se pudo guardar';
+  const failWith = (status: number, data: unknown) =>
+    apiClient
+      .post('/rutas', {}, { adapter: respondWith(status, data) })
+      .catch((error: unknown) => error);
+
+  it('joins the NestJS validation messages', async () => {
+    const error = await failWith(400, {
+      message: ['La hora de inicio debe tener formato HH:mm (ej. 08:00)', 'b'],
+      statusCode: 400,
+    });
+    expect(apiErrorMessage(error, FALLBACK)).toBe(
+      'La hora de inicio debe tener formato HH:mm (ej. 08:00). b',
+    );
+  });
+
+  it('uses a single message as it comes', async () => {
+    const error = await failWith(409, { message: 'La ruta ya existe' });
+    expect(apiErrorMessage(error, FALLBACK)).toBe('La ruta ya existe');
+  });
+
+  it('falls back when the response has no message', async () => {
+    const error = await failWith(500, {});
+    expect(apiErrorMessage(error, FALLBACK)).toBe(FALLBACK);
+  });
+
+  it('keeps the message of an app error, e.g. an invalid id', () => {
+    expect(apiErrorMessage(new Error('Cliente inválido: x'), FALLBACK)).toBe(
+      'Cliente inválido: x',
+    );
   });
 });

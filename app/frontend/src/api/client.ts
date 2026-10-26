@@ -17,6 +17,20 @@ export const setUnauthorizedHandler = (handler: () => void) => {
   onUnauthorized = handler;
 };
 
+/**
+ * Mensaje legible de un error: el de validación de NestJS (string o lista) o
+ * el de un Error propio. Sin respuesta del servidor se usa el fallback.
+ */
+export const apiErrorMessage = (error: unknown, fallback: string): string => {
+  if (!axios.isAxiosError(error)) {
+    return error instanceof Error && error.message ? error.message : fallback;
+  }
+  const message = (error.response?.data as { message?: unknown } | undefined)
+    ?.message;
+  if (Array.isArray(message) && message.length > 0) return message.join('. ');
+  return typeof message === 'string' && message ? message : fallback;
+};
+
 apiClient.interceptors.response.use(
   (response) => {
     if (
